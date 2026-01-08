@@ -53,6 +53,34 @@
       "last_modified": "2026-01-02T14:39:32Z",
       "resolved": "github:NixOS/nixpkgs/16c7794d0a28b5a37904d55bcca36003b9109aaa?lastModified=1767364772"
     },
+    "glibcLocales@latest": {
+      "last_modified": "2025-12-31T03:27:36Z",
+      "resolved": "github:NixOS/nixpkgs/f665af0cdb70ed27e1bd8f9fdfecaf451260fc55#glibcLocales",
+      "source": "devbox-search",
+      "version": "2.40-66",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/0mrra8k6h7dvs6dmq3f4ilsm0v33d01z-glibc-locales-2.40-66",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/0mrra8k6h7dvs6dmq3f4ilsm0v33d01z-glibc-locales-2.40-66"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/wmwyf3bxrhg5ssd477dp99986wh4mzmm-glibc-locales-2.40-66",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/wmwyf3bxrhg5ssd477dp99986wh4mzmm-glibc-locales-2.40-66"
+        }
+      }
+    },
     "libyaml@latest": {
       "last_modified": "2025-12-31T03:27:36Z",
       "resolved": "github:NixOS/nixpkgs/f665af0cdb70ed27e1bd8f9fdfecaf451260fc55#libyaml",
