@@ -6,8 +6,8 @@
     "yarn@latest",
     "bundler@latest",
     "postgresql@17",
-    "libyaml@latest",
-    "pkg-config@latest"
+    "pkg-config@latest",
+    "libyaml.dev"
   ],
   "shell": {
     "init_hook": [
