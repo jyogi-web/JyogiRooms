@@ -16,6 +16,12 @@
     "scripts": {
       "dev": [
         "./bin/dev"
+      ],
+      "lint": [
+        "bin/rubocop"
+      ],
+      "setup": [
+        "bin/setup"
       ]
     }
   }
