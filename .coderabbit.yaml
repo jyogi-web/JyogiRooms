@@ -1,0 +1,120 @@
+# CodeRabbit Configuration for Rails Project
+# Reference: https://docs.coderabbit.ai/reference/configuration
+
+# 日本語でレビューコメントを生成
+language: ja-JP
+
+# レビュー設定
+reviews:
+  # プロフィール設定 (chill, assertive)
+  profile: assertive
+
+  # リクエストの変更
+  request_changes_workflow: true
+
+  # 高レベルサマリー
+  high_level_summary: true
+
+  # 詩的なレビューコメント
+  poem: true
+
+  # ウォークスルーの折りたたみ
+  collapse_walkthrough: true
+
+  # レビューステータス
+  review_status: true
+
+  # ツール設定
+  tools:
+    # Rails用セキュリティスキャナー
+    brakeman:
+      enabled: true
+
+    # Ruby静的解析
+    rubocop:
+      enabled: true
+
+    # YAML linter
+    yamllint:
+      enabled: true
+
+    # Markdown linter
+    markdownlint:
+      enabled: false
+
+    # シェルスクリプト解析
+    shellcheck:
+      enabled: true
+
+    # JavaScript/TypeScript linter
+    biome:
+      enabled: true
+
+  # 自動レビュー設定
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+  # パス別の指示
+  path_instructions:
+    - path: "app/models/**/*.rb"
+      instructions: |
+        - Railsモデルのベストプラクティスに従っているか確認
+        - バリデーション、アソシエーション、スコープが適切か確認
+        - N+1クエリの可能性をチェック
+        - データベースインデックスの必要性を検討
+
+    - path: "app/controllers/**/*.rb"
+      instructions: |
+        - RESTfulな設計になっているか確認
+        - Strong Parametersが適切に使用されているか確認
+        - 認証・認可が適切に実装されているか確認
+        - コントローラーのロジックが肥大化していないか確認
+
+    - path: "app/views/**/*"
+      instructions: |
+        - XSS脆弱性がないか確認
+        - パーシャルの適切な使用を確認
+        - ヘルパーメソッドの活用を確認
+
+    - path: "db/migrate/**/*.rb"
+      instructions: |
+        - マイグレーションの可逆性を確認
+        - インデックスの追加を検討
+        - 本番環境での実行時間を考慮
+
+    - path: "spec/**/*.rb"
+      instructions: |
+        - テストの網羅性を確認
+        - テストが読みやすく保守しやすいか確認
+        - モックやスタブの適切な使用を確認
+
+    - path: "config/**/*.rb"
+      instructions: |
+        - 環境変数の使用を推奨
+        - セキュリティ設定を確認
+        - パフォーマンス設定を確認
+
+  # 除外パターン
+  path_filters:
+    - "!node_modules/**"
+    - "!vendor/**"
+    - "!tmp/**"
+    - "!log/**"
+    - "!public/assets/**"
+    - "!coverage/**"
+    - "!*.min.js"
+    - "!*.min.css"
+
+# チャット設定
+chat:
+  auto_reply: true
+
+# 知識ベース
+knowledge_base:
+  # プロジェクト固有のドキュメントやガイドラインを学習
+  learnings:
+    scope: auto
