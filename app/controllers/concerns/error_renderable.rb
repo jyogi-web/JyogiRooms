@@ -39,7 +39,7 @@ module ErrorRenderable
   end
 
   def clear_session
-    session.delete(:user_id)
-    session.delete(:access_token)
+    reset_session
+    @current_user = nil
   end
 end

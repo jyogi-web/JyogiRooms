@@ -68,7 +68,7 @@ module JyogiAuthenticatable
   # ログイン処理（AccessTokenレコードを作成してセッションにIDを保存）
   def sign_in(user, jyogi_access_token)
     # 既存のアクティブなトークンを失効
-    user.access_tokens.active.each(&:revoke!)
+    user.access_tokens.active.update_all(revoked: true)
 
     # 新しいトークンを作成
     access_token = AccessToken.create_for_user(
@@ -88,7 +88,7 @@ module JyogiAuthenticatable
       access_token&.revoke!
     end
 
-    session.delete(:access_token_id)
+    reset_session
     @current_user = nil
   end
 end

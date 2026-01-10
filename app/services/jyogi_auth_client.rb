@@ -102,39 +102,38 @@ class JyogiAuthClient
   end
 
   private_class_method def self.post_request(uri, params, access_token = nil)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == "https"
-    http.open_timeout = TIMEOUT_SECONDS
-    http.read_timeout = TIMEOUT_SECONDS
-
-    request = Net::HTTP::Post.new(uri.path)
+    request = Net::HTTP::Post.new(uri.request_uri)
     request["Content-Type"] = "application/x-www-form-urlencoded"
     request["Authorization"] = "Bearer #{access_token}" if access_token
     request.body = URI.encode_www_form(params)
 
-    http.request(request)
-  rescue Net::OpenTimeout, Net::ReadTimeout => e
-    raise NetworkError, "Request timeout: #{e.message}"
-  rescue StandardError => e
-    raise NetworkError, "Network error: #{e.message}"
+    execute_request(request, uri)
   end
 
   private_class_method def self.get_request(uri, access_token)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == "https"
-    http.open_timeout = TIMEOUT_SECONDS
-    http.read_timeout = TIMEOUT_SECONDS
-
-    request = Net::HTTP::Get.new(uri.path)
+    request = Net::HTTP::Get.new(uri.request_uri)
     request["Authorization"] = "Bearer #{access_token}"
 
-    Rails.logger.debug "GET #{uri} with Authorization: Bearer #{access_token[0..19]}..."
+    execute_request(request, uri)
+  end
 
+  private_class_method def self.execute_request(request, uri)
+    http = setup_http_client(uri)
     http.request(request)
   rescue Net::OpenTimeout, Net::ReadTimeout => e
     raise NetworkError, "Request timeout: #{e.message}"
-  rescue StandardError => e
+  rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Net::HTTPBadResponse => e
     raise NetworkError, "Network error: #{e.message}"
+  end
+
+  private_class_method def self.setup_http_client(uri)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = uri.scheme == "https"
+    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.verify_hostname = true
+    http.open_timeout = TIMEOUT_SECONDS
+    http.read_timeout = TIMEOUT_SECONDS
+    http
   end
 
   private_class_method def self.parse_response(response)
