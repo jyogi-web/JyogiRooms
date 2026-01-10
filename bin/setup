@@ -7,7 +7,23 @@ def system!(*args)
   system(*args, exception: true)
 end
 
+# Load .env file if it exists
+def load_env_file
+  env_file = File.join(APP_ROOT, ".env")
+  if File.exist?(env_file)
+    File.readlines(env_file).each do |line|
+      line = line.strip
+      next if line.empty? || line.start_with?("#")
+
+      key, value = line.split("=", 2)
+      ENV[key] = value if key && value
+    end
+  end
+end
+
 FileUtils.chdir APP_ROOT do
+  # Load environment variables from .env
+  load_env_file
   # This script is a way to set up or update your development environment automatically.
   # This script is idempotent, so that you can run it at any time and get an expectable outcome.
   # Add necessary setup steps to this file.
@@ -17,6 +33,57 @@ FileUtils.chdir APP_ROOT do
 
   # Install JavaScript dependencies
   system("yarn install --check-files")
+
+  puts "\n== Preparing database cluster =="
+  pg_data = ENV["PGDATA"] || File.join(APP_ROOT, ".devbox/virtenv/postgresql/data")
+  unless File.exist?(File.join(pg_data, "PG_VERSION"))
+    puts "Initializing database cluster..."
+    system!("initdb -D #{pg_data}")
+  end
+
+  puts "\n== Starting database service =="
+  pg_host = File.join(APP_ROOT, ".devbox/virtenv/postgresql")
+
+  # Set PostgreSQL environment variables
+  ENV["PGDATA"] = pg_data
+  ENV["PGHOST"] = pg_host
+
+  # Start or ensure PostgreSQL is running using devbox services
+  puts "Starting PostgreSQL service..."
+  system("devbox services up -b 2>/dev/null")
+
+  # Wait for postgres to be ready
+  puts "Waiting for PostgreSQL to start..."
+  timeout = 10
+  start_time = Time.now
+  ready = false
+
+  while Time.now - start_time < timeout
+    if system("pg_isready -q 2>/dev/null")
+      ready = true
+      break
+    end
+    print "."
+    $stdout.flush
+    sleep 0.5
+  end
+
+  if ready
+    puts " PostgreSQL is ready!"
+  else
+    puts "\nWarning: PostgreSQL did not become ready within #{timeout} seconds."
+    puts "Try: devbox services restart postgresql"
+    exit 1
+  end
+
+  puts "\n== Creating database user =="
+  # Create user if it doesn't exist.
+  # -s: superuser (often needed for dev extensions), -e: echo commands
+  # verify if user exists first to avoid error output
+  db_username = ENV["DB_USERNAME"] || "jyogi"
+  unless system("psql postgres -tAc \"SELECT 1 FROM pg_roles WHERE rolname='#{db_username}'\" | grep -q 1")
+    system("createuser -s #{db_username}")
+  end
 
   # puts "\n== Copying sample files =="
   # unless File.exist?("config/database.yml")
