@@ -1,13 +1,29 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-one:
+# アクティブなトークン（未失効、未期限切れ）
+active:
   user: one
-  token: MyString1
-  expires_at: 2026-01-11 03:43:13
+  token: "active_token_12345"
+  expires_at: <%= 1.day.from_now %>
   revoked: false
 
-two:
-  user: two
-  token: MyString2
-  expires_at: 2026-01-11 03:43:13
+# 期限切れトークン（未失効だが期限切れ）
+expired:
+  user: one
+  token: "expired_token_12345"
+  expires_at: <%= 1.day.ago %>
   revoked: false
+
+# 失効済みトークン（手動で失効）
+revoked:
+  user: two
+  token: "revoked_token_12345"
+  expires_at: <%= 1.day.from_now %>
+  revoked: true
+
+# 期限切れかつ失効済みトークン
+expired_and_revoked:
+  user: two
+  token: "expired_revoked_token_12345"
+  expires_at: <%= 1.day.ago %>
+  revoked: true
