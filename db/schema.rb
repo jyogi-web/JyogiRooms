@@ -10,14 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_10_022957) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_025525) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "reservations", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.datetime "end_at"
-    t.datetime "start_at"
+    t.datetime "end_at", null: false
+    t.datetime "start_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["start_at", "end_at"], name: "index_reservations_on_start_at_and_end_at"
