@@ -2,9 +2,9 @@ require "test_helper"
 
 class ReservationTest < ActiveSupport::TestCase
   def setup
-    User.delete_all
     Reservation.delete_all
-    @user = User.create!(id: 100)
+    User.delete_all
+    @user = User.create!
     @reservation = Reservation.create!(
       user: @user,
       start_at: 1.day.from_now.change(hour: 10, min: 0),
