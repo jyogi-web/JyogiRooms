@@ -1,7 +1,8 @@
 // src/index.ts
 import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
-import { createServer } from 'http';
+import { startHealthCheckCron } from "./cron.js";
+import { server } from "./server.js";
 
 // =====================
 // Environment variables
@@ -11,29 +12,6 @@ if (!token) {
   console.error('❌ DISCORD_BOT_TOKEN is not set');
   process.exit(1);
 }
-
-const port = Number(process.env.PORT) || 3000;
-
-// =====================
-// Health check HTTP server (for Koyeb)
-// =====================
-const server = createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('OK');
-    return;
-  }
-
-  res.writeHead(404);
-  res.end();
-});
-
-server.listen(port, () => {
-  console.log(`🌐 Health check server listening on port ${port}`);
-}).on('error', (err) => {
-  console.error('❌ Failed to start health check server:', err);
-  process.exit(1);
-});
 
 // =====================
 // Discord client
@@ -59,6 +37,8 @@ client.login(token).catch((error) => {
   console.error('❌ Failed to login to Discord:', error);
   process.exit(1);
 });
+
+startHealthCheckCron();
 
 // =====================
 // Graceful shutdown (Koyeb / Cloud Run 対応)
