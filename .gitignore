@@ -8,8 +8,9 @@
 /.bundle
 
 # Ignore all environment files.
-/.env
-/.env.test
+# Ignore all environment files (but keep .env.example tracked).
+/.env*
+!.env.example
 /.envrc
 
 # Ignore all logfiles and tempfiles.
