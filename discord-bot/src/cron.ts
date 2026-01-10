@@ -10,8 +10,13 @@ export function startHealthCheckCron() {
       const now = new Date().toLocaleString('ja-JP');
       console.log(`🔍 [${now}] ヘルスチェック実行中... (${HEALTH_CHECK_URL})`);
       const response = await fetch(HEALTH_CHECK_URL);
+      if (!response.ok) {
+        console.error(`❌ ヘルスチェック失敗: ステータス ${response.status}`);
+      } else {
+        console.log(`✅ ヘルスチェック成功: ステータス ${response.status}`);
+      }
     } catch (error) {
-      console.error('ヘルスチェックエラ:', error);
+      console.error('❌ ヘルスチェックエラー:', error);
     }
   });
 
