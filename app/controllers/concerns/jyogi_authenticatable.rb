@@ -33,44 +33,62 @@ module JyogiAuthenticatable
 
   # セッションからユーザーを取得
   def find_user_from_session
-    user_id = session[:user_id]
-    return nil unless user_id
+    access_token_id = session[:access_token_id]
+    return nil unless access_token_id
 
-    user = User.find_by(id: user_id)
-    return nil unless user
+    access_token = AccessToken.find_by(id: access_token_id)
+    return nil unless access_token&.active?
+
+    user = access_token.user
+    unless user
+      sign_out
+      return nil
+    end
 
     # キャッシュが古い場合は再同期
-    sync_user_if_needed(user)
+    sync_user_if_needed(user, access_token)
     user
   end
 
   # 必要に応じてユーザー情報を再同期
-  def sync_user_if_needed(user)
+  def sync_user_if_needed(user, access_token)
     return if user.cache_fresh?
 
-    access_token = session[:access_token]
-    return unless access_token
-
     begin
-      user_info = JyogiAuthClient.fetch_user_info(access_token: access_token)
-      user.sync_from_jyogi_auth(user_info)
+      user_info = JyogiAuthClient.fetch_user_info(access_token: access_token.token)
+      unless user.sync_from_jyogi_auth(user_info)
+        Rails.logger.warn "Failed to persist synced user info: #{user.errors.full_messages.join(', ')}"
+      end
     rescue JyogiAuthClient::Error => e
       Rails.logger.warn "Failed to sync user info: #{e.message}"
       # 同期失敗してもキャッシュされた情報で継続
     end
   end
 
-  # ログイン処理（セッションにユーザーIDとトークンを保存）
-  def sign_in(user, access_token)
-    session[:user_id] = user.id
-    session[:access_token] = access_token
+  # ログイン処理（AccessTokenレコードを作成してセッションにIDを保存）
+  def sign_in(user, jyogi_access_token)
+    # 既存のアクティブなトークンを失効
+    user.access_tokens.active.each(&:revoke!)
+
+    # 新しいトークンを作成
+    access_token = AccessToken.create_for_user(
+      user: user,
+      token_value: jyogi_access_token
+    )
+
+    session[:access_token_id] = access_token.id
     @current_user = user
   end
 
   # ログアウト処理
   def sign_out
-    session.delete(:user_id)
-    session.delete(:access_token)
+    access_token_id = session[:access_token_id]
+    if access_token_id
+      access_token = AccessToken.find_by(id: access_token_id)
+      access_token&.revoke!
+    end
+
+    session.delete(:access_token_id)
     @current_user = nil
   end
 end

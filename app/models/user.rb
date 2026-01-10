@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_many :reservations
+  has_many :access_tokens, dependent: :destroy
 
   # Validations
   validates :jyogi_user_id, uniqueness: true, allow_nil: true, length: { maximum: 36 }
