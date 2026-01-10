@@ -3,14 +3,12 @@
 module Api
   # ユーザー情報APIコントローラー
   class UsersController < BaseController
+    # ログイン中のユーザー情報取得
+    before_action :authenticate_user!, only: %i[me]
+
     # GET /api/users/me
     # 現在ログイン中のユーザー情報を取得
     def me
-      unless user_signed_in?
-        render json: { error: "\u672A\u30ED\u30B0\u30A4\u30F3" }, status: :unauthorized
-        return
-      end
-
       user = current_user
 
       user_data = {
