@@ -11,16 +11,18 @@ module Api
         return
       end
 
+      user = current_user
+
       user_data = {
-        id: current_user.id,
-        jyogi_user_id: current_user.jyogi_user_id,
-        discord_id: current_user.discord_id,
-        username: current_user.username,
-        display_name: current_user.display_name,
-        avatar_url: current_user.avatar_url,
-        guild_roles: current_user.guild_roles,
-        guild_nickname: current_user.guild_nickname,
-        last_synced_at: current_user.last_synced_at
+        id: user.id,
+        jyogi_user_id: user.jyogi_user_id,
+        discord_id: user.discord_id,
+        username: user.username,
+        display_name: user.display_name,
+        avatar_url: user.avatar_url,
+        guild_roles: user.guild_roles,
+        guild_nickname: user.guild_nickname,
+        last_synced_at: user.last_synced_at
       }
 
       render json: user_data, status: :ok
