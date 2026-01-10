@@ -1,7 +1,7 @@
 // src/index.ts
 import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
-import { startHealthCheckCron } from "./cron.js";
+import { startHealthCheckCron, stopHealthCheckCron } from "./cron.js";
 import { server } from "./server.js";
 
 // =====================
@@ -45,6 +45,8 @@ startHealthCheckCron();
 // =====================
 const shutdown = async (signal: string) => {
   console.log(`🛑 Received ${signal}. Shutting down...`);
+
+  stopHealthCheckCron();
 
   try {
     await new Promise<void>((resolve) => {

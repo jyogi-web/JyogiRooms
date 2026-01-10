@@ -3,7 +3,7 @@ import { createServer } from 'http';
 const port = Number(process.env.PORT) || 3000;
 
 export const server = createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/') {
+  if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('OK');
     return;
