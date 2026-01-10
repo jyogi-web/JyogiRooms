@@ -8,11 +8,17 @@ module Api
 
       # Date filtering
       if params[:start_from].present?
-        reservations = reservations.where('start_at >= ?', params[:start_from])
+        start_time = parse_time(params[:start_from])
+        return render_error("Invalid start_from") unless start_time
+
+        reservations = reservations.where('start_at >= ?', start_time)
       end
 
       if params[:end_to].present?
-        reservations = reservations.where('end_at <= ?', params[:end_to])
+        end_time = parse_time(params[:end_to])
+        return render_error("Invalid end_to") unless end_time
+
+        reservations = reservations.where('end_at <= ?', end_time)
       end
 
       # Order by start time
@@ -53,6 +59,16 @@ module Api
 
     def reservation_params
       params.require(:reservation).permit(:start_at, :end_at)
+    end
+
+    def parse_time(string)
+      Time.zone.parse(string)
+    rescue ArgumentError
+      nil
+    end
+
+    def render_error(message)
+      render json: { error: message }, status: :bad_request
     end
   end
 end
