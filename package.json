@@ -6,6 +6,7 @@
   "author": "RiTa-23",
   "license": "MIT",
   "scripts": {
-    "build": "echo Skipping build"
+    "build": "echo Skipping build",
+    "build:css": "echo Skipping build:css"
   }
 }

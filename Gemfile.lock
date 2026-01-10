@@ -159,8 +159,7 @@ GEM
     marcel (1.1.0)
     matrix (0.4.3)
     mini_mime (1.1.5)
-    minitest (6.0.1)
-      prism (~> 1.5)
+    minitest (5.27.0)
     msgpack (1.8.0)
     net-imap (0.6.2)
       date
@@ -381,6 +380,7 @@ DEPENDENCIES
   jbuilder
   jsbundling-rails
   kamal
+  minitest (< 6.0)
   pg (~> 1.1)
   propshaft
   puma (>= 5.0)
