@@ -84,24 +84,27 @@ class AuthController < ApplicationController
 
   def find_or_create_user(user_info)
     jyogi_user_id = user_info["id"]
-    user = User.find_by(jyogi_user_id: jyogi_user_id)
+    
+    User.transaction do
+      user = User.find_by(jyogi_user_id: jyogi_user_id)
 
-    if user
-      # 既存ユーザーの情報を更新
-      user.sync_from_jyogi_auth(user_info)
-      user
-    else
-      # 新規ユーザー作成
-      User.create!(
-        jyogi_user_id: user_info["id"],
-        discord_id: user_info["discord_id"],
-        username: user_info["username"],
-        display_name: user_info["display_name"],
-        avatar_url: user_info["avatar_url"],
-        guild_roles: user_info["guild_roles"] || {},
-        guild_nickname: user_info["guild_nickname"],
-        last_synced_at: Time.current
-      )
+      if user
+        # 既存ユーザーの情報を更新
+        user.sync_from_jyogi_auth(user_info)
+        user
+      else
+        # 新規ユーザー作成
+        User.create!(
+          jyogi_user_id: user_info["id"],
+          discord_id: user_info["discord_id"],
+          username: user_info["username"],
+          display_name: user_info["display_name"],
+          avatar_url: user_info["avatar_url"],
+          guild_roles: user_info["guild_roles"] || {},
+          guild_nickname: user_info["guild_nickname"],
+          last_synced_at: Time.current
+        )
+      end
     end
   end
 

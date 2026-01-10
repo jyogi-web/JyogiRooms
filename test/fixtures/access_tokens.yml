@@ -2,12 +2,12 @@
 
 one:
   user: one
-  token: MyString
+  token: MyString1
   expires_at: 2026-01-11 03:43:13
   revoked: false
 
 two:
   user: two
-  token: MyString
+  token: MyString2
   expires_at: 2026-01-11 03:43:13
   revoked: false

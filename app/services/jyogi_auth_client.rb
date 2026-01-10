@@ -45,7 +45,17 @@ class JyogiAuthClient
 
     response = post_request(uri, params)
     Rails.logger.info "Token exchange response: #{response.code} #{response.message}"
-    Rails.logger.info "Token exchange response body: #{response.body}"
+    
+    begin
+      body_json = JSON.parse(response.body)
+      masked_body = body_json.dup
+      %w[access_token refresh_token].each do |key|
+        masked_body[key] = "****" if masked_body.key?(key)
+      end
+      Rails.logger.info "Token exchange response body: #{masked_body.to_json}"
+    rescue JSON::ParserError
+      Rails.logger.info "Token exchange response body: #{response.body}"
+    end
 
     parse_response(response)
   rescue JSON::ParserError => e
