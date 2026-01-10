@@ -30,6 +30,9 @@ const server = createServer((req, res) => {
 
 server.listen(port, () => {
   console.log(`🌐 Health check server listening on port ${port}`);
+}).on('error', (err) => {
+  console.error('❌ Failed to start health check server:', err);
+  process.exit(1);
 });
 
 // =====================
@@ -64,11 +67,14 @@ const shutdown = async (signal: string) => {
   console.log(`🛑 Received ${signal}. Shutting down...`);
 
   try {
-    server.close(() => {
-      console.log('🌐 HTTP server closed');
+    await new Promise<void>((resolve) => {
+      server.close(() => {
+        console.log('🌐 HTTP server closed');
+        resolve();
+      });
     });
 
-    await client.destroy();
+    client.destroy();
     console.log('🤖 Discord client destroyed');
   } catch (err) {
     console.error('⚠️ Error during shutdown:', err);
