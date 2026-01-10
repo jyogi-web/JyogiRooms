@@ -87,8 +87,15 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test
-
+        # testが落ちるため、一時的にrun: bin/rails db:test:prepare testをやめてmigrateに変更
+        run: |
+          bin/rails db:create
+          bin/rails db:migrate
+          bin/rails test
+        # 将来的には以下のコマンドに移行予定
+        # run: |
+        #     bin/rails db:create db:schema:load
+        #     bin/rails test
   system-test:
     runs-on: ubuntu-latest
 
@@ -126,7 +133,10 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test:system
+        run: |
+          bin/rails db:create
+          bin/rails db:migrate
+          bin/rails test:system
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v6
