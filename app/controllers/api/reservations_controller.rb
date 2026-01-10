@@ -4,6 +4,7 @@ module Api
 
     # GET /api/reservations
     def index
+      # TODO: Implement Authentication - currently returns all reservations
       reservations = Reservation.all
 
       # Date filtering
@@ -27,11 +28,17 @@ module Api
 
     # POST /api/reservations
     def create
-      # MOCK AUTH: In production, use current_user.reservations.build
+      # TODO: Implement proper Authentication & Authorization (Issue #TBD)
+      # Currently using MOCK AUTH for development.
+
+      unless params[:user_id].present?
+        return render json: { error: "user_id parameter is required" }, status: :bad_request
+      end
+
       user = User.find_by(id: params[:user_id])
 
       if user.nil?
-        return render json: { error: "User not found" }, status: :unprocessable_entity
+        return render json: { error: "User not found" }, status: :not_found
       end
 
       reservation = user.reservations.build(reservation_params)
