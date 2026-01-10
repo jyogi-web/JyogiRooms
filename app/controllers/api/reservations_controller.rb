@@ -12,14 +12,14 @@ module Api
         start_time = parse_time(params[:start_from])
         return render_error("Invalid start_from") unless start_time
 
-        reservations = reservations.where('start_at >= ?', start_time)
+        reservations = reservations.where("start_at >= ?", start_time)
       end
 
       if params[:end_to].present?
         end_time = parse_time(params[:end_to])
         return render_error("Invalid end_to") unless end_time
 
-        reservations = reservations.where('end_at <= ?', end_time)
+        reservations = reservations.where("end_at <= ?", end_time)
       end
 
       # Order by start time

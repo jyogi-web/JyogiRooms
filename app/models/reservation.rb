@@ -12,7 +12,7 @@ class Reservation < ApplicationRecord
     return if start_at.blank? || end_at.blank?
 
     if end_at <= start_at
-      errors.add(:end_at, 'must be after the start time')
+      errors.add(:end_at, "must be after the start time")
     end
   end
 
@@ -23,11 +23,11 @@ class Reservation < ApplicationRecord
     # (StartA < EndB) AND (EndA > StartB)
     existing_reservation = Reservation
                            .where.not(id: id)
-                           .where('start_at < ? AND end_at > ?', end_at, start_at)
+                           .where("start_at < ? AND end_at > ?", end_at, start_at)
                            .exists?
 
     if existing_reservation
-      errors.add(:base, 'This time slot is already booked')
+      errors.add(:base, "This time slot is already booked")
     end
   end
 end
