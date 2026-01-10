@@ -33,5 +33,3 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
-# Discord Bot
-discord-bot/.env
