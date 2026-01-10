@@ -23,7 +23,7 @@ module Api
     def create
       # MOCK AUTH: In production, use current_user.reservations.build
       user = User.find_by(id: params[:user_id])
-      
+
       if user.nil?
         return render json: { error: "User not found" }, status: :unprocessable_entity
       end
