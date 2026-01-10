@@ -1,7 +1,6 @@
 {
   "name": "jyogi-rooms",
   "version": "1.0.0",
-  "main": "index.js",
   "repository": "https://github.com/jyogi-web/JyogiRooms.git",
   "author": "RiTa-23",
   "license": "MIT",
