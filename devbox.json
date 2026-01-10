@@ -11,17 +11,17 @@
   ],
   "shell": {
     "init_hook": [
-      "echo 'Welcome to devbox!' > /dev/null"
+      "echo 'Welcome to devbox!'"
     ],
     "scripts": {
       "dev": [
         "./bin/dev"
       ],
       "lint": [
-        "bin/rubocop"
+        "./bin/rubocop --autocorrect-all"
       ],
       "setup": [
-        "bin/setup"
+        "./bin/setup"
       ]
     }
   }

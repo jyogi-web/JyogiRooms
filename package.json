@@ -1,0 +1,11 @@
+{
+  "name": "jyogi-rooms",
+  "version": "1.0.0",
+  "repository": "https://github.com/jyogi-web/JyogiRooms.git",
+  "author": "RiTa-23",
+  "license": "MIT",
+  "scripts": {
+    "build": "echo Skipping build",
+    "build:css": "echo Skipping build:css"
+  }
+}

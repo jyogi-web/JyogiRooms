@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  start_at: 2026-01-10 10:00:00
+  end_at: 2026-01-10 12:00:00
+
+two:
+  user: two
+  start_at: 2026-01-11 13:00:00
+  end_at: 2026-01-11 15:00:00
