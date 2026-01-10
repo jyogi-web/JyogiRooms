@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_10_025525) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_112250) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -25,8 +25,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_025525) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "avatar_url"
     t.datetime "created_at", null: false
+    t.string "discord_id"
+    t.string "display_name"
+    t.string "guild_nickname"
+    t.jsonb "guild_roles", default: {}
+    t.string "jyogi_user_id", limit: 36
+    t.datetime "last_synced_at"
     t.datetime "updated_at", null: false
+    t.string "username"
+    t.index ["discord_id"], name: "index_users_on_discord_id", unique: true
+    t.index ["jyogi_user_id"], name: "index_users_on_jyogi_user_id", unique: true
   end
 
   add_foreign_key "reservations", "users"

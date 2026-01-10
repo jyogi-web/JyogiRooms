@@ -8,7 +8,9 @@
 /.bundle
 
 # Ignore all environment files.
-/.env*
+/.env
+/.env.test
+/.envrc
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -36,3 +38,8 @@
 
 # Ignore node_modules
 /node_modules
+
+# 個人設定ファイル
+CLAUDE.md
+.claude/
+docs/user/*
