@@ -1,3 +1,6 @@
+# Guard against accidental deletion in production
+return unless Rails.env.development? || Rails.env.test?
+
 # Clear existing data
 puts "Cleaning up database..."
 Reservation.delete_all
@@ -5,8 +8,9 @@ User.delete_all
 
 # Create Users
 puts "Creating Users..."
-user1 = User.create!(id: 1)
-user2 = User.create!(id: 2)
+# Do not specify IDs to avoid PostgreSQL sequence sync issues
+user1 = User.create!
+user2 = User.create!
 
 # Create Reservations
 puts "Creating Reservations..."
