@@ -5,14 +5,14 @@ const HEALTH_CHECK_URL = process.env.HEALTH_CHECK_URL || `http://localhost:${POR
 
 let healthCheckTask: cron.ScheduledTask | null = null;
 
-// 10分ごとにヘルスチェックを実行
+// 30分ごとにヘルスチェックを実行
 export function startHealthCheckCron() {
   if (healthCheckTask) {
     console.log("⚠️ ヘルスチェックのcronは既に実行中です");
     return;
   }
 
-  healthCheckTask = cron.schedule("*/10 * * * *", async () => {
+  healthCheckTask = cron.schedule("*/30 * * * *", async () => {
     try {
       const now = new Date().toLocaleString('ja-JP');
       console.log(`🔍 [${now}] ヘルスチェック実行中... (${HEALTH_CHECK_URL})`);
@@ -39,7 +39,7 @@ export function startHealthCheckCron() {
     }
   });
 
-  console.log("🕐 ヘルスチェックの定期実行を開始しました (10分間隔)");
+  console.log("🕐 ヘルスチェックの定期実行を開始しました (30分間隔)");
 }
 
 export function stopHealthCheckCron() {
