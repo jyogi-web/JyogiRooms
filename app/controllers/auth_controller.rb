@@ -42,9 +42,8 @@ class AuthController < ApplicationController
       # ユーザーを作成または更新
       user = find_or_create_user(user_info)
 
-      # セッションに保存
-      session[:user_id] = user.id
-      session[:access_token] = access_token
+      # ログイン処理（AccessTokenレコード作成とセッション保存）
+      sign_in(user, access_token)
       session.delete(:oauth_state)
 
       # フロントエンドにリダイレクト
@@ -58,17 +57,20 @@ class AuthController < ApplicationController
   # DELETE /auth/logout
   # ログアウト処理
   def logout
-    access_token = session[:access_token]
+    access_token_id = session[:access_token_id]
+    access_token_record = AccessToken.find_by(id: access_token_id) if access_token_id
 
     begin
       # jyogi-auth側でトークンを無効化
-      JyogiAuthClient.logout(access_token: access_token) if access_token
+      if access_token_record
+        JyogiAuthClient.logout(access_token: access_token_record.token)
+      end
     rescue JyogiAuthClient::Error => e
       Rails.logger.warn "Logout error (ignored): #{e.message}"
-      # ログアウトエラーは無視してセッションをクリア
+      # ログアウトエラーは無視してセッションとDBトークンをクリア
     ensure
-      # セッションをクリア
-      reset_session
+      # ローカルのログアウト処理（DBトークン失効とセッションクリア）
+      sign_out
 
       render json: { message: "ログアウトしました。" }, status: :ok
     end
