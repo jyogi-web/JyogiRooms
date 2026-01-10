@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'net/http'
-require 'uri'
-require 'json'
+require "net/http"
+require "uri"
+require "json"
 
 # jyogi-auth API連携クライアント
 class JyogiAuthClient
@@ -20,7 +20,7 @@ class JyogiAuthClient
     params = {
       client_id: config.client_id,
       redirect_uri: config.redirect_uri,
-      response_type: 'code',
+      response_type: "code",
       state: state
     }
     uri.query = URI.encode_www_form(params)
@@ -33,7 +33,7 @@ class JyogiAuthClient
     uri = URI(config.token_url)
 
     params = {
-      grant_type: 'authorization_code',
+      grant_type: "authorization_code",
       code: code,
       redirect_uri: config.redirect_uri,
       client_id: config.client_id,
@@ -93,13 +93,13 @@ class JyogiAuthClient
 
   private_class_method def self.post_request(uri, params, access_token = nil)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == 'https'
+    http.use_ssl = uri.scheme == "https"
     http.open_timeout = TIMEOUT_SECONDS
     http.read_timeout = TIMEOUT_SECONDS
 
     request = Net::HTTP::Post.new(uri.path)
-    request['Content-Type'] = 'application/x-www-form-urlencoded'
-    request['Authorization'] = "Bearer #{access_token}" if access_token
+    request["Content-Type"] = "application/x-www-form-urlencoded"
+    request["Authorization"] = "Bearer #{access_token}" if access_token
     request.body = URI.encode_www_form(params)
 
     http.request(request)
@@ -111,12 +111,12 @@ class JyogiAuthClient
 
   private_class_method def self.get_request(uri, access_token)
     http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == 'https'
+    http.use_ssl = uri.scheme == "https"
     http.open_timeout = TIMEOUT_SECONDS
     http.read_timeout = TIMEOUT_SECONDS
 
     request = Net::HTTP::Get.new(uri.path)
-    request['Authorization'] = "Bearer #{access_token}"
+    request["Authorization"] = "Bearer #{access_token}"
 
     Rails.logger.debug "GET #{uri} with Authorization: Bearer #{access_token[0..19]}..."
 
@@ -133,12 +133,12 @@ class JyogiAuthClient
       JSON.parse(response.body)
     when Net::HTTPUnauthorized
       error_body = JSON.parse(response.body) rescue {}
-      error_message = error_body['error'] || error_body['error_description'] || 'Invalid or expired token'
+      error_message = error_body["error"] || error_body["error_description"] || "Invalid or expired token"
       Rails.logger.error "Auth error response: #{response.body}"
       raise AuthenticationError, error_message
     when Net::HTTPBadRequest
       error_body = JSON.parse(response.body) rescue {}
-      error_message = error_body['error'] || error_body['error_description'] || 'Bad request'
+      error_message = error_body["error"] || error_body["error_description"] || "Bad request"
       Rails.logger.error "Validation error response: #{response.body}"
       raise ValidationError, error_message
     else

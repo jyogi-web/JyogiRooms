@@ -10,13 +10,13 @@ class User < ApplicationRecord
   # @return [Boolean] 同期成功かどうか
   def sync_from_jyogi_auth(user_info)
     update(
-      jyogi_user_id: user_info['id'],
-      discord_id: user_info['discord_id'],
-      username: user_info['username'],
-      display_name: user_info['display_name'],
-      avatar_url: user_info['avatar_url'],
-      guild_roles: user_info['guild_roles'] || {},
-      guild_nickname: user_info['guild_nickname'],
+      jyogi_user_id: user_info["id"],
+      discord_id: user_info["discord_id"],
+      username: user_info["username"],
+      display_name: user_info["display_name"],
+      avatar_url: user_info["avatar_url"],
+      guild_roles: user_info["guild_roles"] || {},
+      guild_nickname: user_info["guild_nickname"],
       last_synced_at: Time.current
     )
   end

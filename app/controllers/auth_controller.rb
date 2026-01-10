@@ -4,7 +4,7 @@
 class AuthController < ApplicationController
   include ErrorRenderable
 
-  skip_before_action :verify_authenticity_token, only: [:callback]
+  skip_before_action :verify_authenticity_token, only: [ :callback ]
 
   # GET /auth/login
   # OAuth2認可フローを開始
@@ -21,20 +21,20 @@ class AuthController < ApplicationController
   def callback
     # stateパラメータ検証（CSRF対策）
     unless valid_state?
-      redirect_to error_redirect_url('Invalid state parameter'), allow_other_host: true
+      redirect_to error_redirect_url("Invalid state parameter"), allow_other_host: true
       return
     end
 
     code = params[:code]
     unless code
-      redirect_to error_redirect_url('Authorization code not found'), allow_other_host: true
+      redirect_to error_redirect_url("Authorization code not found"), allow_other_host: true
       return
     end
 
     begin
       # 認可コードをアクセストークンに交換
       token_response = JyogiAuthClient.exchange_code_for_token(code: code)
-      access_token = token_response['access_token']
+      access_token = token_response["access_token"]
 
       # アクセストークンでユーザー情報を取得
       user_info = JyogiAuthClient.fetch_user_info(access_token: access_token)
@@ -70,7 +70,7 @@ class AuthController < ApplicationController
       # セッションをクリア
       reset_session
 
-      render json: { message: 'ログアウトしました。' }, status: :ok
+      render json: { message: "ログアウトしました。" }, status: :ok
     end
   end
 
@@ -83,7 +83,7 @@ class AuthController < ApplicationController
   end
 
   def find_or_create_user(user_info)
-    jyogi_user_id = user_info['id']
+    jyogi_user_id = user_info["id"]
     user = User.find_by(jyogi_user_id: jyogi_user_id)
 
     if user
@@ -93,13 +93,13 @@ class AuthController < ApplicationController
     else
       # 新規ユーザー作成
       User.create!(
-        jyogi_user_id: user_info['id'],
-        discord_id: user_info['discord_id'],
-        username: user_info['username'],
-        display_name: user_info['display_name'],
-        avatar_url: user_info['avatar_url'],
-        guild_roles: user_info['guild_roles'] || {},
-        guild_nickname: user_info['guild_nickname'],
+        jyogi_user_id: user_info["id"],
+        discord_id: user_info["discord_id"],
+        username: user_info["username"],
+        display_name: user_info["display_name"],
+        avatar_url: user_info["avatar_url"],
+        guild_roles: user_info["guild_roles"] || {},
+        guild_nickname: user_info["guild_nickname"],
         last_synced_at: Time.current
       )
     end

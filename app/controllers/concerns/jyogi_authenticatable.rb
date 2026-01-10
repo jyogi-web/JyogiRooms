@@ -28,7 +28,7 @@ module JyogiAuthenticatable
   def authenticate_user!
     return if user_signed_in?
 
-    render json: { error: '認証が必要です。' }, status: :unauthorized
+    render json: { error: "認証が必要です。" }, status: :unauthorized
   end
 
   # セッションからユーザーを取得
