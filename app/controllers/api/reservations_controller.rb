@@ -55,8 +55,11 @@ module Api
       reservation = Reservation.find_by(id: params[:id])
 
       if reservation
-        reservation.destroy
-        head :no_content
+        if reservation.destroy
+          head :no_content
+        else
+          render json: { errors: reservation.errors.full_messages }, status: :unprocessable_entity
+        end
       else
         render json: { error: "Reservation not found" }, status: :not_found
       end
