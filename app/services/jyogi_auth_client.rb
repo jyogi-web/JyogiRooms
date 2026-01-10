@@ -45,7 +45,7 @@ class JyogiAuthClient
 
     response = post_request(uri, params)
     Rails.logger.info "Token exchange response: #{response.code} #{response.message}"
-    
+
     begin
       body_json = JSON.parse(response.body)
       masked_body = body_json.dup

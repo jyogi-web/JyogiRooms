@@ -1,6 +1,5 @@
 module Api
   class ReservationsController < BaseController
-
     # GET /api/reservations
     def index
       # TODO: Implement Authentication - currently returns all reservations

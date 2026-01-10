@@ -84,7 +84,7 @@ class AuthController < ApplicationController
 
   def find_or_create_user(user_info)
     jyogi_user_id = user_info["id"]
-    
+
     User.transaction do
       user = User.find_by(jyogi_user_id: jyogi_user_id)
 
