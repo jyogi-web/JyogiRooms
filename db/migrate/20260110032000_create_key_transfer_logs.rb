@@ -3,7 +3,7 @@ class CreateKeyTransferLogs < ActiveRecord::Migration[8.1]
     create_table :key_transfer_logs do |t|
       t.references :from_user, null: false, foreign_key: { to_table: :users }, index: true
       t.references :to_user, null: false, foreign_key: { to_table: :users }, index: true
-      t.references :room, null: false, foreign_key: true, index: true
+      t.references :room, null: false, foreign_key: true, index: false
       t.timestamps
     end
 
