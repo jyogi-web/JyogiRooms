@@ -129,8 +129,15 @@ class JyogiAuthClient
   private_class_method def self.setup_http_client(uri)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = uri.scheme == "https"
-    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-    http.verify_hostname = true
+
+    # SSL検証を環境変数で制御(デフォルトは有効)
+    ssl_verify_enabled = ENV.fetch("JYOGI_SSL_VERIFY", "true") == "true"
+
+    if http.use_ssl
+      http.verify_mode = ssl_verify_enabled ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
+      http.verify_hostname = ssl_verify_enabled
+    end
+
     http.open_timeout = TIMEOUT_SECONDS
     http.read_timeout = TIMEOUT_SECONDS
     http

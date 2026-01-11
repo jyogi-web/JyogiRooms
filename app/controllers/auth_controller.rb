@@ -44,13 +44,15 @@ class AuthController < ApplicationController
 
       # ログイン処理（AccessTokenレコード作成とセッション保存）
       sign_in(user, access_token)
-      session.delete(:oauth_state)
 
       # フロントエンドにリダイレクト
       redirect_to success_redirect_url, allow_other_host: true
     rescue JyogiAuthClient::Error => e
       Rails.logger.error "OAuth callback error: #{e.message}"
       redirect_to error_redirect_url(e.message), allow_other_host: true
+    ensure
+      # oauth_stateを確実にクリア（成功/失敗問わず）
+      session.delete(:oauth_state)
     end
   end
 
