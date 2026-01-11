@@ -5,10 +5,16 @@ class AuthController < ApplicationController
   include ErrorRenderable
 
   skip_before_action :verify_authenticity_token, only: [ :callback ]
+  skip_before_action :authenticate_user!
 
   # GET /auth/login
   # OAuth2認可フローを開始
   def login
+    # return_toパラメータがあればセッションに保存
+    if params[:return_to].present?
+      session[:return_to] = sanitize_return_to(params[:return_to])
+    end
+
     state = SecureRandom.hex(16)
     session[:oauth_state] = state
 
@@ -45,8 +51,9 @@ class AuthController < ApplicationController
       # ログイン処理（AccessTokenレコード作成とセッション保存）
       sign_in(user, access_token)
 
-      # フロントエンドにリダイレクト
-      redirect_to success_redirect_url, allow_other_host: true
+      # return_toがあればそこにリダイレクト、なければデフォルト
+      redirect_url = consume_return_to || success_redirect_url
+      redirect_to redirect_url, allow_other_host: true
     rescue JyogiAuthClient::Error => e
       Rails.logger.error "OAuth callback error: #{e.message}"
       redirect_to error_redirect_url(e.message), allow_other_host: true
@@ -121,5 +128,23 @@ class AuthController < ApplicationController
     frontend_url = JyogiAuth.configuration.frontend_url
     encoded_message = CGI.escape(message)
     "#{frontend_url}?auth=error&message=#{encoded_message}"
+  end
+
+  # return_toを消費(取得後削除)
+  def consume_return_to
+    return_to = session.delete(:return_to)
+    return nil unless return_to
+
+    # 内部URLのみ許可(オープンリダイレクト対策)
+    return_to if return_to.start_with?("/")
+  end
+
+  # return_toパラメータのサニタイズ
+  def sanitize_return_to(url)
+    return nil if url.blank?
+    return nil unless url.start_with?("/")  # 内部URLのみ許可
+    return nil if url.start_with?("/auth/")  # 認証フローへのリダイレクトは禁止
+
+    url
   end
 end

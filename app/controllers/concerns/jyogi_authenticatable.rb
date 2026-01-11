@@ -24,11 +24,26 @@ module JyogiAuthenticatable
     current_user.present?
   end
 
-  # 認証必須処理（ログインしていない場合は401エラー）
+  # 認証必須処理(ログインしていない場合の処理)
   def authenticate_user!
     return if user_signed_in?
 
-    render json: { error: "認証が必要です。" }, status: :unauthorized
+    # API以外へのアクセスの場合はログインページにリダイレクト
+    if !request.path.start_with?("/api/")
+      store_location_for_return
+      redirect_to "/auth/login"
+    else
+      # APIの場合は401 JSONレスポンス
+      render json: { error: "認証が必要です。" }, status: :unauthorized
+    end
+  end
+
+  # リダイレクト先URLをセッションに保存
+  def store_location_for_return
+    # GETリクエストかつXHRでない場合のみ保存
+    if request.get? && !request.xhr?
+      session[:return_to] = request.fullpath
+    end
   end
 
   # セッションからユーザーを取得

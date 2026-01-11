@@ -3,12 +3,6 @@
 module Api
   # ユーザー情報APIコントローラー
   class UsersController < BaseController
-    # ログイン中のユーザー情報取得
-    # NOTE: 今後の拡張に備えて認証を必須化
-    # 編集について
-    # https://github.com/jyogi-web/JyogiRooms/pull/60#discussion_r2678899818
-    before_action :authenticate_user!, only: %i[me logout]
-
     # GET /api/users/me
     # 現在ログイン中のユーザー情報を取得
     def me
