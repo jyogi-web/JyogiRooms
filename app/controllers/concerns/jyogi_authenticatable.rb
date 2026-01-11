@@ -44,10 +44,12 @@ module JyogiAuthenticatable
     if request.get? && !request.xhr?
       # 相対パスのみを保存し、外部URLへのリダイレクトを防ぐ
       path = request.fullpath
-      # プロトコルやホスト名を含むURLは保存しない
-      unless path.match?(%r{\A(?:https?:)?//})
-        session[:return_to] = path
-      end
+    return if path.bytesize > 2048
+    return if path.match?(/[\r\n]/) || path.include?("\\")
+    return unless path.start_with?("/") && !path.start_with?("//") && !path.start_with?("/\\")
+    return if path == "/auth" || path.start_with?("/auth/")
+
+    session[:return_to] = path
     end
   end
 

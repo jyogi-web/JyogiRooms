@@ -7,7 +7,7 @@ class AuthController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [ :callback ]
   skip_before_action :authenticate_user!
 
-  def login_params
+  private def login_params
     params.permit(:return_to)
   end
 
@@ -55,9 +55,12 @@ class AuthController < ApplicationController
       # ログイン処理（AccessTokenレコード作成とセッション保存）
       sign_in(user, access_token)
 
-      # return_toがあればそこにリダイレクト、なければデフォルト
-      redirect_url = consume_return_to || success_redirect_url
-      redirect_to redirect_url, allow_other_host: true
+      # リダイレクト先へ遷移
+      if (return_to = consume_return_to).present?
+        redirect_to return_to
+      else
+        redirect_to success_redirect_url, allow_other_host: true
+      end
     rescue JyogiAuthClient::Error => e
       Rails.logger.error "OAuth callback error: #{e.message}"
       redirect_to error_redirect_url(e.message), allow_other_host: true
@@ -134,39 +137,62 @@ class AuthController < ApplicationController
     "#{frontend_url}?auth=error&message=#{encoded_message}"
   end
 
-  # return_toを消費(取得後削除)
+  # return_toを消費(取得後削除)し、バリデーション・正規化を行う
   def consume_return_to
-    return_to = session.delete(:return_to)
-    return nil unless return_to
+    raw = session.delete(:return_to)
+    return nil if raw.blank?
 
+    # 前後の空白を削除
+    raw = raw.strip
+    return nil if raw.blank?
+
+    # バックスラッシュや改行を含む値を拒否
+    return nil if raw.include?("\\") || raw.include?("\n") || raw.include?("\r")
+
+    # "/"で始まるが"//"では始まらないことを要求
+    return nil unless raw.start_with?("/")
+    return nil if raw.start_with?("//")
+
+    # パスを正規化
     begin
-      uri = URI.parse(return_to)
-      # スキームとホストがない相対パスのみ許可
-      return_to if uri.scheme.nil? && uri.host.nil? && return_to.start_with?("/") && !return_to.start_with?("//")
-    rescue URI::InvalidURIError
-      nil
+      normalized_path = Pathname.new(raw).cleanpath.to_s
+    rescue StandardError
+      return nil
     end
+
+    # 正規化後のパスが"/"で始まり(相対パス化を防ぐ)、"/auth"で始まらないことを確認
+    return nil unless normalized_path.start_with?("/")
+    return nil if normalized_path.start_with?("/auth")
+
+    normalized_path
   end
 
   # return_toパラメータのサニタイズ
   def sanitize_return_to(url)
     return nil if url.blank?
 
-    # プロトコル相対URLや不正なパスを除外
+    # 前後の空白を削除
+    url = url.strip
+    return nil if url.blank?
+
+    # バックスラッシュや改行を含む値を拒否
+    return nil if url.include?("\\") || url.include?("\n") || url.include?("\r")
+
+    # "/"で始まるが"//"では始まらないことを要求
     return nil unless url.start_with?("/")
-    return nil if url.start_with?("//") || url.start_with?("/\\")
+    return nil if url.start_with?("//")
 
-    # パストラバーサルを含むURLを除外
-    return nil if url.include?("/../") || url.include?("/./")
-
-    # 正規化後のパスで認証フローへのリダイレクトを禁止
+    # パスを正規化
     begin
       normalized_path = Pathname.new(url).cleanpath.to_s
     rescue StandardError
       return nil
     end
-    return nil if normalized_path.start_with?("/auth/")
 
-    url
+    # 正規化後のパスが"/"で始まり(相対パス化を防ぐ)、"/auth"で始まらないことを確認
+    return nil unless normalized_path.start_with?("/")
+    return nil if normalized_path.start_with?("/auth")
+
+    normalized_path
   end
 end
