@@ -27,6 +27,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_184313) do
     t.index ["user_id"], name: "index_access_tokens_on_user_id"
   end
 
+  create_table "key_transfer_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "from_user_id", null: false
+    t.bigint "room_id", null: false
+    t.bigint "to_user_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_key_transfer_logs_on_created_at"
+    t.index ["from_user_id"], name: "index_key_transfer_logs_on_from_user_id"
+    t.index ["room_id", "created_at"], name: "index_key_transfer_logs_on_room_id_and_created_at"
+    t.index ["to_user_id"], name: "index_key_transfer_logs_on_to_user_id"
+  end
+
+  create_table "keys", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["room_id"], name: "index_keys_on_room_id", unique: true
+    t.index ["user_id"], name: "index_keys_on_user_id"
+  end
+
   create_table "reservations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "end_at", null: false
@@ -35,6 +56,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_184313) do
     t.bigint "user_id", null: false
     t.index ["start_at", "end_at"], name: "index_reservations_on_start_at_and_end_at"
     t.index ["user_id"], name: "index_reservations_on_user_id"
+  end
+
+  create_table "rooms", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "room_number", null: false
+    t.datetime "updated_at", null: false
+    t.index ["room_number"], name: "index_rooms_on_room_number", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -53,5 +82,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_184313) do
   end
 
   add_foreign_key "access_tokens", "users"
+  add_foreign_key "key_transfer_logs", "rooms"
+  add_foreign_key "key_transfer_logs", "users", column: "from_user_id"
+  add_foreign_key "key_transfer_logs", "users", column: "to_user_id"
+  add_foreign_key "keys", "rooms"
+  add_foreign_key "keys", "users"
   add_foreign_key "reservations", "users"
 end
