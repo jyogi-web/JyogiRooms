@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_10_025525) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_032000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,5 +29,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_025525) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "rooms", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "room_number", null: false
+    t.datetime "updated_at", null: false
+    t.index ["room_number"], name: "index_rooms_on_room_number", unique: true
+  end
+
+  create_table "keys", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["room_id"], name: "index_keys_on_room_id", unique: true
+    t.index ["user_id"], name: "index_keys_on_user_id"
+  end
+
+  create_table "key_transfer_logs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "from_user_id", null: false
+    t.bigint "room_id", null: false
+    t.bigint "to_user_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_key_transfer_logs_on_created_at"
+    t.index ["from_user_id"], name: "index_key_transfer_logs_on_from_user_id"
+    t.index ["room_id"], name: "index_key_transfer_logs_on_room_id"
+    t.index ["to_user_id"], name: "index_key_transfer_logs_on_to_user_id"
+    t.index ["room_id", "created_at"], name: "index_key_transfer_logs_on_room_id_and_created_at"
+  end
+
   add_foreign_key "reservations", "users"
+  add_foreign_key "keys", "users"
+  add_foreign_key "keys", "rooms"
+  add_foreign_key "key_transfer_logs", "users", column: "from_user_id"
+  add_foreign_key "key_transfer_logs", "users", column: "to_user_id"
+  add_foreign_key "key_transfer_logs", "rooms"
 end
