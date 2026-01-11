@@ -2,7 +2,12 @@ import cron from "node-cron";
 import { Client, TextChannel } from "discord.js";
 
 const CRON_EXPRESSION =
-  process.env.LOCK_ANNOUNCE_CRON || "0 11 * * *";
+  process.env.LOCK_ANNOUNCE_CRON || "0 11 * * *";// Note: デフォルトで日本時間20:00を設定する
+
+if (!cron.validate(CRON_EXPRESSION)) {
+  console.error(`❌ 無効なcron式です: ${CRON_EXPRESSION}`);
+  process.exit(1);
+}
 
 const CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
 
@@ -33,7 +38,7 @@ export function startLockAnnounceCron(client: Client) {
       });
 
       await (channel as TextChannel).send(
-        `🔒 **施錠のお知らせ**\n\n本日 ${now} をもって施錠しました。\nご確認をお願いします。`
+        `🔒 **施錠のお知らせ**\n\n部室の施錠時間です!\n鍵持ちの部員は各部室が施錠されているか確認をお願いします。`
       );
 
       console.log("✅ 施錠アナウンスを送信しました");
@@ -43,7 +48,7 @@ export function startLockAnnounceCron(client: Client) {
   });
 
   console.log(
-    `🕰️ 施錠アナウンス cron を開始しました (${CRON_EXPRESSION} UTC)`
+    `🕰️ 施錠アナウンス cron を開始しました (${CRON_EXPRESSION} UTC / 20:00 JST)`
   );
 }
 
