@@ -2,6 +2,7 @@ require "test_helper"
 
 class ReservationTest < ActiveSupport::TestCase
   def setup
+    AccessToken.delete_all
     Reservation.delete_all
     User.delete_all
     @user = User.create!

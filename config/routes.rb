@@ -11,7 +11,17 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  # jyogi-auth OAuth2認証
+  get "auth/login", to: "auth#login"
+  get "auth/callback", to: "auth#callback"
+  delete "auth/logout", to: "auth#logout"
+
   namespace :api do
     resources :reservations, only: %i[index create destroy]
+
+    # ユーザー情報
+    get "users/me", to: "users#me"
+    delete "users/logout", to: "users#logout"
   end
 end

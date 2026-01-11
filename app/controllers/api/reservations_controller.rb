@@ -1,7 +1,5 @@
 module Api
-  class ReservationsController < ApplicationController
-    skip_forgery_protection # API requests don't provide CSRF tokens usually
-
+  class ReservationsController < BaseController
     # GET /api/reservations
     def index
       # TODO: Implement Authentication - currently returns all reservations
