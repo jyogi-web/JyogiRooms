@@ -6,6 +6,10 @@
   "license": "MIT",
   "scripts": {
     "build": "echo Skipping build",
-    "build:css": "echo Skipping build:css"
+    "build:css": "npx @tailwindcss/cli -i ./app/assets/stylesheets/application.tailwind.css -o ./app/assets/builds/application.css --minify"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18"
   }
 }
