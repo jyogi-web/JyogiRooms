@@ -54,7 +54,7 @@ class JyogiAuthClient
       end
       Rails.logger.info "Token exchange response body: #{masked_body.to_json}"
     rescue JSON::ParserError
-      Rails.logger.info "Token exchange response body: #{response.body}"
+      Rails.logger.warn "Token exchange response: Invalid JSON format"
     end
 
     parse_response(response)

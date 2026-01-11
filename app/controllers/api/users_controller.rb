@@ -7,7 +7,7 @@ module Api
     # NOTE: 今後の拡張に備えて認証を必須化
     # 編集について
     # https://github.com/jyogi-web/JyogiRooms/pull/60#discussion_r2678899818
-    before_action :authenticate_user!, only: %i[me]
+    before_action :authenticate_user!, only: %i[me logout]
 
     # GET /api/users/me
     # 現在ログイン中のユーザー情報を取得
@@ -29,10 +29,11 @@ module Api
       render json: user_data, status: :ok
     end
 
+    # DELETE /api/users/logout
+    # ログアウト処理
     def logout
       sign_out
-      reset_session
-      render json: { message: "\u30ED\u30B0\u30A2\u30A6\u30C8\u3057\u307E\u3057\u305F\u3002" }, status: :ok
+      render json: { message: I18n.t("api.users.logout.success") }, status: :ok
     end
   end
 end

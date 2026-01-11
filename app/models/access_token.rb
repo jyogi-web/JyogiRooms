@@ -31,12 +31,6 @@ class AccessToken < ApplicationRecord
     update!(revoked: true)
   end
 
-  # セキュアなランダムトークンを生成
-  # @return [String]
-  def self.generate_token
-    SecureRandom.urlsafe_base64(32)
-  end
-
   # トークンを作成（デフォルトで24時間有効）
   # @param user [User] ユーザー
   # @param token_value [String] jyogi-authのアクセストークン
