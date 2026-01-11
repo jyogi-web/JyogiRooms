@@ -4,16 +4,16 @@ import { Client, TextChannel } from "discord.js";
 const CRON_EXPRESSION =
   process.env.LOCK_ANNOUNCE_CRON || "0 11 * * *";// Note: デフォルトで日本時間20:00を設定する
 
-if (!cron.validate(CRON_EXPRESSION)) {
-  console.error(`❌ 無効なcron式です: ${CRON_EXPRESSION}`);
-  process.exit(1);
-}
-
 const CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
 
 let task: cron.ScheduledTask | null = null;
 
 export function startLockAnnounceCron(client: Client) {
+  if (!cron.validate(CRON_EXPRESSION)) {
+    console.error(`❌ 無効なcron式です: ${CRON_EXPRESSION}`);
+    process.exit(1);
+    }
+
   if (!CHANNEL_ID) {
     console.error("❌ ANNOUNCE_CHANNEL_ID is not set");
     return;
