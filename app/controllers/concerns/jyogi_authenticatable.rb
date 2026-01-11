@@ -42,7 +42,12 @@ module JyogiAuthenticatable
   def store_location_for_return
     # GETリクエストかつXHRでない場合のみ保存
     if request.get? && !request.xhr?
-      session[:return_to] = request.fullpath
+      # 相対パスのみを保存し、外部URLへのリダイレクトを防ぐ
+      path = request.fullpath
+      # プロトコルやホスト名を含むURLは保存しない
+      unless path.match?(%r{\A(?:https?:)?//})
+        session[:return_to] = path
+      end
     end
   end
 

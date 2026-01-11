@@ -7,12 +7,16 @@ class AuthController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [ :callback ]
   skip_before_action :authenticate_user!
 
+  def login_params
+    params.permit(:return_to)
+  end
+
   # GET /auth/login
   # OAuth2認可フローを開始
   def login
     # return_toパラメータがあればセッションに保存
-    if params[:return_to].present?
-      session[:return_to] = sanitize_return_to(params[:return_to])
+    if login_params[:return_to].present?
+      session[:return_to] = sanitize_return_to (login_params[:return_to])
     end
 
     state = SecureRandom.hex(16)
@@ -135,15 +139,33 @@ class AuthController < ApplicationController
     return_to = session.delete(:return_to)
     return nil unless return_to
 
-    # 内部URLのみ許可(オープンリダイレクト対策)
-    return_to if return_to.start_with?("/")
+    begin
+      uri = URI.parse(return_to)
+      # スキームとホストがない相対パスのみ許可
+      return_to if uri.scheme.nil? && uri.host.nil? && return_to.start_with?("/") && !return_to.start_with?("//")
+    rescue URI::InvalidURIError
+      nil
+    end
   end
 
   # return_toパラメータのサニタイズ
   def sanitize_return_to(url)
     return nil if url.blank?
-    return nil unless url.start_with?("/")  # 内部URLのみ許可
-    return nil if url.start_with?("/auth/")  # 認証フローへのリダイレクトは禁止
+
+    # プロトコル相対URLや不正なパスを除外
+    return nil unless url.start_with?("/")
+    return nil if url.start_with?("//") || url.start_with?("/\\")
+
+    # パストラバーサルを含むURLを除外
+    return nil if url.include?("/../") || url.include?("/./")
+
+    # 正規化後のパスで認証フローへのリダイレクトを禁止
+    begin
+      normalized_path = Pathname.new(url).cleanpath.to_s
+    rescue StandardError
+      return nil
+    end
+    return nil if normalized_path.start_with?("/auth/")
 
     url
   end
