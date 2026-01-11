@@ -1,0 +1,83 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-800">今日の予約</h1>
+    
+    <div class="hidden md:flex items-center gap-3">
+      <% if current_user&.avatar_url.present? %>
+        <%= image_tag current_user.avatar_url, class: "w-10 h-10 rounded-full border border-gray-200 shadow-sm object-cover" %>
+      <% else %>
+        <div class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 font-bold shadow-sm">
+          <%= current_user&.display_name&.first || "G" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Today's Reservations %>
+  <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <% if @reservations.any? %>
+      <% @reservations.each do |reservation| %>
+        <div class="card flex flex-col gap-2 relative overflow-hidden group">
+          <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+          <div class="flex justify-between items-start pl-2">
+            <div>
+              <p class="text-sm font-bold text-gray-800">
+                <%= reservation.start_at.strftime("%H:%M") %> - <%= reservation.end_at.strftime("%H:%M") %>
+              </p>
+              <p class="text-xs text-gray-500 mt-0.5">第3部室（仮）</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-gray-700"><%= reservation.user.display_name || "Unknown" %></span>
+              <% if reservation.user.avatar_url.present? %>
+                <%= image_tag reservation.user.avatar_url, class: "w-8 h-8 rounded-full bg-gray-200" %>
+              <% else %>
+                <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                  <%= reservation.user.display_name&.first || "?" %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="col-span-full card py-8 text-center text-gray-500">
+        予約はありません
+      </div>
+    <% end %>
+  </div>
+
+  <div class="h-px bg-gray-200 my-6"></div>
+
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold text-gray-800">現在の鍵持ち</h2>
+  </div>
+
+  <%# Key Holders %>
+  <div class="grid gap-4 grid-cols-2 md:grid-cols-4">
+    <% @keys.each do |key| %>
+      <div class="card flex flex-col items-center justify-center py-6 gap-3">
+        <p class="text-sm font-medium text-gray-500"><%= key.room.name %></p>
+        
+        <div class="relative">
+          <% if key.user.avatar_url.present? %>
+            <%= image_tag key.user.avatar_url, class: "w-14 h-14 rounded-full border-4 border-gray-50 shadow-sm" %>
+          <% else %>
+            <div class="w-14 h-14 rounded-full bg-gray-200 border-4 border-gray-50 shadow-sm flex items-center justify-center text-gray-500 text-lg font-bold">
+              <%= key.user.display_name&.first || "?" %>
+            </div>
+          <% end %>
+          <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+        </div>
+        
+        <p class="text-sm font-bold text-gray-800"><%= key.user.display_name || "Unknown" %></p>
+      </div>
+    <% end %>
+
+    <%# Empty state helper %>
+    <% if @keys.empty? %>
+      <div class="col-span-full text-center text-gray-400 text-sm py-4">
+        鍵持ち情報がありません
+      </div>
+    <% end %>
+  </div>
+</div>
