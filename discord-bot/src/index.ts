@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { Client, GatewayIntentBits } from 'discord.js';
 import { startHealthCheckCron, stopHealthCheckCron } from "./cron.js";
 import { server } from "./server.js";
+import { startLockAnnounceCron, stopLockAnnounceCron } from "./lockAnnounce.js";
 
 // =====================
 // Environment variables
@@ -31,6 +32,7 @@ client.once('ready', () => {
   }
 
   console.log(`🤖 Logged in as ${client.user.tag}`);
+  startLockAnnounceCron(client);
 });
 
 client.login(token).catch((error) => {
@@ -47,6 +49,7 @@ const shutdown = async (signal: string) => {
   console.log(`🛑 Received ${signal}. Shutting down...`);
 
   stopHealthCheckCron();
+  stopLockAnnounceCron(); 
 
   try {
     await new Promise<void>((resolve) => {
