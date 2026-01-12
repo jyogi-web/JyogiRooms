@@ -16,7 +16,7 @@ class Calendar::DayComponent < ViewComponent::Base
   end
 
   def is_current_month?
-    @date.month == @current_month.month
+    @date.year == @current_month.year && @date.month == @current_month.month
   end
 
   def day_reservations
