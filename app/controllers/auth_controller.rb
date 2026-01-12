@@ -16,7 +16,8 @@ class AuthController < ApplicationController
   def login
     # return_toパラメータがあればセッションに保存
     if login_params[:return_to].present?
-      session[:return_to] = sanitize_return_to(login_params[:return_to])
+      sanitized = sanitize_return_to(login_params[:return_to])
+      session[:return_to] = sanitized if sanitized.present?
     end
 
     state = SecureRandom.hex(16)
