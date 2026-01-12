@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #5B7C86;
-    --color-primary-hover: #4A656E;
+    --color-primary: #1e3a8a;
+    /* Deep Blue (Tailwind Blue 900) */
+    --color-primary-hover: #172554;
+    /* Darker Blue (Tailwind Blue 950) */
     --color-danger: #EF4444;
 
     --font-sans: "Inter", "Noto Sans JP", sans-serif;
