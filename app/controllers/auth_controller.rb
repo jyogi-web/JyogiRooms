@@ -136,7 +136,7 @@ class AuthController < ApplicationController
     encoded_message = CGI.escape(message)
     "#{frontend_url}?auth=error&message=#{encoded_message}"
   end
-  
+
   # return_toパスのバリデーション・正規化（共通処理）
   def validate_return_to_path(raw)
     return nil if raw.blank?
@@ -158,7 +158,7 @@ class AuthController < ApplicationController
 
     normalized_path
   end
-  
+
   # return_toを消費(取得後削除)し、バリデーション・正規化を行う
   def consume_return_to
     raw = session.delete(:return_to)
