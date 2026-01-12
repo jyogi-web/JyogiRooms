@@ -16,7 +16,7 @@ class AuthController < ApplicationController
   def login
     # return_toパラメータがあればセッションに保存
     if login_params[:return_to].present?
-      session[:return_to] = sanitize_return_to (login_params[:return_to])
+      session[:return_to] = sanitize_return_to(login_params[:return_to])
     end
 
     state = SecureRandom.hex(16)
@@ -136,63 +136,37 @@ class AuthController < ApplicationController
     encoded_message = CGI.escape(message)
     "#{frontend_url}?auth=error&message=#{encoded_message}"
   end
-
-  # return_toを消費(取得後削除)し、バリデーション・正規化を行う
-  def consume_return_to
-    raw = session.delete(:return_to)
+  
+  # return_toパスのバリデーション・正規化（共通処理）
+  def validate_return_to_path(raw)
     return nil if raw.blank?
 
-    # 前後の空白を削除
-    raw = raw.strip
-    return nil if raw.blank?
-
-    # バックスラッシュや改行を含む値を拒否
-    return nil if raw.include?("\\") || raw.include?("\n") || raw.include?("\r")
-
-    # "/"で始まるが"//"では始まらないことを要求
-    return nil unless raw.start_with?("/")
-    return nil if raw.start_with?("//")
-
-    # パスを正規化
-    begin
-      normalized_path = Pathname.new(raw).cleanpath.to_s
-    rescue StandardError
-      return nil
-    end
-
-    # 正規化後のパスが"/"で始まり(相対パス化を防ぐ)、"/auth"で始まらないことを確認
-    return nil unless normalized_path.start_with?("/")
-    return nil if normalized_path.start_with?("/auth")
-
-    normalized_path
-  end
-
-  # return_toパラメータのサニタイズ
-  def sanitize_return_to(url)
+    url = raw.strip
     return nil if url.blank?
-
-    # 前後の空白を削除
-    url = url.strip
-    return nil if url.blank?
-
-    # バックスラッシュや改行を含む値を拒否
     return nil if url.include?("\\") || url.include?("\n") || url.include?("\r")
-
-    # "/"で始まるが"//"では始まらないことを要求
     return nil unless url.start_with?("/")
     return nil if url.start_with?("//")
 
-    # パスを正規化
     begin
       normalized_path = Pathname.new(url).cleanpath.to_s
     rescue StandardError
       return nil
     end
 
-    # 正規化後のパスが"/"で始まり(相対パス化を防ぐ)、"/auth"で始まらないことを確認
     return nil unless normalized_path.start_with?("/")
     return nil if normalized_path.start_with?("/auth")
 
     normalized_path
+  end
+  
+  # return_toを消費(取得後削除)し、バリデーション・正規化を行う
+  def consume_return_to
+    raw = session.delete(:return_to)
+    validate_return_to_path(raw)
+  end
+
+  # return_toパラメータのサニタイズ
+  def sanitize_return_to(url)
+    validate_return_to_path(url)
   end
 end
