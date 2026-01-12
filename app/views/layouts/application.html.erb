@@ -61,6 +61,17 @@
           <span class="font-medium">設定</span>
         <% end %>
       </nav>
+      
+      <!-- User Profile Footer -->
+      <div class="p-4 border-t border-gray-200">
+        <div class="flex items-center gap-3 px-2">
+          <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
+          <div class="flex flex-col">
+            <span class="text-sm font-bold text-gray-800"><%= current_user&.display_name || "Guest" %></span>
+            <span class="text-xs text-gray-500">@<%= current_user&.username || "guest" %></span>
+          </div>
+        </div>
+      </div>
     </aside>
 
     <!-- Mobile Header (Optional, for brand) -->
