@@ -17,38 +17,30 @@ class ReservationsController < ApplicationController
     # eager_load user for performance
     @reservations = Reservation.includes(:user)
                                .where(start_at: start_date.beginning_of_day..end_date.end_of_day)
+                               .where(start_at: start_of_month..end_of_month)
                                .order(:start_at)
 
+    # Group by date for efficient access in the view (avoiding N+1)
     @reservations_by_date = @reservations.group_by { |r| r.start_at.to_date }
   end
 
   def new
     @reservation = Reservation.new
-    # Handle date parameter for pre-filling
+    
+    # Safe date parsing for pre-filling the form
     if params[:date].present?
-      date = Date.parse(params[:date]) rescue Date.current
+      date = begin
+        Date.parse(params[:date])
+      rescue ArgumentError
+        Date.current
+      end
       @reservation.reservation_date = date
-      @reservation.start_time = "10:00"
-      @reservation.end_time = "12:00"
-
-      # Fetch existing reservations for this day to display in the view
-      @existing_reservations = Reservation.includes(:user)
-                                          .where(start_at: date.beginning_of_day..date.end_of_day)
-                                          .order(:start_at)
-    else
-      @existing_reservations = []
     end
   end
 
   def create
     @reservation = Reservation.new(reservation_params)
     @reservation.user = current_user
-
-    # Guard for missing user (though normally authenticated)
-    if @reservation.user.nil?
-      redirect_to root_path, alert: "ログインしてください"
-      return
-    end
 
     if @reservation.save
       redirect_to reservations_path, notice: "予約を作成しました"
