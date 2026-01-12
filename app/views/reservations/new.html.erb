@@ -51,8 +51,9 @@
             </svg>
           </div>
           <!-- Display for User -->
+          <!-- Display for User -->
           <input type="text" 
-                 value="<%= @reservation.reservation_date&.strftime('%Y年%m月%d日') %> (<%= %w(日 月 火 水 木 金 土)[@reservation.reservation_date&.wday] %>)" 
+                 value="<%= format_date_with_weekday(@reservation.reservation_date) %>" 
                  disabled 
                  class="bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg block w-full pl-10 p-2.5 font-medium cursor-not-allowed">
           

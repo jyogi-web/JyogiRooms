@@ -14,17 +14,20 @@ class Reservation < ApplicationRecord
   private
 
   def combine_date_and_time
-    if reservation_date.present? && start_time.present? && end_time.present?
-      begin
-        date = Date.parse(reservation_date)
-        s_time = Time.parse(start_time)
-        e_time = Time.parse(end_time)
+    return unless reservation_date.present? && start_time.present? && end_time.present?
 
-        self.start_at = date.in_time_zone.change(hour: s_time.hour, min: s_time.min)
-        self.end_at = date.in_time_zone.change(hour: e_time.hour, min: e_time.min)
-      rescue ArgumentError
-        # Handle invalid date/time parsing if necessary, or let validation fail
-        errors.add(:base, "Invalid date or time format")
+    begin
+      date = Date.parse(reservation_date.to_s)
+      s_time = Time.parse(start_time.to_s)
+      e_time = Time.parse(end_time.to_s)
+
+      self.start_at = date.in_time_zone.change(hour: s_time.hour, min: s_time.min)
+      self.end_at = date.in_time_zone.change(hour: e_time.hour, min: e_time.min)
+    rescue ArgumentError => e
+      if e.message.include?("invalid date")
+        errors.add(:reservation_date, "invalid format")
+      else
+        errors.add(:base, "Invalid time format")
       end
     end
   end

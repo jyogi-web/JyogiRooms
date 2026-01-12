@@ -34,7 +34,6 @@
   </div>
 
   <%# Key Holders %>
-  <%# Key Holders %>
   <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
     <% @rooms.each do |room| %>
       <div class="card p-5">
@@ -48,7 +47,7 @@
                 
                 <%# Tooltip %>
                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                  <%= key.user.display_name %>
+                  <%= key.user&.display_name || "Unknown" %>
                 </div>
               </div>
             <% end %>

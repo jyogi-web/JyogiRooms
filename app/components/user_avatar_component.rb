@@ -6,7 +6,7 @@ class UserAvatarComponent < ViewComponent::Base
   end
 
   def render?
-    true
+    @user.present?
   end
 
   private
