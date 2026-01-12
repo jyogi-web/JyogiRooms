@@ -14,6 +14,8 @@ class ReservationsController < ApplicationController
     @reservations = Reservation.includes(:user)
                                .where(start_at: start_date.beginning_of_day..end_date.end_of_day)
                                .order(:start_at)
+
+    @reservations_by_date = @reservations.group_by { |r| r.start_at.to_date }
   end
 
   def new

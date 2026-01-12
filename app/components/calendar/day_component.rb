@@ -1,8 +1,8 @@
 class Calendar::DayComponent < ViewComponent::Base
-  def initialize(date:, current_month:, reservations:)
+  def initialize(date:, current_month:, reservations_by_date:)
     @date = date
     @current_month = current_month
-    @reservations = reservations
+    @reservations_by_date = reservations_by_date
   end
 
   def render?
@@ -20,8 +20,7 @@ class Calendar::DayComponent < ViewComponent::Base
   end
 
   def day_reservations
-    @reservations.select { |r| r.start_at.to_date == @date }
-                 .sort_by(&:start_at)
+    (@reservations_by_date[@date] || []).sort_by(&:start_at)
   end
 
   def is_past?
