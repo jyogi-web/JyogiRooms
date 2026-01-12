@@ -3,6 +3,7 @@ class Reservation < ApplicationRecord
 
   validates :start_at, presence: true
   validates :end_at, presence: true
+  validate :start_at_cannot_be_in_the_past
   validate :end_at_must_be_after_start_at
   validate :cannot_overlap_with_others
 
@@ -49,6 +50,14 @@ class Reservation < ApplicationRecord
 
     if existing_reservation
       errors.add(:base, "This time slot is already booked")
+    end
+  end
+
+  def start_at_cannot_be_in_the_past
+    return if start_at.blank?
+
+    if start_at < Time.current
+      errors.add(:start_at, "can't be in the past")
     end
   end
 end

@@ -1,14 +1,19 @@
-<%= link_to new_reservation_path(date: @date), class: container_classes do %>
+<% tag_name = is_past? ? :div : :a %>
+<% tag_options = is_past? ? { class: container_classes } : { href: new_reservation_path(date: @date), class: container_classes } %>
+
+<%= content_tag(tag_name, tag_options) do %>
   <!-- Date Number -->
   <div class="flex justify-between items-start">
     <span class="<%= date_circle_classes %>">
       <%= @date.day %>
     </span>
     
-    <%# Add Button visual cue on hover %>
-    <span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity">
-      <%= render Icons::PlusComponent.new %>
-    </span>
+    <%# Add Button visual cue on hover (Only for future dates) %>
+    <% unless is_past? %>
+      <span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity">
+        <%= render Icons::PlusComponent.new %>
+      </span>
+    <% end %>
   </div>
 
   <!-- Reservations List -->

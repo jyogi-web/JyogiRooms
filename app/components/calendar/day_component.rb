@@ -24,10 +24,19 @@ class Calendar::DayComponent < ViewComponent::Base
                  .sort_by(&:start_at)
   end
 
+  def is_past?
+    @date < Date.current
+  end
+
   def container_classes
-    base = "relative bg-white min-h-[120px] p-2 hover:bg-gray-50 transition-colors group flex flex-col gap-1"
-    opacity = is_current_month? ? "" : "opacity-50 bg-gray-50/30"
-    "#{base} #{opacity}"
+    base = "relative bg-white min-h-[120px] p-2 flex flex-col gap-1"
+    
+    if is_past?
+      "#{base} bg-gray-100/50 cursor-not-allowed text-gray-400"
+    else
+      style = is_current_month? ? "hover:bg-gray-50 transition-colors group" : "opacity-50 bg-gray-50/30 hover:bg-gray-50"
+      "#{base} #{style}"
+    end
   end
 
   def date_circle_classes
