@@ -6,7 +6,28 @@ class Reservation < ApplicationRecord
   validate :end_at_must_be_after_start_at
   validate :cannot_overlap_with_others
 
+  attr_accessor :reservation_date, :start_time, :end_time
+
+  before_validation :combine_date_and_time
+
   private
+
+  def combine_date_and_time
+    if reservation_date.present? && start_time.present? && end_time.present?
+      begin
+        date = Date.parse(reservation_date)
+        s_time = Time.parse(start_time)
+        e_time = Time.parse(end_time)
+
+        self.start_at = date.in_time_zone.change(hour: s_time.hour, min: s_time.min)
+        self.end_at = date.in_time_zone.change(hour: e_time.hour, min: e_time.min)
+      rescue ArgumentError
+        # Handle invalid date/time parsing if necessary, or let validation fail
+        errors.add(:base, "Invalid date or time format")
+      end
+    end
+  end
+
 
   def end_at_must_be_after_start_at
     return if start_at.blank? || end_at.blank?

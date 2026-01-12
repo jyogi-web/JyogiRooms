@@ -9,30 +9,16 @@ class ReservationsController < ApplicationController
     # Handle date parameter for pre-filling
     if params[:date].present?
       date = Date.parse(params[:date])
-      @reservation.start_at = date.in_time_zone.change(hour: 10, min: 0)
-      @reservation.end_at = date.in_time_zone.change(hour: 12, min: 0)
+      @reservation.reservation_date = date
+      @reservation.start_time = "10:00"
+      @reservation.end_time = "12:00"
+      # Also set actual attributes for display if needed, or rely on virtuals
     end
   end
 
   def create
-    # Combine date and time params to construct start_at and end_at
-    date_str = params[:reservation][:date]
-    start_time_str = params[:reservation][:start_time]
-    end_time_str = params[:reservation][:end_time]
-
-    if date_str.present? && start_time_str.present? && end_time_str.present?
-      date = Date.parse(date_str)
-      start_time = Time.parse(start_time_str)
-      end_time = Time.parse(end_time_str)
-
-      @reservation = Reservation.new
-      @reservation.start_at = date.in_time_zone.change(hour: start_time.hour, min: start_time.min)
-      @reservation.end_at = date.in_time_zone.change(hour: end_time.hour, min: end_time.min)
-      @reservation.user = current_user
-    else
-      @reservation = Reservation.new(reservation_params)
-      @reservation.user = current_user
-    end
+    @reservation = Reservation.new(reservation_params)
+    @reservation.user = current_user
 
     if @reservation.save
       redirect_to reservations_path, notice: "予約を作成しました"
@@ -44,6 +30,6 @@ class ReservationsController < ApplicationController
   private
 
   def reservation_params
-    params.require(:reservation).permit(:start_at, :end_at)
+    params.require(:reservation).permit(:start_at, :end_at, :reservation_date, :start_time, :end_time)
   end
 end
