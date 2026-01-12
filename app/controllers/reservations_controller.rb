@@ -24,7 +24,13 @@ class ReservationsController < ApplicationController
       @reservation.reservation_date = date
       @reservation.start_time = "10:00"
       @reservation.end_time = "12:00"
-      # Also set actual attributes for display if needed, or rely on virtuals
+      
+      # Fetch existing reservations for this day to display in the view
+      @existing_reservations = Reservation.includes(:user)
+                                          .where(start_at: date.beginning_of_day..date.end_of_day)
+                                          .order(:start_at)
+    else
+      @existing_reservations = []
     end
   end
 
