@@ -19,19 +19,7 @@
       </h2>
       <div class="space-y-2">
         <% @existing_reservations.each do |res| %>
-          <div class="flex items-center bg-white p-3 rounded-lg shadow-sm border border-blue-100">
-            <div class="flex-shrink-0 mr-3">
-              <%= render UserAvatarComponent.new(user: res.user, size: :small) %>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-gray-900 truncate">
-                <%= res.user&.display_name %>
-              </div>
-              <div class="text-xs text-gray-500">
-                <%= res.start_at.strftime("%H:%M") %> ~ <%= res.end_at.strftime("%H:%M") %>
-              </div>
-            </div>
-          </div>
+          <%= render ReservationComponent.new(reservation: res, layout: :list) %>
         <% end %>
       </div>
     </div>
