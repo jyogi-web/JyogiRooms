@@ -32,7 +32,7 @@ class UserAvatarComponent < ViewComponent::Base
     base = "rounded-full flex items-center justify-center font-bold shadow-sm"
     "#{base} #{size_classes} #{bg_color_class} #{@extra_classes}"
   end
-  
+
   def image_classes
     "#{size_classes} rounded-full object-cover shadow-sm #{@extra_classes}"
   end

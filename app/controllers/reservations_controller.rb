@@ -2,13 +2,13 @@ class ReservationsController < ApplicationController
   def index
     # Determine the month to display
     @current_month = params[:start_date] ? Date.parse(params[:start_date]) : Date.current.beginning_of_month
-    
+
     # Calculate the start and end of the calendar grid (including padding days)
     start_date = @current_month.beginning_of_month.beginning_of_week(:sunday)
     end_date = @current_month.end_of_month.end_of_week(:sunday)
-    
+
     @calendar_days = (start_date..end_date).to_a
-    
+
     # Fetch reservations for the visible range
     # eager_load user for performance
     @reservations = Reservation.includes(:user)
@@ -24,7 +24,7 @@ class ReservationsController < ApplicationController
       @reservation.reservation_date = date
       @reservation.start_time = "10:00"
       @reservation.end_time = "12:00"
-      
+
       # Fetch existing reservations for this day to display in the view
       @existing_reservations = Reservation.includes(:user)
                                           .where(start_at: date.beginning_of_day..date.end_of_day)
