@@ -47,21 +47,31 @@ Reservation.create!(
 puts "Reservations (Today): #{Reservation.where(start_at: today.all_day).count}"
 
 # 4. Create Keys (5 holders per room)
-Key.destroy_all # Reset keys for clean state
+if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
+  puts "⚠️ Scip destructive operations in production (ALLOW_MOCK_DATA!=true)"
+else
+  Key.destroy_all # Reset keys for clean state
+end
 
 # Room 1 holders (users 0-4)
-users[0..4].each do |user|
-  Key.create!(user: user, room: room1)
+if users.length >= 5
+  users[0..4].each do |user|
+    Key.create!(user: user, room: room1)
+  end
 end
 
 # Room 2 holders (users 5-9)
-users[5..9].each do |user|
-  Key.create!(user: user, room: room2)
+if users.length >= 10
+  users[5..9].each do |user|
+    Key.create!(user: user, room: room2)
+  end
 end
 
 # Room 3 holders (users 10-14)
-users[10..14].each do |user|
-  Key.create!(user: user, room: room3)
+if users.length >= 15
+  users[10..14].each do |user|
+    Key.create!(user: user, room: room3)
+  end
 end
 
 puts "Keys: #{Key.count}"
