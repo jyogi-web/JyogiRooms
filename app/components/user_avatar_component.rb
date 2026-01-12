@@ -13,6 +13,8 @@ class UserAvatarComponent < ViewComponent::Base
 
   def size_classes
     case @size
+    when :xs
+      "w-6 h-6 text-[10px]"
     when :small
       "w-8 h-8 text-xs"
     when :medium
