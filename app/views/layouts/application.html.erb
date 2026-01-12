@@ -65,18 +65,8 @@
 
     <!-- Mobile Header (Optional, for brand) -->
     <header class="md:hidden fixed top-0 left-0 w-full h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-30">
-      <span class="text-lg font-bold text-gray-800">Jyogi Rooms</span>
-      
-      <%# Mobile User Icon %>
-      <div class="flex items-center">
-        <% if current_user&.avatar_url.present? %>
-          <%= image_tag current_user.avatar_url, class: "w-8 h-8 rounded-full border border-gray-200 shadow-sm object-cover" %>
-        <% else %>
-          <div class="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 text-xs font-bold shadow-sm">
-            <%= current_user&.display_name&.first || "G" %>
-          </div>
-        <% end %>
-      </div>
+      <span class="text-xl font-bold text-gray-800">Jyogi Rooms</span>
+      <%= render(UserAvatarComponent.new(user: current_user, size: :small)) %>
     </header>
 
     <!-- Main Content -->
