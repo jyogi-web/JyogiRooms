@@ -7,7 +7,7 @@
   </div>
 
   <!-- Existing Reservations Section -->
-  <% if @existing_reservations.any? %>
+  <% if @existing_reservations&.any? %>
     <div class="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
       <h2 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
