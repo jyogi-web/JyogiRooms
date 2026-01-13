@@ -5,8 +5,6 @@ class UserAvatarComponent < ViewComponent::Base
     @extra_classes = extra_classes
   end
 
-
-
   private
 
   def size_classes
