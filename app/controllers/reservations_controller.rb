@@ -1,4 +1,5 @@
 class ReservationsController < ApplicationController
+  before_action :authenticate_user!
   def index
     # Determine the month to display
     @current_month = begin
