@@ -48,7 +48,7 @@ puts "Reservations (Today): #{Reservation.where(start_at: today.all_day).count}"
 
 # 4. Create Keys (5 holders per room)
 if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
-  puts "⚠️ Scip destructive operations in production (ALLOW_MOCK_DATA!=true)"
+  puts "⚠️ Skip destructive operations in production (ALLOW_MOCK_DATA!=true)"
 else
   Key.destroy_all # Reset keys for clean state
 end
