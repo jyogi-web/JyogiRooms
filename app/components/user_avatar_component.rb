@@ -5,9 +5,7 @@ class UserAvatarComponent < ViewComponent::Base
     @extra_classes = extra_classes
   end
 
-  def render?
-    @user.present?
-  end
+
 
   private
 
