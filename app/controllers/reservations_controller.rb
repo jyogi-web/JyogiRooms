@@ -17,7 +17,6 @@ class ReservationsController < ApplicationController
     # eager_load user for performance
     @reservations = Reservation.includes(:user)
                                .where(start_at: start_date.beginning_of_day..end_date.end_of_day)
-                               .where(start_at: start_of_month..end_of_month)
                                .order(:start_at)
 
     # Group by date for efficient access in the view (avoiding N+1)
@@ -35,6 +34,11 @@ class ReservationsController < ApplicationController
         Date.current
       end
       @reservation.reservation_date = date
+      @existing_reservations = Reservation.includes(:user)
+                                          .where(start_at: date.beginning_of_day..date.end_of_day)
+                                          .order(:start_at)
+    else
+      @existing_reservations = []
     end
   end
 
