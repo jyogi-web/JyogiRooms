@@ -21,7 +21,7 @@
     <% day_reservations.each do |res| %>
       <div class="text-[10px] bg-indigo-50 text-indigo-700 border-l-2 border-indigo-500 pl-0.5 md:pl-1 pr-0.5 py-0.5 rounded-sm flex items-center justify-between group/res shadow-sm hover:shadow-md transition-shadow cursor-default">
         <span class="font-bold md:truncate md:mr-1 whitespace-normal break-all leading-tight w-full md:w-auto">
-          <%= res.start_at.strftime("%H:%M") %>~<span class="hidden md:inline"><%= res.end_at.strftime("%H:%M") %></span>
+          <%= helpers.format_time_short(res.start_at) %>~<span class="hidden md:inline"><%= helpers.format_time_short(res.end_at) %></span>
         </span>
         <div class="hidden md:block flex-shrink-0">
           <%= render UserAvatarComponent.new(user: res.user, size: :xs, extra_classes: "border-0 shadow-none") %>
