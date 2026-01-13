@@ -16,6 +16,7 @@ class Reservation < ApplicationRecord
   def combine_date_and_time
     return unless reservation_date.present? && start_time.present? && end_time.present?
 
+    begin
       date = Date.parse(reservation_date.to_s)
     rescue ArgumentError
       errors.add(:reservation_date, "invalid format")
