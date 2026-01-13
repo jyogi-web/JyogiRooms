@@ -35,9 +35,7 @@ class ReservationsController < ApplicationController
         Date.current
       end
       @reservation.reservation_date = date
-      @existing_reservations = Reservation.includes(:user)
-                                          .where(start_at: date.beginning_of_day..date.end_of_day)
-                                          .order(:start_at)
+      @existing_reservations = fetch_existing_reservations(date)
     else
       @existing_reservations = []
     end
@@ -51,14 +49,7 @@ class ReservationsController < ApplicationController
       redirect_to reservations_path, notice: "予約を作成しました"
     else
       # Re-populate existing reservations for the view
-      if @reservation.reservation_date.present?
-         date = @reservation.reservation_date
-         @existing_reservations = Reservation.includes(:user)
-                                             .where(start_at: date.beginning_of_day..date.end_of_day)
-                                             .order(:start_at)
-      else
-        @existing_reservations = []
-      end
+      @existing_reservations = fetch_existing_reservations(@reservation.reservation_date)
       render :new, status: :unprocessable_entity
     end
   end
@@ -67,5 +58,13 @@ class ReservationsController < ApplicationController
 
   def reservation_params
     params.require(:reservation).permit(:start_at, :end_at, :reservation_date, :start_time, :end_time)
+  end
+
+  def fetch_existing_reservations(date)
+    return [] unless date.present?
+
+    Reservation.includes(:user)
+               .where(start_at: date.beginning_of_day..date.end_of_day)
+               .order(:start_at)
   end
 end
