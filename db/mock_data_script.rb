@@ -59,26 +59,26 @@ if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
   puts "⚠️ Skip destructive operations in production (ALLOW_MOCK_DATA!=true)"
 else
   Key.destroy_all # Reset keys for clean state
-end
 
-# Room 1 holders (users 0-4)
-if users.length >= 5
-  users[0..4].each do |user|
-    Key.create!(user: user, room: room1)
+  # Room 1 holders (users 0-4)
+  if users.length >= 5
+    users[0..4].each do |user|
+      Key.create!(user: user, room: room1)
+    end
   end
-end
 
-# Room 2 holders (users 5-9)
-if users.length >= 10
-  users[5..9].each do |user|
-    Key.create!(user: user, room: room2)
+  # Room 2 holders (users 5-9)
+  if users.length >= 10
+    users[5..9].each do |user|
+      Key.create!(user: user, room: room2)
+    end
   end
-end
 
-# Room 3 holders (users 10-14)
-if users.length >= 15
-  users[10..14].each do |user|
-    Key.create!(user: user, room: room3)
+  # Room 3 holders (users 10-14)
+  if users.length >= 15
+    users[10..14].each do |user|
+      Key.create!(user: user, room: room3)
+    end
   end
 end
 
