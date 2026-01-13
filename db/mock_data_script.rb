@@ -52,7 +52,7 @@ else
     puts "⚠️ Not enough users to create mock reservations (need at least 3)"
   end
 end
-puts "Reservations (Today): #{Reservation.where(start_at: today.all_day).count}"
+puts "Reservations (Today): #{Reservation.where(start_at: Time.current.all_day).count}"
 
 # 4. Create Keys (5 holders per room)
 if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
