@@ -1,9 +1,7 @@
 <div class="max-w-md mx-auto px-4 py-8">
   <div class="mb-6 flex items-center">
     <%= link_to reservations_path(start_date: @reservation.reservation_date&.beginning_of_month), class: "text-gray-500 hover:text-gray-700 mr-4" do %>
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-      </svg>
+      <%= render Icons::ArrowLeftComponent.new(classes: "w-6 h-6") %>
     <% end %>
     <h1 class="text-2xl font-bold text-gray-800">予約</h1>
   </div>
@@ -46,9 +44,7 @@
         <label class="block text-sm font-bold text-gray-700 mb-2">日付</label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-            </svg>
+            <%= render Icons::CalendarComponent.new(classes: "h-5 w-5 text-gray-400") %>
           </div>
           <!-- Display for User -->
           <input type="text" 
@@ -67,9 +63,7 @@
           <label class="block text-sm font-bold text-gray-700 mb-2">開始時間</label>
           <div class="relative">
              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
+               <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
              </div>
              <%= f.time_field :start_time, 
                  class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5", 
@@ -80,9 +74,7 @@
           <label class="block text-sm font-bold text-gray-700 mb-2">終了時間</label>
            <div class="relative">
              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
+               <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
              </div>
             <%= f.time_field :end_time, 
                 class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5", 
