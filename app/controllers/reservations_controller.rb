@@ -25,7 +25,7 @@ class ReservationsController < ApplicationController
 
   def new
     @reservation = Reservation.new
-    
+
     # Safe date parsing for pre-filling the form
     if params[:date].present?
       date = begin
