@@ -1,5 +1,5 @@
-<% tag_name = is_past? ? :div : :a %>
-<% tag_options = is_past? ? { class: container_classes } : { href: new_reservation_path(date: @date), class: container_classes } %>
+<% tag_name = past? ? :div : :a %>
+<% tag_options = past? ? { class: container_classes } : { href: new_reservation_path(date: @date), class: container_classes } %>
 
 <%= content_tag(tag_name, tag_options) do %>
   <!-- Date Number -->
@@ -9,7 +9,7 @@
     </span>
     
     <%# Add Button visual cue on hover (Only for future dates) %>
-    <% unless is_past? %>
+    <% unless past? %>
       <span class="opacity-0 group-hover:opacity-100 text-primary transition-opacity">
         <%= render Icons::PlusComponent.new %>
       </span>
