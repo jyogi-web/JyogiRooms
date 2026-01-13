@@ -26,24 +26,28 @@ users = User.all.to_a
 puts "Users: #{User.count}"
 
 # 3. Create Reservations for Today (3 items)
-Reservation.where(start_at: Time.current.all_day).destroy_all
-today = Time.current.to_date
+if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
+  puts "⚠️ Skip destructive operations in production (ALLOW_MOCK_DATA!=true)"
+else
+  Reservation.where(start_at: Time.current.all_day).destroy_all
+  today = Time.current.to_date
 
-Reservation.create!(
-  user: users[0],
-  start_at: today.in_time_zone.change(hour: 10, min: 0),
-  end_at: today.in_time_zone.change(hour: 12, min: 0)
-)
-Reservation.create!(
-  user: users[1],
-  start_at: today.in_time_zone.change(hour: 13, min: 0),
-  end_at: today.in_time_zone.change(hour: 15, min: 0)
-)
-Reservation.create!(
-  user: users[2],
-  start_at: today.in_time_zone.change(hour: 16, min: 0),
-  end_at: today.in_time_zone.change(hour: 18, min: 0)
-)
+  Reservation.create!(
+    user: users[0],
+    start_at: today.in_time_zone.change(hour: 10, min: 0),
+    end_at: today.in_time_zone.change(hour: 12, min: 0)
+  )
+  Reservation.create!(
+    user: users[1],
+    start_at: today.in_time_zone.change(hour: 13, min: 0),
+    end_at: today.in_time_zone.change(hour: 15, min: 0)
+  )
+  Reservation.create!(
+    user: users[2],
+    start_at: today.in_time_zone.change(hour: 16, min: 0),
+    end_at: today.in_time_zone.change(hour: 18, min: 0)
+  )
+end
 puts "Reservations (Today): #{Reservation.where(start_at: today.all_day).count}"
 
 # 4. Create Keys (5 holders per room)
