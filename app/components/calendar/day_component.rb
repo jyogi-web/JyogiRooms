@@ -5,9 +5,7 @@ class Calendar::DayComponent < ViewComponent::Base
     @reservations_by_date = reservations_by_date
   end
 
-  def render?
-    true
-  end
+
 
   private
 
