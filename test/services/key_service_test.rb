@@ -18,6 +18,10 @@ class KeyServiceTest < ActiveSupport::TestCase
     )
   end
 
+  # =====================
+  # current_holder
+  # =====================
+
   test "current_holder returns user when key exists" do
     Key.create!(room: @room, user: @from_user)
 
@@ -31,6 +35,10 @@ class KeyServiceTest < ActiveSupport::TestCase
 
     assert_nil holder
   end
+
+  # =====================
+  # transfer
+  # =====================
 
   test "transfer updates key owner and creates transfer log" do
     key = Key.create!(room: @room, user: @from_user)
@@ -66,18 +74,22 @@ class KeyServiceTest < ActiveSupport::TestCase
   test "transfer is rolled back when transfer log creation fails" do
     key = Key.create!(room: @room, user: @from_user)
 
-    # KeyTransferLog.create! を失敗させてロールバックを確認
-    KeyTransferLog.stub(:create!, ->(*) { raise ActiveRecord::RecordInvalid.new(KeyTransferLog.new) }) do
+    # KeyTransferLog.create! を強制的に失敗させる
+    KeyTransferLog.stub(
+      :create!,
+      ->(*) { raise ActiveRecord::RecordInvalid.new(KeyTransferLog.new) }
+    ) do
       assert_raises ActiveRecord::RecordInvalid do
         KeyService.transfer(
-          room_id: `@room.id`,
-          from_user: `@from_user`,
-          to_user_id: `@to_user.id`
+          room_id: @room.id,
+          from_user: @from_user,
+          to_user_id: @to_user.id
         )
-     end
-  end
+      end
+    end
 
-    # 鍵の所有者が元に戻っていること（トランザクション確認）
-    assert_equal `@from_user`, key.reload.user
+    # トランザクションがロールバックされていること
+    assert_equal @from_user, key.reload.user
     assert_equal 0, KeyTransferLog.count
   end
+end
