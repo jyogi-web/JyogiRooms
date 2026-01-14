@@ -8,8 +8,7 @@ class KeyService
   # @param room_id [Integer]
   # @return [User, nil] 鍵が存在しない場合は nil
   def self.current_holder(room_id)
-    key = Key.find_by(room_id: room_id)
-    key&.user
+    Key.current_holder_by_room_id(room_id)
   end
 
   # 鍵を譲渡する
