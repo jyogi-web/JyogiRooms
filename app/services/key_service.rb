@@ -3,14 +3,6 @@
 # - トランザクション管理を行う
 # - 失敗時は例外を投げ、ハンドリングは呼び出し元に委ねる
 class KeyService
-  # 現在の鍵持ちを取得する
-  #
-  # @param room_id [Integer]
-  # @return [User, nil] 鍵が存在しない場合は nil
-  def self.current_holder(room_id)
-    Key.current_holder_by_room_id(room_id)
-  end
-
   # 鍵を譲渡する
   #
   # @param room_id [Integer]
