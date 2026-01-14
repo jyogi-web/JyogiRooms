@@ -23,7 +23,7 @@ class KeyService
     ActiveRecord::Base.transaction do
       # 1. 現在の鍵を取得
       #    from_user が鍵を持っていない場合は例外を投げる
-      key = Key.find_by!(
+      key = Key.lock.find_by!(
         room_id: room_id,
         user_id: from_user.id
       )
