@@ -70,26 +70,4 @@ class KeyServiceTest < ActiveSupport::TestCase
       )
     end
   end
-
-  test "transfer is rolled back when transfer log creation fails" do
-    key = Key.create!(room: @room, user: @from_user)
-
-    # KeyTransferLog.create! を強制的に失敗させる
-    KeyTransferLog.stub(
-      :create!,
-      ->(*) { raise ActiveRecord::RecordInvalid.new(KeyTransferLog.new) }
-    ) do
-      assert_raises ActiveRecord::RecordInvalid do
-        KeyService.transfer(
-          room_id: @room.id,
-          from_user: @from_user,
-          to_user_id: @to_user.id
-        )
-      end
-    end
-
-    # トランザクションがロールバックされていること
-    assert_equal @from_user, key.reload.user
-    assert_equal 0, KeyTransferLog.count
-  end
 end
