@@ -13,17 +13,17 @@ class KeyTest < ActiveSupport::TestCase
     )
   end
 
-  test "current_holder_by_room_id returns user when key exists" do
+  test "current_holder_by_room_id returns users array when key exists" do
     Key.create!(room: @room, user: @user)
 
-    holder = Key.current_holder_by_room_id(@room.id)
+    holders = Key.current_holder_by_room_id(@room.id)
 
-    assert_equal @user, holder
+    assert_equal [@user], holders
   end
 
-  test "current_holder_by_room_id returns nil when key does not exist" do
-    holder = Key.current_holder_by_room_id(@room.id)
+  test "current_holder_by_room_id returns empty array when key does not exist" do
+    holders = Key.current_holder_by_room_id(@room.id)
 
-    assert_nil holder
+    assert_equal [], holders
   end
 end
