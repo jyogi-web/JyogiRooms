@@ -18,7 +18,7 @@ class KeyTest < ActiveSupport::TestCase
 
     holders = Key.current_holder_by_room_id(@room.id)
 
-    assert_equal [@user], holders
+    assert_equal [ @user ], holders
   end
 
   test "current_holder_by_room_id returns empty array when key does not exist" do
