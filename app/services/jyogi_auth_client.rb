@@ -133,7 +133,7 @@ class JyogiAuthClient
     # SSL検証を環境変数で制御(デフォルトは有効)
     ssl_verify_enabled = ENV.fetch("JYOGI_SSL_VERIFY", "true") == "true"
 
-    if http.use_ssl
+    if http.use_ssl?
       http.verify_mode = ssl_verify_enabled ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
       http.verify_hostname = ssl_verify_enabled
     end

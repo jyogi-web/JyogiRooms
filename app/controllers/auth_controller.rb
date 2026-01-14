@@ -5,10 +5,21 @@ class AuthController < ApplicationController
   include ErrorRenderable
 
   skip_before_action :verify_authenticity_token, only: [ :callback ]
+  skip_before_action :authenticate_user!
+
+  private def login_params
+    params.permit(:return_to)
+  end
 
   # GET /auth/login
   # OAuth2認可フローを開始
   def login
+    # return_toパラメータがあればセッションに保存
+    if login_params[:return_to].present?
+      sanitized = sanitize_return_to(login_params[:return_to])
+      session[:return_to] = sanitized if sanitized.present?
+    end
+
     state = SecureRandom.hex(16)
     session[:oauth_state] = state
 
@@ -45,8 +56,12 @@ class AuthController < ApplicationController
       # ログイン処理（AccessTokenレコード作成とセッション保存）
       sign_in(user, access_token)
 
-      # フロントエンドにリダイレクト
-      redirect_to success_redirect_url, allow_other_host: true
+      # リダイレクト先へ遷移
+      if (return_to = consume_return_to).present?
+        redirect_to return_to
+      else
+        redirect_to success_redirect_url, allow_other_host: true
+      end
     rescue JyogiAuthClient::Error => e
       Rails.logger.error "OAuth callback error: #{e.message}"
       redirect_to error_redirect_url(e.message), allow_other_host: true
@@ -121,5 +136,38 @@ class AuthController < ApplicationController
     frontend_url = JyogiAuth.configuration.frontend_url
     encoded_message = CGI.escape(message)
     "#{frontend_url}?auth=error&message=#{encoded_message}"
+  end
+
+  # return_toパスのバリデーション・正規化（共通処理）
+  def validate_return_to_path(raw)
+    return nil if raw.blank?
+
+    url = raw.strip
+    return nil if url.blank?
+    return nil if url.include?("\\") || url.include?("\n") || url.include?("\r")
+    return nil unless url.start_with?("/")
+    return nil if url.start_with?("//")
+
+    begin
+      normalized_path = Pathname.new(url).cleanpath.to_s
+    rescue StandardError
+      return nil
+    end
+
+    return nil unless normalized_path.start_with?("/")
+    return nil if normalized_path.start_with?("/auth")
+
+    normalized_path
+  end
+
+  # return_toを消費(取得後削除)し、バリデーション・正規化を行う
+  def consume_return_to
+    raw = session.delete(:return_to)
+    validate_return_to_path(raw)
+  end
+
+  # return_toパラメータのサニタイズ
+  def sanitize_return_to(url)
+    validate_return_to_path(url)
   end
 end

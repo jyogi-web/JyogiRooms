@@ -4,9 +4,6 @@ class ApplicationController < ActionController::Base
 
   include JyogiAuthenticatable
 
-  # 認証をオプショナルにする（デフォルトでは認証不要）
-  skip_before_action :authenticate_user!, raise: false
-
   # ビューでもcurrent_userを使えるようにする
   helper_method :current_user, :user_signed_in?
 end
