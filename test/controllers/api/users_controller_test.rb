@@ -20,21 +20,25 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
   test "show without authentication returns 401" do
     get "/api/users/#{users(:one).id}"
     assert_response :unauthorized
+    assert_equal "認証が必要です。", response.parsed_body["error"]
   end
 
   test "create without authentication returns 401" do
     post "/api/users"
     assert_response :unauthorized
+    assert_equal "認証が必要です。", response.parsed_body["error"]
   end
 
   test "update without authentication returns 401" do
     put "/api/users/#{users(:one).id}"
     assert_response :unauthorized
+    assert_equal "認証が必要です。", response.parsed_body["error"]
   end
 
   test "destroy without authentication returns 401" do
     delete "/api/users/#{users(:one).id}"
     assert_response :unauthorized
+    assert_equal "認証が必要です。", response.parsed_body["error"]
   end
 
   # ====================
