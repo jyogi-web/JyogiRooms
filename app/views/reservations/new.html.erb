@@ -1,0 +1,95 @@
+<div class="max-w-md mx-auto px-4 py-8">
+  <div class="mb-6 flex items-center">
+    <%= link_to reservations_path(start_date: @reservation.reservation_date&.beginning_of_month), class: "text-gray-500 hover:text-gray-700 mr-4" do %>
+      <%= render Icons::ArrowLeftComponent.new(classes: "w-6 h-6") %>
+    <% end %>
+    <h1 class="text-2xl font-bold text-gray-800">予約</h1>
+  </div>
+
+  <!-- Existing Reservations Section -->
+  <% if @existing_reservations&.any? %>
+    <div class="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+      <h2 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
+        </svg>
+        この日の予約状況
+      </h2>
+      <div class="space-y-2">
+        <% @existing_reservations.each do |res| %>
+          <%= render ReservationComponent.new(reservation: res, layout: :list) %>
+        <% end %>
+      </div>
+    </div>
+  <% elsif params[:date].present? %>
+    <div class="mb-8 p-4 bg-gray-50 border border-gray-100 rounded-xl text-center text-sm text-gray-500">
+      この日の予約はまだありません
+    </div>
+  <% end %>
+
+  <div class="card p-6">
+    <%= form_with(model: @reservation, local: true, class: "space-y-6") do |f| %>
+      <% if @reservation.errors.any? %>
+        <div class="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
+          <ul class="list-disc pl-5">
+            <% @reservation.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Date (Read-only / Hidden) -->
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">日付</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <%= render Icons::CalendarComponent.new(classes: "h-5 w-5 text-gray-400") %>
+          </div>
+          <!-- Display for User -->
+          <input type="text" 
+                 value="<%= format_date_with_weekday(@reservation.reservation_date) %>" 
+                 disabled 
+                 class="bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg block w-full pl-10 p-2.5 font-medium cursor-not-allowed">
+          
+          <!-- Hidden Value for Submission -->
+          <%= f.hidden_field :reservation_date %>
+        </div>
+      </div>
+
+      <!-- Time Selection Grid -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">開始時間</label>
+          <div class="relative">
+             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
+             </div>
+             <%= f.time_field :start_time, 
+                 class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5", 
+                 required: true %>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">終了時間</label>
+           <div class="relative">
+             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
+             </div>
+            <%= f.time_field :end_time, 
+                class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5", 
+                required: true %>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-6">
+        <%= f.submit "予約を作成する", class: "btn btn-primary w-full justify-center py-3 text-base shadow-lg shadow-primary/30" %>
+        
+        <p class="text-xs text-center text-gray-500 mt-4">
+          ※ 他の予約と時間が重なっている場合は登録できません
+        </p>
+      </div>
+    <% end %>
+  </div>
+</div>
