@@ -10,13 +10,6 @@ module Api
       render json: { 'user': format_user_data(current_user) }, status: :ok
     end
 
-    # DELETE /api/users/logout
-    # ログアウト処理
-    def logout
-      sign_out
-      render json: { message: I18n.t("api.users.logout.success") }, status: :ok
-    end
-
     # GET /api/users/:id
     # 指定IDのユーザー情報を取得
     # @param id [Integer] ユーザーID

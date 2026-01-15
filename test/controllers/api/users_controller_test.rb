@@ -11,11 +11,6 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  test "logout without authentication returns 401" do
-    delete "/api/users/logout"
-    assert_response :unauthorized
-  end
-
   test "index without authentication returns 401" do
     get "/api/users"
     assert_response :unauthorized
@@ -50,12 +45,6 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
     get "/api/users/me"
     assert_response :success
     assert response.parsed_body.key?("user")
-  end
-
-  test "logout with authentication returns success" do
-    sign_in_as(users(:one))
-    delete "/api/users/logout"
-    assert_response :success
   end
 
   test "index with authentication returns success" do
