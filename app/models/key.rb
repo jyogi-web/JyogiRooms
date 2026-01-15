@@ -5,6 +5,6 @@ class Key < ApplicationRecord
   # 指定した room_id の現在の鍵持ちを返す
   # 鍵が未登録の場合は nil を返す
   def self.current_holder_by_room_id(room_id)
-    find_by(room_id: room_id)&.user
+    where(room_id: room_id).includes(:user).map(&:user)
   end
 end

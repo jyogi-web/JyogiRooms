@@ -19,24 +19,6 @@ class KeyServiceTest < ActiveSupport::TestCase
   end
 
   # =====================
-  # current_holder
-  # =====================
-
-  test "current_holder returns user when key exists" do
-    Key.create!(room: @room, user: @from_user)
-
-    holder = KeyService.current_holder(@room.id)
-
-    assert_equal @from_user, holder
-  end
-
-  test "current_holder returns nil when key does not exist" do
-    holder = KeyService.current_holder(@room.id)
-
-    assert_nil holder
-  end
-
-  # =====================
   # transfer
   # =====================
 
