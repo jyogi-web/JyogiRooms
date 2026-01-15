@@ -24,11 +24,7 @@ Rails.application.routes.draw do
 
     # ユーザー情報
     get "users/me", to: "users#me"
-    get "users", to: "users#index"
-    get "users/:id", to: "users#show"
-    post "users", to: "users#create"
-    put "users/:id", to: "users#update"
-    delete "users/:id", to: "users#destroy"
+    resources :users, only: %i[index show create update destroy]
   end
 
   if Rails.env.test?
