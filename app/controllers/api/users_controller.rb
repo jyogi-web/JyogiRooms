@@ -6,21 +6,7 @@ module Api
     # GET /api/users/me
     # 現在ログイン中のユーザー情報を取得
     def me
-      user = current_user
-
-      user_data = {
-        id: user.id,
-        jyogi_user_id: user.jyogi_user_id,
-        discord_id: user.discord_id,
-        username: user.username,
-        display_name: user.display_name,
-        avatar_url: user.avatar_url,
-        guild_roles: user.guild_roles,
-        guild_nickname: user.guild_nickname,
-        last_synced_at: user.last_synced_at
-      }
-
-      render json: user_data, status: :ok
+      render json: { 'user': format_user_data( current_user) }, status: :ok
     end
 
     # DELETE /api/users/logout
@@ -36,24 +22,12 @@ module Api
     # 
     # @return User情報のJSON | エラーメッセージ 
     def show
+      # 1. パラメータからユーザーIDを取得
       user = User.find_by(id: params[:id])
 
-
-
+      # 2. ユーザー情報をJSON形式で返す
       if user
-        user_data = { 'user': {
-          id: user.id,
-          jyogi_user_id: user.jyogi_user_id,
-          discord_id: user.discord_id,
-          username: user.username,
-          display_name: user.display_name,
-          avatar_url: user.avatar_url,
-          guild_roles: user.guild_roles,
-          guild_nickname: user.guild_nickname,
-          last_synced_at: user.last_synced_at
-        } }
-
-        render json: {'user': user_data }, status: :ok
+        render json: {'user': format_user_data(user) }, status: :ok
         # 受け取り側
         # {%= user_data = JSON.parse(response.body)["user"] %}
       else
