@@ -29,5 +29,68 @@ module Api
       sign_out
       render json: { message: I18n.t("api.users.logout.success") }, status: :ok
     end
+
+    # GET /api/users/:id
+    # 指定IDのユーザー情報を取得
+    # @param id [Integer] ユーザーID
+    # 
+    # @return User情報のJSON | エラーメッセージ 
+    def show
+      user = User.find_by(id: params[:id])
+
+
+
+      if user
+        user_data = { 'user': {
+          id: user.id,
+          jyogi_user_id: user.jyogi_user_id,
+          discord_id: user.discord_id,
+          username: user.username,
+          display_name: user.display_name,
+          avatar_url: user.avatar_url,
+          guild_roles: user.guild_roles,
+          guild_nickname: user.guild_nickname,
+          last_synced_at: user.last_synced_at
+        } }
+
+        render json: {'user': user_data }, status: :ok
+        # 受け取り側
+        # {%= user_data = JSON.parse(response.body)["user"] %}
+      else
+        render json: { error: I18n.t("api.users.show.not_found") }, status: :not_found
+      end
+    end
+
+    # GET /api/users
+    def index
+    end
+
+    # POST /api/users
+    def create
+    end
+
+    # PUT /api/users/:id
+    def update
+    end
+
+    # DELETE /api/users/:id
+    def destroy
+    end
+
+    private
+
+    def format_user_data(user)
+      {
+        id: user.id,
+        jyogi_user_id: user.jyogi_user_id,
+        discord_id: user.discord_id,
+        username: user.username,
+        display_name: user.display_name,
+        avatar_url: user.avatar_url,
+        guild_roles: user.guild_roles,
+        guild_nickname: user.guild_nickname,
+        last_synced_at: user.last_synced_at
+      }
+    end
   end
 end
