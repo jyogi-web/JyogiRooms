@@ -4,7 +4,7 @@ class KeysController < ApplicationController
   # GET /rooms/:room_id/key
   # 現在の鍵持ちを取得
   def show
-    users = KeyService.current_holders(params[:room_id])
+    users = KeyService.current_holder(params[:room_id])
 
     render json: {
       room_id: params[:room_id],
