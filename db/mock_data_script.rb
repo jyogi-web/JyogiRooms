@@ -3,9 +3,9 @@
 puts "--- Creating Mock Data ---"
 
 # 1. Create Rooms
-room1 = Room.find_or_create_by!(name: "第1部室", room_number: "101")
-room2 = Room.find_or_create_by!(name: "第2部室", room_number: "201")
-room3 = Room.find_or_create_by!(name: "第3部室", room_number: "301")
+room1 = Room.find_or_create_by!(name: "第1部室", room_number: "322")
+room2 = Room.find_or_create_by!(name: "第2部室", room_number: "321")
+room3 = Room.find_or_create_by!(name: "第3部室", room_number: "224")
 puts "Rooms: #{Room.count}"
 
 # 2. Create Users (Ensure enough users exist)
