@@ -1,44 +1,76 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class Api::UsersControllerTest < ActionDispatch::IntegrationTest
-  test "should get index" do
-    get api_users_index_url
-    assert_response :success
+  # ====================
+  # 未認証時のテスト
+  # ====================
+  test "index without authentication returns 401" do
+    get "/api/users"
+    assert_response :unauthorized
+    assert_equal "認証が必要です。", response.parsed_body["error"]
   end
 
-  test "should get show" do
+  test "show without authentication returns 401" do
     user = users(:one)
-    get api_user_url(id: user.id)
-    assert_response :success
+    get "/api/users/#{user.id}"
+    assert_response :unauthorized
   end
 
-  # TODO: コードが実装されたら有効化する
-  # test "should get create" do
-  #   get api_users_create_url
-  #   assert_response :success
-  # end
+  test "create without authentication returns 401" do
+    post "/api/users"
+    assert_response :unauthorized
+  end
 
-  # test "should get update" do
-  #   get api_users_update_url
-  #   assert_response :success
-  # end
+  test "update without authentication returns 401" do
+    put "/api/users/1"
+    assert_response :unauthorized
+  end
 
-  # test "should get destroy" do
-  #   get api_users_destroy_url
-  #   assert_response :success
-  # end
-  
-  test "create returns 405" do
+  test "destroy without authentication returns 401" do
+    delete "/api/users/1"
+    assert_response :unauthorized
+  end
+
+  # ====================
+  # 認証済み時のテスト
+  # ====================
+  test "index with authentication returns success" do
+    sign_in_as(users(:one))
+    get "/api/users"
+    assert_response :success
+    assert response.parsed_body.key?("users")
+  end
+
+  test "show with authentication returns success" do
+    user = users(:one)
+    sign_in_as(user)
+    get "/api/users/#{user.id}"
+    assert_response :success
+    assert response.parsed_body.key?("user")
+  end
+
+  test "show with authentication returns 404 for non-existent user" do
+    sign_in_as(users(:one))
+    get "/api/users/999999"
+    assert_response :not_found
+  end
+
+  test "create with authentication returns 405 (not implemented)" do
+    sign_in_as(users(:one))
     post "/api/users"
     assert_response :method_not_allowed
   end
 
-  test "update returns 405" do
+  test "update with authentication returns 405 (not implemented)" do
+    sign_in_as(users(:one))
     put "/api/users/1"
     assert_response :method_not_allowed
   end
 
-  test "destroy returns 405" do
+  test "destroy with authentication returns 405 (not implemented)" do
+    sign_in_as(users(:one))
     delete "/api/users/1"
     assert_response :method_not_allowed
   end
