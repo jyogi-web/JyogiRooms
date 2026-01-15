@@ -24,12 +24,12 @@ Rails.application.routes.draw do
 
     # ユーザー情報
     get "users/me", to: "users#me"
+    delete "users/logout", to: "users#logout"
     get "users", to: "users#index"
     get "users/:id", to: "users#show"
     post "users", to: "users#create"
     put "users/:id", to: "users#update"
     delete "users/:id", to: "users#destroy"
-    delete "users/logout", to: "users#logout"
   end
 
   if Rails.env.test?
