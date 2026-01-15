@@ -26,4 +26,8 @@ Rails.application.routes.draw do
     get "users/me", to: "users#me"
     delete "users/logout", to: "users#logout"
   end
+
+  if Rails.env.test?
+    post "/test/login", to: "test_session#create"
+  end
 end
