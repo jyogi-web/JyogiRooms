@@ -84,7 +84,6 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-          RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           JYOGI_AUTH_URL: http://mock-auth.example.com
           CLIENT_ID: mock_client_id
