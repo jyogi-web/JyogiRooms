@@ -5,7 +5,7 @@
   "author": "RiTa-23",
   "license": "MIT",
   "scripts": {
-    "build": "echo Skipping build",
+    "build": "npm run build:css",
     "build:css": "npx @tailwindcss/cli -i ./app/assets/stylesheets/application.tailwind.css -o ./app/assets/builds/application.css --minify"
   },
   "dependencies": {
