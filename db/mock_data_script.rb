@@ -10,16 +10,21 @@ puts "Rooms: #{Room.count}"
 
 # 2. Create Users (Ensure enough users exist)
 # We need at least 3 (res) + 15 (keys) = 18 users.
-current_count = User.count
-needed = 20 - current_count
-if needed > 0
-  needed.times do |i|
-    User.create!(
-      username: "user_#{current_count + i}",
-      display_name: "User #{current_count + i + 1}",
-      discord_id: "mock_#{current_count + i}",
-      jyogi_user_id: SecureRandom.uuid
-    )
+if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
+  puts "⚠️ Skip creating mock users in production (ALLOW_MOCK_DATA!=true)"
+  puts "   Current Users: #{User.count}"
+else
+  current_count = User.count
+  needed = 20 - current_count
+  if needed > 0
+    needed.times do |i|
+      User.create!(
+        username: "user_#{current_count + i}",
+        display_name: "User #{current_count + i + 1}",
+        discord_id: "mock_#{current_count + i}",
+        jyogi_user_id: SecureRandom.uuid
+      )
+    end
   end
 end
 users = User.all.to_a
