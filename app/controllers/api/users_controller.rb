@@ -5,8 +5,9 @@ module Api
   class UsersController < BaseController
     # GET /api/users/me
     # 現在ログイン中のユーザー情報を取得
+    # @return User [JSON] | エラーメッセージ
     def me
-      render json: { 'user': format_user_data( current_user) }, status: :ok
+      render json: { 'user': format_user_data(current_user) }, status: :ok
     end
 
     # DELETE /api/users/logout
@@ -19,15 +20,15 @@ module Api
     # GET /api/users/:id
     # 指定IDのユーザー情報を取得
     # @param id [Integer] ユーザーID
-    # 
-    # @return User情報のJSON | エラーメッセージ 
+    #
+    # @return User [JSON] | エラーメッセージ
     def show
       # 1. パラメータからユーザーIDを取得
       user = User.find_by(id: params[:id])
 
       # 2. ユーザー情報をJSON形式で返す
       if user
-        render json: {'user': format_user_data(user) }, status: :ok
+        render json: { 'user': format_user_data(user) }, status: :ok
         # 受け取り側
         # {%= user_data = JSON.parse(response.body)["user"] %}
       else
@@ -37,7 +38,7 @@ module Api
 
     # GET /api/users
     # ユーザー一覧を取得
-    # @return ['users': Array<User>] ユーザー情報の配列
+    # @return [Hash] { users: Array<User> } ユーザー情報の配列を含むハッシュ
     def index
       # TODO: ページネーション対応
       users = User.all
@@ -46,14 +47,20 @@ module Api
 
     # POST /api/users
     def create
+      # TODO : 実装
+      head :method_not_allowed
     end
 
     # PUT /api/users/:id
     def update
+      # TODO : 実装
+      head :method_not_allowed
     end
 
     # DELETE /api/users/:id
     def destroy
+      # TODO : 実装
+      head :method_not_allowed
     end
 
     private
