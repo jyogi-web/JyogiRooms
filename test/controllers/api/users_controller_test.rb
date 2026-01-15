@@ -23,8 +23,7 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show without authentication returns 401" do
-    user = users(:one)
-    get "/api/users/#{user.id}"
+    get "/api/users/#{users(:one).id}"
     assert_response :unauthorized
   end
 
@@ -34,12 +33,12 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update without authentication returns 401" do
-    put "/api/users/1"
+    put "/api/users/#{users(:one).id}"
     assert_response :unauthorized
   end
 
   test "destroy without authentication returns 401" do
-    delete "/api/users/1"
+    delete "/api/users/#{users(:one).id}"
     assert_response :unauthorized
   end
 
@@ -88,13 +87,13 @@ class Api::UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "update with authentication returns 405 (not implemented)" do
     sign_in_as(users(:one))
-    put "/api/users/1"
+    put "/api/users/#{users(:one).id}"
     assert_response :method_not_allowed
   end
 
   test "destroy with authentication returns 405 (not implemented)" do
     sign_in_as(users(:one))
-    delete "/api/users/1"
+    delete "/api/users/#{users(:one).id}"
     assert_response :method_not_allowed
   end
 end
