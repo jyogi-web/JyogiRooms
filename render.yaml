@@ -1,0 +1,19 @@
+databases:
+  # DB is managed externally (Neon), so no database service definition here.
+  # Ensure DATABASE_URL is set in the environment variables.
+
+services:
+  - type: web
+    name: jyogi-rooms
+    runtime: ruby
+    buildCommand: ./bin/render-build.sh
+    startCommand: bundle exec puma -C config/puma.rb
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_MASTER_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: 2
