@@ -36,7 +36,12 @@ module Api
     end
 
     # GET /api/users
+    # ユーザー一覧を取得
+    # @return ['users': Array<User>] ユーザー情報の配列
     def index
+      # TODO: ページネーション対応
+      users = User.all
+      render json: { users: users.map { |user| format_user_data(user) } }, status: :ok
     end
 
     # POST /api/users

@@ -24,6 +24,8 @@ Rails.application.routes.draw do
 
     # ユーザー情報
     get "users/me", to: "users#me"
+    get "users", to: "users#index"
+    get "users/:id", to: "users#show"
     delete "users/logout", to: "users#logout"
   end
 
