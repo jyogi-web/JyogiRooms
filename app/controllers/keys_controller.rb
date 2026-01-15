@@ -1,5 +1,5 @@
 class KeysController < ApplicationController
-  before_action :authenticate_user!, only: [:update]
+  before_action :authenticate_user!, only: [ :update ]
 
   # GET /rooms/:room_id/key
   # 現在の鍵持ちを取得
