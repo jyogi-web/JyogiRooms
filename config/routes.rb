@@ -25,6 +25,7 @@ Rails.application.routes.draw do
   get "auth/login", to: "auth#login"
   get "auth/callback", to: "auth#callback"
   delete "auth/logout", to: "auth#logout"
+  get "auth/logged_out", to: "auth#logged_out"
 
   namespace :api do
     resources :reservations, only: %i[index create destroy]
