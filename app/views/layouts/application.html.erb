@@ -46,8 +46,8 @@
           <button type="button" class="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:bg-gray-100">
             <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
             <div class="flex flex-col text-left flex-1">
-              <span class="text-sm font-bold text-gray-800"><%= current_user&.display_name || "Guest" %></span>
-              <span class="text-xs text-gray-500">@<%= current_user&.username || "guest" %></span>
+              <span class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></span>
+              <span class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></span>
             </div>
             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -77,8 +77,8 @@
         <!-- Mobile Dropdown Menu -->
         <div class="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200 z-50">
           <div class="px-4 py-3 border-b border-gray-100">
-            <p class="text-sm font-bold text-gray-800"><%= current_user&.display_name || "Guest" %></p>
-            <p class="text-xs text-gray-500">@<%= current_user&.username || "guest" %></p>
+            <p class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></p>
+            <p class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></p>
           </div>
           <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors", data: { turbo_confirm: "ログアウトしますか？" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
