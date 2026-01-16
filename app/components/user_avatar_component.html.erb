@@ -1,0 +1,7 @@
+<% if @user&.avatar_url.present? %>
+  <%= image_tag @user.avatar_url, class: image_classes, alt: @user.display_name %>
+<% else %>
+  <div class="<%= container_classes %>">
+    <%= initial %>
+  </div>
+<% end %>

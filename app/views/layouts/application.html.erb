@@ -18,11 +18,56 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <%# Google Fonts: Inter & Noto Sans JP %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%#= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
   </head>
 
-  <body>
-    <%= yield %>
+  <body class="min-h-screen bg-gray-100 font-sans text-gray-800">
+    <!-- Desktop Sidebar -->
+    <aside class="hidden md:flex flex-col w-64 h-screen fixed top-0 left-0 bg-white border-r border-gray-200 z-30">
+      <div class="h-16 flex items-center px-6 border-b border-gray-100">
+        <span class="text-xl font-bold text-gray-800">Jyogi Rooms</span>
+      </div>
+      <nav class="flex-1 px-4 py-6 space-y-1">
+        <% nav_items.each do |item| %>
+          <%= render "shared/nav_item", item: item, mode: :desktop %>
+        <% end %>
+      </nav>
+      
+      <!-- User Profile Footer -->
+      <div class="p-4 border-t border-gray-200">
+        <div class="flex items-center gap-3 px-2">
+          <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
+          <div class="flex flex-col">
+            <span class="text-sm font-bold text-gray-800"><%= current_user&.display_name || "Guest" %></span>
+            <span class="text-xs text-gray-500">@<%= current_user&.username || "guest" %></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Header (Optional, for brand) -->
+    <header class="md:hidden fixed top-0 left-0 w-full h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-30">
+      <span class="text-xl font-bold text-gray-800">Jyogi Rooms</span>
+      <%= render(UserAvatarComponent.new(user: current_user, size: :small)) %>
+    </header>
+
+    <!-- Main Content -->
+    <main class="md:ml-64 pt-14 md:pt-0 pb-20 md:pb-0">
+      <%= yield %>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+      <nav class="md:hidden fixed bottom-0 left-0 w-full h-16 bg-white border-t border-gray-200 flex justify-around items-center z-50 px-2 safe-area-bottom">
+        <% nav_items.each do |item| %>
+          <%= render "shared/nav_item", item: item, mode: :mobile %>
+        <% end %>
+      </nav>
   </body>
 </html>

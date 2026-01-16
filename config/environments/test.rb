@@ -47,4 +47,11 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Set default ENV variables for tests to avoid KeyError
+  ENV["JYOGI_AUTH_URL"] ||= "http://mock-auth.example.com"
+  ENV["CLIENT_ID"] ||= "mock_client_id"
+  ENV["CLIENT_SECRET"] ||= "mock_client_secret"
+  ENV["REDIRECT_URI"] ||= "http://localhost:3000/auth/callback"
+  ENV["FRONTEND_URL"] ||= "http://localhost:3000"
 end
