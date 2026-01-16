@@ -30,7 +30,7 @@
                 <div class="relative group cursor-pointer">
                   <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
                   
-                  <%# Tooltip -->
+                  <%# Tooltip %>
                   <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                     <%= key.user&.display_name || "Unknown" %>
                   </div>
@@ -45,8 +45,7 @@
         <!-- Key Transfer Form -->
         <div>
           <p class="text-sm font-semibold text-gray-600 mb-3">鍵を譲渡</p>
-          <%= form_with url: keys_path, method: :post, local: true, class: "space-y-3" do |form| %>
-            <%= form.hidden_field :room_id, value: room.id %>
+          <%= form_with url: transfer_key_path(room.id), method: :post, local: true, class: "space-y-3" do |form| %>
             
             <!-- User Select -->
             <div>

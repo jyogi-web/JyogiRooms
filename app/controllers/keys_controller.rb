@@ -1,5 +1,5 @@
 class KeysController < ApplicationController
-  before_action :authenticate_user!, only: [ :create ]
+  before_action :authenticate_user!, only: [ :index, :transfer ]
 
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
@@ -8,11 +8,12 @@ class KeysController < ApplicationController
     @users = User.order(:display_name)
   end
 
-  # POST /keys
+  # POST /keys/:id/transfer
   # 鍵を譲渡する
-  def create
+  def transfer
+    room_id = params[:id]
     KeyService.transfer(
-      room_id: params[:room_id],
+      room_id: room_id,
       from_user: current_user,
       to_user_id: params[:to_user_id]
     )
