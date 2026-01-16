@@ -7,3 +7,9 @@ db/schema.rb linguist-generated
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
+
+# プロジェクト全体は自動判定
+* text=auto
+
+# binディレクトリ以下のシェルスクリプトは、強制的にLFでチェックアウトさせる
+/bin/* text eol=lf
