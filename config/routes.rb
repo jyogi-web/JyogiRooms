@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   root "dashboard#index"
   resources :reservations, only: [ :index, :new, :create ]
   resources :keys, only: [ :index ]
-  
+
   resources :rooms, only: [] do
     resource :key, only: [] do
       post :transfer
