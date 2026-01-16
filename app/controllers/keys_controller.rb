@@ -1,27 +1,11 @@
 class KeysController < ApplicationController
-  before_action :authenticate_user!, only: [ :update, :create ]
+  before_action :authenticate_user!, only: [ :create ]
 
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
   def index
     @rooms = Room.includes(keys: :user).order(:room_number)
     @users = User.order(:display_name)
-  end
-
-  # GET /rooms/:room_id/key
-  # 現在の鍵持ちを取得
-  def show
-    users = Key.current_holder_by_room_id(params[:room_id])
-
-    render json: {
-      room_id: params[:room_id],
-      users: users.map { |user|
-        {
-          id: user.id,
-          display_name: user.display_name
-        }
-      }
-    }
   end
 
   # POST /keys
