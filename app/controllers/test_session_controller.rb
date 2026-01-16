@@ -4,7 +4,7 @@ class TestSessionController < ApplicationController
 
   def create
     # Identify environment again for double safety, though routes guard it.
-    raise ActionController::RoutingError, 'Not Found' unless Rails.env.test?
+    raise ActionController::RoutingError, "Not Found" unless Rails.env.test?
 
     user = User.find(params[:user_id])
     # Create a dummy access token
