@@ -1,31 +1,32 @@
 class KeysController < ApplicationController
-  before_action :authenticate_user!, only: [ :update ]
+  before_action :authenticate_user!, only: [ :index, :transfer ]
 
-  # GET /rooms/:room_id/key
-  # 現在の鍵持ちを取得
-  def show
-    users = Key.current_holder_by_room_id(params[:room_id])
-
-    render json: {
-      room_id: params[:room_id],
-      users: users.map { |user|
-        {
-          id: user.id,
-          display_name: user.display_name
-        }
-      }
-    }
+  # GET /keys
+  # 鍵管理画面：全ての部室と現在の鍵持ちを表示
+  def index
+    @rooms = Room.includes(keys: :user).order(:room_number)
+    @users = User.where.not(id: current_user.id).order(:display_name)
   end
 
-  # PATCH /rooms/:room_id/key
+  # POST /rooms/:room_id/key/transfer
   # 鍵を譲渡する
-  def update
+  def transfer
     KeyService.transfer(
       room_id: params[:room_id],
       from_user: current_user,
-      to_user_id: params[:to_user_id]
+      to_user_id: transfer_params[:to_user_id]
     )
 
-    render json: { status: "ok" }
+    redirect_to keys_path, notice: "鍵を譲渡しました"
+  rescue ActiveRecord::RecordNotFound
+    redirect_to keys_path, alert: "指定された部屋または譲渡先ユーザーが見つかりません"
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to keys_path, alert: "鍵の譲渡に失敗しました：#{e.message}"
+  end
+
+  private
+
+  def transfer_params
+    params.permit(:to_user_id)
   end
 end
