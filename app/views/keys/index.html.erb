@@ -45,8 +45,7 @@
         <!-- Key Transfer Form -->
         <div>
           <p class="text-sm font-semibold text-gray-600 mb-3">鍵を譲渡</p>
-          <%= form_with url: room_key_transfer_path(room.id), method: :post, local: true, class: "space-y-3" do |form| %>
-            
+            <%= form_with url: transfer_room_key_path(room.id), method: :post, local: true, class: "space-y-3" do |form| %>
             <!-- User Select -->
             <div>
               <%= form.select :to_user_id, 
