@@ -4,7 +4,7 @@
 class AuthController < ApplicationController
   include ErrorRenderable
 
-  skip_before_action :verify_authenticity_token, only: [ :callback ]
+  skip_before_action :verify_authenticity_token, only: [ :callback, :logged_out ]
   skip_before_action :authenticate_user!
 
   private def login_params
@@ -71,25 +71,26 @@ class AuthController < ApplicationController
     end
   end
 
+  # GET /auth/logged_out
+  # ログアウト完了ページ
+  def logged_out
+    # 既にログイン中の場合はホームにリダイレクト
+    return redirect_to root_path if current_user
+
+    render layout: false
+  end
+
   # DELETE /auth/logout
   # ログアウト処理
   def logout
-    access_token_id = session[:access_token_id]
-    access_token_record = AccessToken.find_by(id: access_token_id) if access_token_id
+    # ローカルのログアウト処理（DBトークン失効とセッションクリア）
+    sign_out
 
-    begin
-      # jyogi-auth側でトークンを無効化
-      if access_token_record
-        JyogiAuthClient.logout(access_token: access_token_record.token)
-      end
-    rescue JyogiAuthClient::Error => e
-      Rails.logger.warn "Logout error (ignored): #{e.message}"
-      # ログアウトエラーは無視してセッションとDBトークンをクリア
-    ensure
-      # ローカルのログアウト処理（DBトークン失効とセッションクリア）
-      sign_out
-
-      render json: { message: "ログアウトしました。" }, status: :ok
+    respond_to do |format|
+      # jyogi-authのログアウトページにリダイレクト（Discordセッションもクリア）
+      logout_url_with_redirect = "#{JyogiAuth.configuration.logout_url}?redirect_uri=#{CGI.escape(auth_logged_out_url)}"
+      format.html { redirect_to logout_url_with_redirect, allow_other_host: true }
+      format.json { render json: { message: "ログアウトしました。" }, status: :ok }
     end
   end
 

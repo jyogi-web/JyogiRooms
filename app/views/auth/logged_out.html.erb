@@ -1,0 +1,42 @@
+<% content_for(:title) { "ログアウト完了 | Jyogi Rooms" } %>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= yield :title %></title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+</head>
+
+<body class="min-h-screen bg-gray-100 font-sans text-gray-800 flex items-center justify-center">
+  <div class="w-full max-w-md mx-4">
+    <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+      <!-- Checkmark Icon -->
+      <div class="w-16 h-16 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
+        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">ログアウトしました</h1>
+      <p class="text-gray-500 mb-8">またのご利用をお待ちしております</p>
+
+      <%= link_to auth_login_path, class: "inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors" do %>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+        </svg>
+        再度ログイン
+      <% end %>
+    </div>
+
+    <p class="text-center text-gray-400 text-sm mt-6">Jyogi Rooms</p>
+  </div>
+</body>
+</html>
