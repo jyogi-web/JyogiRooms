@@ -33,10 +33,10 @@
                     
                     <%# Tooltip %>
                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                      <%= key.user&.display_name || "Unknown" %>
+                      <%= key.user.display_name %>
                     </div>
                   </div>
-                  <p class="text-xs text-gray-700 font-medium text-center"><%= key.user&.display_name || "Unknown" %></p>
+                  <p class="text-xs text-gray-700 font-medium text-center"><%= key.user.display_name %></p>
                 </div>
               <% end %>
             <% else %>
@@ -46,7 +46,7 @@
         </div>
 
         <!-- Key Transfer Form -->
-        <% if room.keys.exists?(user_id: current_user.id) %>
+        <% if room.keys.any? { |k| k.user_id == current_user.id } %>
           <div>
             <p class="text-sm font-semibold text-gray-600 mb-3">鍵を譲渡</p>
             <%= form_with url: room_key_transfer_path(room.id), method: :post, local: true, class: "space-y-3" do |form| %>
