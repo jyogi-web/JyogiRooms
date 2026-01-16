@@ -3,7 +3,7 @@ module NavigationHelper
     [
       { path: root_path, icon: :home, label: "ホーム", active: current_page?(root_path) },
       { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) },
-      { path: "#", icon: :key, label: "鍵管理", active: false },
+      { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) },
       { path: "#", icon: :cog, label: "設定", active: false }
     ]
   end
