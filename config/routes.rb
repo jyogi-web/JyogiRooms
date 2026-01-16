@@ -24,7 +24,7 @@ Rails.application.routes.draw do
 
     # ユーザー情報
     get "users/me", to: "users#me"
-    delete "users/logout", to: "users#logout"
+    resources :users, only: %i[index show create update destroy]
   end
 
   if Rails.env.test?
