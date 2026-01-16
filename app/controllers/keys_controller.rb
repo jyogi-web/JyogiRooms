@@ -4,7 +4,7 @@ class KeysController < ApplicationController
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
   def index
-    @rooms = Room.includes(keys: :user).order(:room_number)
+    @rooms = Room.includes(keys: :user).order(room_number: :desc)
     @users = User.where.not(id: current_user.id).order(:display_name)
   end
 
