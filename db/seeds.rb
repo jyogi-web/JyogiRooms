@@ -3,38 +3,28 @@ return unless Rails.env.development? || Rails.env.test?
 
 # Clear existing data
 puts "Cleaning up database..."
+KeyTransferLog.delete_all
+Key.delete_all
+AccessToken.delete_all
 Reservation.delete_all
+Room.delete_all
 User.delete_all
+
+# Create Rooms
+puts "Creating Rooms..."
+room1 = Room.create!(name: "第１部室", room_number: "322")
+room2 = Room.create!(name: "第２部室", room_number: "321")
+room3 = Room.create!(name: "第３部室", room_number: "224")
 
 # Create Users
 puts "Creating Users..."
-# Do not specify IDs to avoid PostgreSQL sequence sync issues
-user1 = User.create!
-user2 = User.create!
-
-# Create Reservations
-puts "Creating Reservations..."
-now = Time.current
-
-# 1. Past Reservation (Yesterday)
-Reservation.create!(
-  user: user1,
-  start_at: now.yesterday.change(hour: 10, min: 0, sec: 0),
-  end_at: now.yesterday.change(hour: 12, min: 0, sec: 0)
+user1 = User.create!(
+  username: "test_user1",
+  display_name: "テストユーザー1"
+)
+user2 = User.create!(
+  username: "test_user2",
+  display_name: "テストユーザー2"
 )
 
-# 2. Today's Reservation
-Reservation.create!(
-  user: user2,
-  start_at: now.change(hour: 13, min: 0, sec: 0),
-  end_at: now.change(hour: 15, min: 0, sec: 0)
-)
-
-# 3. Future Reservation (Tomorrow)
-Reservation.create!(
-  user: user1,
-  start_at: now.tomorrow.change(hour: 10, min: 0, sec: 0),
-  end_at: now.tomorrow.change(hour: 12, min: 0, sec: 0)
-)
-
-puts "Done! Created #{User.count} users and #{Reservation.count} reservations."
+puts "Done! Created #{Room.count} rooms and #{User.count} users."
