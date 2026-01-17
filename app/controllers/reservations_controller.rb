@@ -70,7 +70,9 @@ class ReservationsController < ApplicationController
     if @reservation.update(reservation_params)
       redirect_to reservations_path, notice: "予約を更新しました"
     else
-      @existing_reservations = fetch_existing_reservations(@reservation.reservation_date)
+      # Use original date if available (in case of date change failure), otherwise current input date
+      date = @reservation.start_at_was&.to_date || @reservation.reservation_date
+      @existing_reservations = fetch_existing_reservations(date, exclude_id: @reservation.id)
       render :edit, status: :unprocessable_entity
     end
   end
