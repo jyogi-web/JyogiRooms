@@ -17,7 +17,7 @@ class Reservation < ApplicationRecord
   def combine_date_and_time
     # Use provided reservation_date, or fall back to existing start_at date if available
     date_val = reservation_date.presence || start_at&.to_date
-    
+
     return unless date_val.present? && start_time.present? && end_time.present?
 
     begin
