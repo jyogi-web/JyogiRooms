@@ -1,8 +1,8 @@
 <%= form_with(model: reservation, local: true, class: "space-y-6") do |f| %>
   <% if reservation.errors.any? %>
     <div class="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
-      <ul class="list-disc pl-5">
-        <% reservation.errors.full_messages.each do |message| %>
+      <ul class="list-none space-y-1">
+        <% reservation.errors.map(&:message).uniq.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>

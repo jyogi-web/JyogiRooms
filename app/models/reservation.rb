@@ -1,8 +1,9 @@
 class Reservation < ApplicationRecord
   belongs_to :user
 
-  validates :start_time, presence: { message: "を入力してください" }
-  validates :end_time, presence: { message: "を入力してください" }
+  validates :start_time, presence: { message: "開始時間を入力してください" }
+  validates :end_time, presence: { message: "終了時間を入力してください" }
+
   validate :start_at_cannot_be_in_the_past
   validate :end_at_must_be_after_start_at
   validate :cannot_overlap_with_others
