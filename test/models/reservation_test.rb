@@ -66,7 +66,7 @@ class ReservationTest < ActiveSupport::TestCase
     # Overlaps end
     new_reservation.start_at = @reservation.end_at - 1.hour
     new_reservation.end_at = @reservation.end_at + 1.hour
-     # Update virtuals
+    # Update virtuals
     new_reservation.start_time = new_reservation.start_at.strftime("%H:%M")
     new_reservation.end_time = new_reservation.end_at.strftime("%H:%M")
 

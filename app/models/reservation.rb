@@ -10,7 +10,7 @@ class Reservation < ApplicationRecord
   validates :purpose, length: { maximum: 15 }
 
   attr_writer :reservation_date, :start_time, :end_time
-  
+
   def reservation_date
     @reservation_date || start_at&.to_date
   end
