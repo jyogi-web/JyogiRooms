@@ -6,6 +6,7 @@ class Admin::RolesController < Admin::BaseController
 
   def show
     @role = Role.includes(:users).find(params[:id])
+    @users = @role.users
   end
 
   def update
