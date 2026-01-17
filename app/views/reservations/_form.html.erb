@@ -29,16 +29,16 @@
 
   <!-- Time Selection Grid -->
   <div class="grid grid-cols-2 gap-4">
-    <div>
-      <%= f.label :start_time, "開始時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
-      <div class="relative">
-         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-           <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
-         </div>
-         <%= f.time_field :start_time, 
-             class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 #{'border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' if reservation.errors[:start_time].any?}", 
-             required: true %>
-      </div>
+      <div>
+       <%= f.label :start_time, "開始時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
+       <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
+          </div>
+          <%= f.time_field :start_time, 
+              class: time_field_class(reservation, :start_time), 
+              required: true %>
+       </div>
     </div>
     <div>
       <%= f.label :end_time, "終了時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
@@ -47,7 +47,7 @@
            <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
          </div>
         <%= f.time_field :end_time, 
-            class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 #{'border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' if reservation.errors[:end_time].any?}", 
+            class: time_field_class(reservation, :end_time), 
             required: true %>
       </div>
     </div>
