@@ -1,33 +1,14 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
   <h1 class="text-2xl font-bold text-gray-800">管理画面</h1>
 
-  <!-- Admin Navigation Dropdown -->
-  <div class="mb-6">
-    <% current_path = request.path %>
-    <% nav_items = [
-      { label: "ユーザー管理", path: admin_roles_path },
-      { label: "譲渡履歴", path: admin_key_transfer_logs_path }
-    ] %>
-    
-    <select 
-      onchange="if(this.value) window.location.href = this.value"
-      class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-800 cursor-pointer"
-    >
-      <option value="" disabled>メニューを選択</option>
-      <% nav_items.each do |item| %>
-        <option value="<%= item[:path] %>" <%= "selected" if current_path == item[:path] %>>
-          <%= item[:label] %>
-        </option>
-      <% end %>
-    </select>
-  </div>
+  <%= render 'admin/nav' %>
 
   <h2 class="text-xl font-bold text-gray-800 mb-6">ロール詳細: <%= @role.name %></h2>
 
   <div class="card p-6 mb-6">
     <h2 class="text-lg font-bold text-gray-800 mb-4">このロールに属するユーザー</h2>
     
-    <% if @role.users.any? %>
+    <% if @users.any? %>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-100">
@@ -38,7 +19,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <% @role.users.each do |user| %>
+            <% @users.each do |user| %>
               <tr class="hover:bg-gray-50 transition-colors">
                 <td class="px-4 py-3 text-gray-800">@<%= user.username %></td>
                 <td class="px-4 py-3 text-gray-800"><%= user.display_name %></td>
