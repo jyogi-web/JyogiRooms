@@ -82,8 +82,6 @@ GEM
     bcrypt_pbkdf (1.1.2)
     bigdecimal (4.0.1)
     bindex (0.8.1)
-    bootsnap (1.21.1)
-      msgpack (~> 1.2)
     brakeman (7.1.2)
       racc
     builder (3.3.0)
@@ -164,7 +162,6 @@ GEM
     mini_mime (1.1.5)
     minitest (6.0.1)
       prism (~> 1.5)
-    msgpack (1.8.0)
     net-imap (0.6.2)
       date
       net-protocol
@@ -379,7 +376,6 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  bootsnap
   brakeman
   bundler-audit
   capybara
