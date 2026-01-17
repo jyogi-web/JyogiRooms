@@ -35,7 +35,8 @@ class ReservationTest < ActiveSupport::TestCase
   test "end_at should be after start_at" do
     @reservation.end_at = @reservation.start_at - 1.hour
     assert_not @reservation.valid?
-    assert_includes @reservation.errors[:end_at], "must be after the start time"
+    # Ensure checking the correct attribute and message
+    assert_includes @reservation.errors[:end_time], "開始時刻より先の時刻を指定してください"
   end
 
   test "should not overlap with existing reservation" do
@@ -45,17 +46,30 @@ class ReservationTest < ActiveSupport::TestCase
       start_at: @reservation.start_at + 10.minutes,
       end_at: @reservation.end_at - 10.minutes
     )
+    # Ensure virtual attributes are set for validation
+    new_reservation.reservation_date = new_reservation.start_at.to_date
+    new_reservation.start_time = new_reservation.start_at.strftime("%H:%M")
+    new_reservation.end_time = new_reservation.end_at.strftime("%H:%M")
+
     assert_not new_reservation.valid?
-    assert_includes new_reservation.errors[:base], "This time slot is already booked"
+    assert_includes new_reservation.errors[:base], "指定された時間は既に予約が入っています"
 
     # Overlaps start
     new_reservation.start_at = @reservation.start_at - 1.hour
     new_reservation.end_at = @reservation.start_at + 1.hour
+    # Update virtuals
+    new_reservation.start_time = new_reservation.start_at.strftime("%H:%M")
+    new_reservation.end_time = new_reservation.end_at.strftime("%H:%M")
+
     assert_not new_reservation.valid?
 
     # Overlaps end
     new_reservation.start_at = @reservation.end_at - 1.hour
     new_reservation.end_at = @reservation.end_at + 1.hour
+     # Update virtuals
+    new_reservation.start_time = new_reservation.start_at.strftime("%H:%M")
+    new_reservation.end_time = new_reservation.end_at.strftime("%H:%M")
+
     assert_not new_reservation.valid?
   end
 

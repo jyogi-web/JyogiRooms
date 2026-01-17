@@ -9,7 +9,19 @@ class Reservation < ApplicationRecord
   validate :cannot_overlap_with_others
   validates :purpose, length: { maximum: 15 }
 
-  attr_accessor :reservation_date, :start_time, :end_time
+  attr_writer :reservation_date, :start_time, :end_time
+  
+  def reservation_date
+    @reservation_date || start_at&.to_date
+  end
+
+  def start_time
+    @start_time || start_at&.strftime("%H:%M")
+  end
+
+  def end_time
+    @end_time || end_at&.strftime("%H:%M")
+  end
 
   before_validation :combine_date_and_time
 
