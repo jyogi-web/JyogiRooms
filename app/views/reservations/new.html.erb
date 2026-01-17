@@ -7,25 +7,8 @@
   </div>
 
   <!-- Existing Reservations Section -->
-  <% if @existing_reservations&.any? %>
-    <div class="mb-8 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-      <h2 class="text-sm font-bold text-blue-800 mb-3 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clip-rule="evenodd" />
-        </svg>
-        この日の予約状況
-      </h2>
-      <div class="space-y-2">
-        <% @existing_reservations.each do |res| %>
-          <%= render ReservationComponent.new(reservation: res, layout: :list) %>
-        <% end %>
-      </div>
-    </div>
-  <% elsif params[:date].present? %>
-    <div class="mb-8 p-4 bg-gray-50 border border-gray-100 rounded-xl text-center text-sm text-gray-500">
-      この日の予約はまだありません
-    </div>
-  <% end %>
+  <!-- Existing Reservations Section -->
+  <%= render partial: "existing_reservations", locals: { reservations: @existing_reservations, show_empty_message: params[:date].present? } %>
 
   <div class="card p-6">
     <%= render partial: "form", locals: { reservation: @reservation, submit_text: "予約を作成する" } %>
