@@ -1,6 +1,8 @@
 class Reservation < ApplicationRecord
   belongs_to :user
 
+  attr_writer :reservation_date, :start_time, :end_time
+
   validates :start_time, presence: { message: "開始時間を入力してください" }
   validates :end_time, presence: { message: "終了時間を入力してください" }
 
@@ -9,7 +11,7 @@ class Reservation < ApplicationRecord
   validate :cannot_overlap_with_others
   validates :purpose, length: { maximum: 15 }
 
-  attr_writer :reservation_date, :start_time, :end_time
+
 
   def reservation_date
     @reservation_date || start_at&.to_date
@@ -43,14 +45,14 @@ class Reservation < ApplicationRecord
     begin
       s_time = Time.parse(start_time.to_s)
     rescue ArgumentError
-      errors.add(:start_time, "形式が正しくありません")
+      errors.add(:start_time, "開始時刻の形式が正しくありません")
       return
     end
 
     begin
       e_time = Time.parse(end_time.to_s)
     rescue ArgumentError
-      errors.add(:end_time, "形式が正しくありません")
+      errors.add(:end_time, "終了時刻の形式が正しくありません")
       return
     end
 
