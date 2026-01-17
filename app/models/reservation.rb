@@ -6,6 +6,7 @@ class Reservation < ApplicationRecord
   validate :start_at_cannot_be_in_the_past
   validate :end_at_must_be_after_start_at
   validate :cannot_overlap_with_others
+  validates :purpose, length: { maximum: 15 }
 
   attr_accessor :reservation_date, :start_time, :end_time
 
