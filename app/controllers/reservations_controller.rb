@@ -52,6 +52,10 @@ class ReservationsController < ApplicationController
       redirect_to reservations_path, notice: "予約を作成しました"
     else
       # Re-populate existing reservations for the view
+      if @reservation.reservation_date.present? && @reservation.reservation_date.is_a?(String)
+        @reservation.reservation_date = Date.parse(@reservation.reservation_date) rescue nil
+      end
+
       @existing_reservations = fetch_existing_reservations(@reservation.reservation_date)
       render :new, status: :unprocessable_entity
     end
@@ -72,6 +76,13 @@ class ReservationsController < ApplicationController
     else
       # Use original date if available (in case of date change failure), otherwise current input date
       date = @reservation.start_at_was&.to_date || @reservation.reservation_date
+
+      # Ensure reservation_date is a Date object for the view
+      if @reservation.reservation_date.present? && @reservation.reservation_date.is_a?(String)
+        @reservation.reservation_date = Date.parse(@reservation.reservation_date) rescue nil
+      end
+      @reservation.reservation_date ||= date
+
       @existing_reservations = fetch_existing_reservations(date, exclude_id: @reservation.id)
       render :edit, status: :unprocessable_entity
     end
@@ -96,12 +107,16 @@ class ReservationsController < ApplicationController
   def fetch_existing_reservations(date, exclude_id: nil)
     return [] unless date.present?
 
+    date = Date.parse(date.to_s) unless date.is_a?(Date)
+
     query = Reservation.includes(:user)
                        .where(start_at: date.beginning_of_day..date.end_of_day)
 
     query = query.where.not(id: exclude_id) if exclude_id
 
     query.order(:start_at)
+  rescue ArgumentError
+    []
   end
 
   def set_reservation

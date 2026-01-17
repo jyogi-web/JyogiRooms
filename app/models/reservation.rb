@@ -1,14 +1,29 @@
 class Reservation < ApplicationRecord
   belongs_to :user
 
-  validates :start_at, presence: true
-  validates :end_at, presence: true
+  attr_writer :reservation_date, :start_time, :end_time
+
+  validates :start_time, presence: { message: "開始時間を入力してください" }
+  validates :end_time, presence: { message: "終了時間を入力してください" }
+
   validate :start_at_cannot_be_in_the_past
   validate :end_at_must_be_after_start_at
   validate :cannot_overlap_with_others
   validates :purpose, length: { maximum: 15 }
 
-  attr_accessor :reservation_date, :start_time, :end_time
+
+
+  def reservation_date
+    @reservation_date || start_at&.to_date
+  end
+
+  def start_time
+    @start_time || start_at&.strftime("%H:%M")
+  end
+
+  def end_time
+    @end_time || end_at&.strftime("%H:%M")
+  end
 
   before_validation :combine_date_and_time
 
@@ -23,21 +38,21 @@ class Reservation < ApplicationRecord
     begin
       date = date_val.is_a?(Date) ? date_val : Date.parse(date_val.to_s)
     rescue ArgumentError
-      errors.add(:reservation_date, "invalid format")
+      errors.add(:reservation_date, "日付形式が正しくありません")
       return
     end
 
     begin
       s_time = Time.parse(start_time.to_s)
     rescue ArgumentError
-      errors.add(:start_time, "invalid format")
+      errors.add(:start_time, "開始時刻の形式が正しくありません")
       return
     end
 
     begin
       e_time = Time.parse(end_time.to_s)
     rescue ArgumentError
-      errors.add(:end_time, "invalid format")
+      errors.add(:end_time, "終了時刻の形式が正しくありません")
       return
     end
 
@@ -50,7 +65,7 @@ class Reservation < ApplicationRecord
     return if start_at.blank? || end_at.blank?
 
     if end_at <= start_at
-      errors.add(:end_at, "must be after the start time")
+      errors.add(:end_time, "開始時刻より先の時刻を指定してください")
     end
   end
 
@@ -65,7 +80,7 @@ class Reservation < ApplicationRecord
                            .exists?
 
     if existing_reservation
-      errors.add(:base, "This time slot is already booked")
+      errors.add(:base, "指定された時間は既に予約が入っています")
     end
   end
 
@@ -73,7 +88,7 @@ class Reservation < ApplicationRecord
     return if start_at.blank?
 
     if start_at < Time.current
-      errors.add(:start_at, "can't be in the past")
+      errors.add(:start_time, "現在時刻より先の時刻を指定してください")
     end
   end
 end

@@ -9,4 +9,15 @@ module ReservationsHelper
     return "" if time.nil?
     time.strftime("%H:%M")
   end
+
+  def time_field_class(reservation, field_name)
+    base_classes = "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5"
+    error_classes = "border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500"
+
+    if reservation.errors[field_name].any?
+      "#{base_classes} #{error_classes}"
+    else
+      base_classes
+    end
+  end
 end
