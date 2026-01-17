@@ -35,6 +35,7 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
             return;
         }
 
+        // Create embed list (max 10 for Discord limit)
         const embed = new EmbedBuilder()
             .setTitle('📅 今後の予約一覧')
             .setColor('#0099ff')
@@ -49,27 +50,21 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
             const dateStr = start.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
             const timeStr = `${start.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
 
-            // ユーザー名（APIに含まれていれば表示、なければID）
-            let userName = res.user?.display_name || res.user?.username || `User ${res.user_id}`;
-
-            // Discord IDがある場合は、サーバー上のニックネームを取得して上書き
-            if (res.user?.discord_id && interaction.guild) {
-                try {
-                    const member = await interaction.guild.members.fetch(res.user.discord_id);
-                    if (member) {
-                        userName = member.displayName; // サーバーでの表示名（ニックネーム優先）
-                    }
-                } catch (e) {
-                    // メンバーが見つからない場合などは無視してDB上の名前を使う
-                    console.warn(`Member fetch failed for ${res.user.discord_id}`);
+            // Determine user display (mention if Discord ID exists)
+            let userDisplay = `User ${res.user_id}`;
+            if (res.user) {
+                if (res.user.discord_id) {
+                    userDisplay = `<@${res.user.discord_id}>`;
+                } else {
+                    userDisplay = res.user.display_name || res.user.username;
                 }
             }
 
-            description += `**${dateStr} ${timeStr}**\n👤 ${userName}\n\n`;
+            description += `**${dateStr} ${timeStr}**\n👤 ${userDisplay}\n\n`;
         }
 
         embed.setDescription(description);
-        await interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ content: '', embeds: [embed] });
 
     } catch (error) {
         console.error(error);

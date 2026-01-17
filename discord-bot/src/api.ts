@@ -14,6 +14,7 @@ export interface Reservation {
         username: string;
         display_name: string;
         discord_id?: string;
+        avatar_url?: string;
     };
 }
 
