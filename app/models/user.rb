@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  belongs_to :role, optional: true
+  belongs_to :role, optional: true, inverse_of: :users
   has_many :reservations
   has_many :access_tokens, dependent: :destroy
 
@@ -35,7 +35,10 @@ class User < ApplicationRecord
     jyogi_user_id.present?
   end
 
+  # ユーザーが管理者ロールを持つかどうか
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # @return [Boolean] 管理者かどうか
   def admin?
-    role&.name == "admin"
+    role&.name == Role::ADMIN
   end
 end
