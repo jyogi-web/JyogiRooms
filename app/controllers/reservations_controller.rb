@@ -78,8 +78,11 @@ class ReservationsController < ApplicationController
   end
 
   def destroy
-    @reservation.destroy
-    redirect_to reservations_path, notice: "予約を削除しました", status: :see_other
+    if @reservation.destroy
+      redirect_to reservations_path, notice: "予約を削除しました", status: :see_other
+    else
+      redirect_to reservations_path, alert: "予約の削除に失敗しました"
+    end
   end
 
   private
