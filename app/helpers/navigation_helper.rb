@@ -1,11 +1,18 @@
 module NavigationHelper
   def nav_items
-    [
+    items = [
       { path: root_path, icon: :home, label: "ホーム", active: current_page?(root_path) },
       { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) },
-      { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) },
-      { path: "#", icon: :cog, label: "設定", active: false }
+      { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) }
     ]
+
+    # 管理者のみ管理画面へのリンクを表示
+    if current_user&.admin?
+      items << { path: "#", icon: :shield, label: "管理画面", active: false }
+    end
+
+    items << { path: "#", icon: :cog, label: "設定", active: false }
+    items
   end
 
   def nav_icon(name, classes)
@@ -16,6 +23,8 @@ module NavigationHelper
                "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
     when :key
                "M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
+    when :shield
+               "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
     when :cog
                nil
     end

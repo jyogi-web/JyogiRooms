@@ -39,6 +39,26 @@ user5 = User.create!(
   display_name: "5(テストユーザー)"
 )
 
+# Create Roles and assign to users
+puts "Creating Roles and assigning users..."
+admin_role = Role.find_or_create_by!(name: Role::ADMIN)
+member_role = Role.find_or_create_by!(name: "member")
+
+# Default all to member
+[ user1, user2, user3, user4, user5 ].each do |u|
+  u.update!(role: member_role)
+end
+
+# test_user5は管理者に設定
+seed_admin_username = ENV["SEED_ADMIN_USERNAME"] || "test_user5"
+admin_target = User.find_by(username: seed_admin_username)
+if admin_target
+  admin_target.update!(role: admin_role)
+  puts "Assigned admin role to #{admin_target.username}"
+else
+  puts "No admin assigned: user '#{seed_admin_username}' not found"
+end
+
 # Create Keys (鍵の所有状態)
 puts "Creating Keys..."
 key1 = Key.create!(room: room1, user: user1)  # user1が第1部室の鍵を持つ
@@ -69,5 +89,6 @@ KeyTransferLog.create!(
 puts "Done! Created:"
 puts "  - #{Room.count} rooms"
 puts "  - #{User.count} users"
+puts "  - #{Role.count} roles"
 puts "  - #{Key.count} keys"
 puts "  - #{KeyTransferLog.count} transfer logs"
