@@ -53,8 +53,7 @@
         <% end %>
         <%= render Ui::ConfirmModalComponent.new(
               trigger_icon: render(Icons::TrashComponent.new(classes: "w-4 h-4")),
-              title: "予約の削除",
-              confirm_text: "削除する"
+              title: "予約の削除"
             ) do %>
           <%= button_to "削除する", reservation_path(@reservation), method: :delete, class: "px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" %>
         <% end %>
