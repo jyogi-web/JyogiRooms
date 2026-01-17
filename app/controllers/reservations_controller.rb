@@ -58,7 +58,12 @@ class ReservationsController < ApplicationController
   end
 
   def edit
-    @existing_reservations = fetch_existing_reservations(@reservation.reservation_date)
+    # Populate virtual attributes for form pre-filling
+    @reservation.reservation_date = @reservation.start_at.to_date
+    @reservation.start_time = @reservation.start_at.strftime("%H:%M")
+    @reservation.end_time = @reservation.end_at.strftime("%H:%M")
+
+    @existing_reservations = fetch_existing_reservations(@reservation.reservation_date, exclude_id: @reservation.id)
   end
 
   def update
@@ -81,12 +86,15 @@ class ReservationsController < ApplicationController
     params.require(:reservation).permit(:start_at, :end_at, :reservation_date, :start_time, :end_time, :purpose)
   end
 
-  def fetch_existing_reservations(date)
+  def fetch_existing_reservations(date, exclude_id: nil)
     return [] unless date.present?
 
-    Reservation.includes(:user)
-               .where(start_at: date.beginning_of_day..date.end_of_day)
-               .order(:start_at)
+    query = Reservation.includes(:user)
+                       .where(start_at: date.beginning_of_day..date.end_of_day)
+
+    query = query.where.not(id: exclude_id) if exclude_id
+
+    query.order(:start_at)
   end
 
   def set_reservation
