@@ -60,7 +60,7 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
                 }
             }
 
-            description += `**${dateStr} ${timeStr}**\n👤 ${userDisplay}\n\n`;
+            description += `**${dateStr} ${timeStr}**\n👤${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
         }
 
         embed.setDescription(description);

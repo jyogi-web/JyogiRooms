@@ -8,6 +8,7 @@ export interface Reservation {
     user_id: number;
     start_at: string;
     end_at: string;
+    purpose: string;
     // user information loaded via includes
     user?: {
         id: number;
