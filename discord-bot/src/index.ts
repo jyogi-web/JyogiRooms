@@ -4,6 +4,8 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { startHealthCheckCron, stopHealthCheckCron } from "./cron.js";
 import { server } from "./server.js";
 import { startLockAnnounceCron, stopLockAnnounceCron } from "./lockAnnounce.js";
+import { commands } from './commands/index.js';
+import { Events } from 'discord.js';
 
 // =====================
 // Environment variables
@@ -35,6 +37,28 @@ client.once('ready', () => {
   startLockAnnounceCron(client);
 });
 
+client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = commands.find(c => c.data.name === interaction.commandName);
+
+  if (!command) {
+    console.error(`No command matching ${interaction.commandName} was found.`);
+    return;
+  }
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+    } else {
+      await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    }
+  }
+});
+
 client.login(token).catch((error) => {
   console.error('❌ Failed to login to Discord:', error);
   process.exit(1);
@@ -49,7 +73,7 @@ const shutdown = async (signal: string) => {
   console.log(`🛑 Received ${signal}. Shutting down...`);
 
   stopHealthCheckCron();
-  stopLockAnnounceCron(); 
+  stopLockAnnounceCron();
 
   try {
     await new Promise<void>((resolve) => {
