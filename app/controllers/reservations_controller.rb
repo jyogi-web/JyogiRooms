@@ -81,8 +81,6 @@ class ReservationsController < ApplicationController
       if @reservation.reservation_date.present? && @reservation.reservation_date.is_a?(String)
         @reservation.reservation_date = Date.parse(@reservation.reservation_date) rescue nil
       end
-      # If fallback to start_at_was happened for 'date' var, ensure reservation_date matches it if it was nil/invalid?
-      # Actually view uses @reservation.reservation_date.
       @reservation.reservation_date ||= date
 
       @existing_reservations = fetch_existing_reservations(date, exclude_id: @reservation.id)
