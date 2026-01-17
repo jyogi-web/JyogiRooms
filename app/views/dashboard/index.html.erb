@@ -1,4 +1,31 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
+  <% if Rails.env.development? || Rails.env.test? %>
+    <!-- 開発用: ユーザー切り替え -->
+    <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-2 mb-3">
+        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <h3 class="text-sm font-bold text-yellow-800">開発モード: ユーザー切り替え</h3>
+      </div>
+      <div class="flex items-center gap-3">
+        <p class="text-sm text-yellow-700">
+          現在: <span class="font-bold"><%= current_user&.display_name || "Guest" %></span>
+          <% if current_user&.admin? %>
+            <span class="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded">管理者</span>
+          <% end %>
+        </p>
+        <%= form_with url: switch_user_path, method: :post, class: "flex items-center gap-2 flex-1" do |f| %>
+          <%= f.select :user_id, 
+              options_for_select(@all_users.map { |u| ["#{u.display_name} (@#{u.username})#{u.admin? ? ' 👑' : ''}", u.id] }, current_user&.id),
+              {},
+              class: "flex-1 px-3 py-1.5 text-sm border border-yellow-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400" %>
+          <%= f.submit "切替", class: "px-4 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors" %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
     <h2 class="text-xl font-bold text-gray-800">今日の予約</h2>
 
   <%# Today's Reservations %>

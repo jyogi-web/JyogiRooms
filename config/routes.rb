@@ -38,4 +38,9 @@ Rails.application.routes.draw do
   if Rails.env.test?
     post "/test/login", to: "test_session#create"
   end
+
+  # 開発・テスト環境でのユーザー切り替え
+  if Rails.env.development? || Rails.env.test?
+    post "switch_user", to: "dashboard#switch_user"
+  end
 end
