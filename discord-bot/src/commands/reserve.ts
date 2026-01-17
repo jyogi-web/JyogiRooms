@@ -42,7 +42,7 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
 
         let description = '';
 
-        reservations.forEach(res => {
+        for (const res of reservations) {
             const start = new Date(res.start_at);
             const end = new Date(res.end_at);
 
@@ -50,10 +50,23 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
             const timeStr = `${start.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
 
             // ユーザー名（APIに含まれていれば表示、なければID）
-            const userName = res.user?.display_name || res.user?.username || `User ${res.user_id}`;
+            let userName = res.user?.display_name || res.user?.username || `User ${res.user_id}`;
+
+            // Discord IDがある場合は、サーバー上のニックネームを取得して上書き
+            if (res.user?.discord_id && interaction.guild) {
+                try {
+                    const member = await interaction.guild.members.fetch(res.user.discord_id);
+                    if (member) {
+                        userName = member.displayName; // サーバーでの表示名（ニックネーム優先）
+                    }
+                } catch (e) {
+                    // メンバーが見つからない場合などは無視してDB上の名前を使う
+                    console.warn(`Member fetch failed for ${res.user.discord_id}`);
+                }
+            }
 
             description += `**${dateStr} ${timeStr}**\n👤 ${userName}\n\n`;
-        });
+        }
 
         embed.setDescription(description);
         await interaction.editReply({ embeds: [embed] });

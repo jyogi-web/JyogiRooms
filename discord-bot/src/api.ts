@@ -13,6 +13,7 @@ export interface Reservation {
         id: number;
         username: string;
         display_name: string;
+        discord_id?: string;
     };
 }
 
