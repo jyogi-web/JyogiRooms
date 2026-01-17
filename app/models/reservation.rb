@@ -15,10 +15,13 @@ class Reservation < ApplicationRecord
   private
 
   def combine_date_and_time
-    return unless reservation_date.present? && start_time.present? && end_time.present?
+    # Use provided reservation_date, or fall back to existing start_at date if available
+    date_val = reservation_date.presence || start_at&.to_date
+    
+    return unless date_val.present? && start_time.present? && end_time.present?
 
     begin
-      date = Date.parse(reservation_date.to_s)
+      date = date_val.is_a?(Date) ? date_val : Date.parse(date_val.to_s)
     rescue ArgumentError
       errors.add(:reservation_date, "invalid format")
       return

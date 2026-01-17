@@ -88,7 +88,9 @@ class ReservationsController < ApplicationController
   private
 
   def reservation_params
-    params.require(:reservation).permit(:start_at, :end_at, :reservation_date, :start_time, :end_time, :purpose)
+    permitted = [ :start_time, :end_time, :purpose ]
+    permitted << :reservation_date if [ "create", "new" ].include?(action_name)
+    params.require(:reservation).permit(permitted)
   end
 
   def fetch_existing_reservations(date, exclude_id: nil)
