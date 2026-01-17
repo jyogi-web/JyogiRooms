@@ -8,7 +8,7 @@ module NavigationHelper
 
     # 管理者のみ管理画面へのリンクを表示
     if current_user&.admin?
-      items << { path: "#", icon: :shield, label: "管理画面", active: false }
+      items << { path: admin_roles_path, icon: :shield, label: "管理画面", active: current_page?(admin_roles_path) }
     end
 
     items << { path: "#", icon: :cog, label: "設定", active: false }

@@ -35,6 +35,14 @@ Rails.application.routes.draw do
     resources :users, only: %i[index show create update destroy]
   end
 
+  # 管理者画面
+  namespace :admin do
+    root "roles#index"
+    resources :roles, only: %i[index show update]
+    resources :users, only: %i[show]
+    resources :key_transfer_logs, only: %i[index show]
+  end
+
   if Rails.env.test?
     post "/test/login", to: "test_session#create"
   end
