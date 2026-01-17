@@ -34,30 +34,34 @@ puts "Users: #{User.count}"
 if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
   puts "⚠️ Skip destructive operations in production (ALLOW_MOCK_DATA!=true)"
 else
-  Reservation.where(start_at: Time.current.all_day).destroy_all
-  today = Time.current.to_date
+  target_day = Time.current.tomorrow
+  Reservation.where(start_at: target_day.all_day).destroy_all
+  target_date = target_day.to_date
 
   if users.length >= 3
     Reservation.create!(
       user: users[0],
-      start_at: today.in_time_zone.change(hour: 10, min: 0),
-      end_at: today.in_time_zone.change(hour: 12, min: 0)
+      start_at: target_date.in_time_zone.change(hour: 10, min: 0),
+      end_at: target_date.in_time_zone.change(hour: 12, min: 0),
+      purpose: "定例会議"
     )
     Reservation.create!(
       user: users[1],
-      start_at: today.in_time_zone.change(hour: 13, min: 0),
-      end_at: today.in_time_zone.change(hour: 15, min: 0)
+      start_at: target_date.in_time_zone.change(hour: 13, min: 0),
+      end_at: target_date.in_time_zone.change(hour: 15, min: 0),
+      purpose: "採用面接"
     )
     Reservation.create!(
       user: users[2],
-      start_at: today.in_time_zone.change(hour: 16, min: 0),
-      end_at: today.in_time_zone.change(hour: 18, min: 0)
+      start_at: target_date.in_time_zone.change(hour: 16, min: 0),
+      end_at: target_date.in_time_zone.change(hour: 18, min: 0),
+      purpose: "もくもく会"
     )
   else
     puts "⚠️ Not enough users to create mock reservations (need at least 3)"
   end
 end
-puts "Reservations (Today): #{Reservation.where(start_at: Time.current.all_day).count}"
+puts "Reservations (Tomorrow): #{Reservation.where(start_at: Time.current.tomorrow.all_day).count}"
 
 # 4. Create Keys (5 holders per room)
 if Rails.env.production? && ENV['ALLOW_MOCK_DATA'] != 'true'
