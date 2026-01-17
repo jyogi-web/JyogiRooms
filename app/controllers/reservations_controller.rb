@@ -1,5 +1,8 @@
 class ReservationsController < ApplicationController
   before_action :authenticate_user!
+  before_action :set_reservation, only: [ :edit, :update, :destroy ]
+  before_action :ensure_owner, only: [ :edit, :update, :destroy ]
+
   def index
     # Determine the month to display
     @current_month = begin
@@ -54,17 +57,60 @@ class ReservationsController < ApplicationController
     end
   end
 
+  def edit
+    # Populate virtual attributes for form pre-filling
+    @reservation.reservation_date = @reservation.start_at.to_date
+    @reservation.start_time = @reservation.start_at.strftime("%H:%M")
+    @reservation.end_time = @reservation.end_at.strftime("%H:%M")
+
+    @existing_reservations = fetch_existing_reservations(@reservation.reservation_date, exclude_id: @reservation.id)
+  end
+
+  def update
+    if @reservation.update(reservation_params)
+      redirect_to reservations_path, notice: "予約を更新しました"
+    else
+      # Use original date if available (in case of date change failure), otherwise current input date
+      date = @reservation.start_at_was&.to_date || @reservation.reservation_date
+      @existing_reservations = fetch_existing_reservations(date, exclude_id: @reservation.id)
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    if @reservation.destroy
+      redirect_to reservations_path, notice: "予約を削除しました", status: :see_other
+    else
+      redirect_to reservations_path, alert: "予約の削除に失敗しました"
+    end
+  end
+
   private
 
   def reservation_params
-    params.require(:reservation).permit(:start_at, :end_at, :reservation_date, :start_time, :end_time, :purpose)
+    permitted = [ :start_time, :end_time, :purpose ]
+    permitted << :reservation_date if [ "create", "new" ].include?(action_name)
+    params.require(:reservation).permit(permitted)
   end
 
-  def fetch_existing_reservations(date)
+  def fetch_existing_reservations(date, exclude_id: nil)
     return [] unless date.present?
 
-    Reservation.includes(:user)
-               .where(start_at: date.beginning_of_day..date.end_of_day)
-               .order(:start_at)
+    query = Reservation.includes(:user)
+                       .where(start_at: date.beginning_of_day..date.end_of_day)
+
+    query = query.where.not(id: exclude_id) if exclude_id
+
+    query.order(:start_at)
+  end
+
+  def set_reservation
+    @reservation = Reservation.find(params[:id])
+  end
+
+  def ensure_owner
+    unless @reservation.user == current_user
+      redirect_to reservations_path, alert: "他のユーザーの予約は編集・削除できません" and return
+    end
   end
 end
