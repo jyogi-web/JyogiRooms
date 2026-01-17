@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_12_015055) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_16_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_12_015055) do
   create_table "reservations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "end_at", null: false
+    t.string "purpose"
     t.datetime "start_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
