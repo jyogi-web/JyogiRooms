@@ -21,4 +21,8 @@ class ReservationComponent < ViewComponent::Base
   def user_name
     @reservation.user&.display_name || "Unknown"
   end
+
+  def purpose
+    @reservation.purpose.presence
+  end
 end

@@ -2,13 +2,20 @@
   <!-- Dashboard Style: Box with Blue Sidebar -->
   <div class="card flex flex-col gap-2 relative overflow-hidden group border border-gray-100 shadow-sm">
     <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
-    <div class="flex justify-between items-start pl-3 py-1">
-      <div>
+    <div class="flex justify-between items-center pl-3 py-1">
+      <div class="flex-shrink-0">
         <p class="text-sm font-bold text-gray-800">
           <%= start_time %> ~ <%= end_time %>
         </p>
       </div>
-      <div class="flex items-center gap-2">
+      <% if purpose.present? %>
+        <div class="flex-1 px-3 text-left min-w-0">
+          <span class="text-sm font-medium text-gray-700 truncate block"><%= purpose %></span>
+        </div>
+      <% else %>
+        <div class="flex-1"></div>
+      <% end %>
+      <div class="flex items-center gap-2 flex-shrink-0">
         <span class="text-sm font-medium text-gray-700"><%= user_name %></span>
         <%= render(UserAvatarComponent.new(user: @reservation.user, size: :small, extra_classes: "bg-gray-200")) %>
       </div>
@@ -17,18 +24,25 @@
 
 <% elsif @layout == :list %>
   <!-- List Style: Simple Row with Avatar Left -->
-  <div class="flex items-center bg-white p-3 rounded-lg shadow-sm border border-blue-100">
-    <div class="flex-shrink-0 mr-3">
-      <%= render UserAvatarComponent.new(user: @reservation.user, size: :small) %>
-    </div>
-    <div class="flex-1 min-w-0">
-      <div class="text-sm font-medium text-gray-900 truncate">
-        <%= user_name %>
+  <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-blue-100">
+    <div class="flex items-center min-w-0">
+      <div class="flex-shrink-0 mr-3">
+        <%= render UserAvatarComponent.new(user: @reservation.user, size: :small) %>
       </div>
-      <div class="text-xs text-gray-500">
-        <%= start_time %> ~ <%= end_time %>
+      <div>
+        <div class="text-sm font-medium text-gray-900 truncate">
+          <%= user_name %>
+        </div>
+        <div class="text-xs text-gray-500">
+          <%= start_time %> ~ <%= end_time %>
+        </div>
       </div>
     </div>
+    <% if purpose.present? %>
+      <div class="ml-4 truncate text-sm text-gray-700 font-medium">
+        <%= purpose %>
+      </div>
+    <% end %>
   </div>
 
 <% end %>
