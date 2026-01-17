@@ -25,4 +25,8 @@ class ReservationComponent < ViewComponent::Base
   def purpose
     @reservation.purpose.presence
   end
+
+  def owned_by_current_user?
+    helpers.current_user == @reservation.user
+  end
 end

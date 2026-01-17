@@ -46,14 +46,16 @@
       </div>
     </div>
     
-    <div class="flex items-center gap-2 ml-4">
-      <button type="button" class="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-colors" title="編集">
-        <%= render Icons::PencilComponent.new(classes: "w-4 h-4") %>
-      </button>
-      <button type="button" class="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors" title="削除">
-        <%= render Icons::TrashComponent.new(classes: "w-4 h-4") %>
-      </button>
-    </div>
+    <% if owned_by_current_user? %>
+      <div class="flex items-center gap-2 ml-4">
+        <button type="button" class="text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-colors" title="編集">
+          <%= render Icons::PencilComponent.new(classes: "w-4 h-4") %>
+        </button>
+        <button type="button" class="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors" title="削除">
+          <%= render Icons::TrashComponent.new(classes: "w-4 h-4") %>
+        </button>
+      </div>
+    <% end %>
   </div>
 
 <% end %>
