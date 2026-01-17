@@ -1,0 +1,99 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-800">管理画面</h1>
+
+  <!-- Admin Navigation Dropdown -->
+  <div class="mb-6">
+    <% current_path = request.path %>
+    <% nav_items = [
+      { label: "ユーザー管理", path: admin_roles_path },
+      { label: "譲渡履歴", path: admin_key_transfer_logs_path }
+    ] %>
+    
+    <select 
+      onchange="if(this.value) window.location.href = this.value"
+      class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-800 cursor-pointer"
+    >
+      <option value="" disabled>メニューを選択</option>
+      <% nav_items.each do |item| %>
+        <option value="<%= item[:path] %>" <%= "selected" if current_path == item[:path] %>>
+          <%= item[:label] %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <h2 class="text-xl font-bold text-gray-800 mb-6">ロール管理</h2>
+
+  <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <% @roles.each do |role| %>
+      <div class="card p-6">
+        <div class="flex items-start justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800"><%= role.name %></h2>
+          <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+            <%= role.users.count %> ユーザー
+          </span>
+        </div>
+        
+        <div class="space-y-2">
+          <!-- ロール詳細へのリンク -->
+          <%= link_to admin_role_path(role), class: "inline-flex items-center gap-2 text-primary hover:text-primary-dark font-medium text-sm" do %>
+            詳細を表示
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- ユーザー一覧セクション -->
+  <h2 class="text-xl font-bold text-gray-800 mb-6 mt-8">ユーザー一覧</h2>
+
+  <div class="overflow-x-auto card">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-100 border-b border-gray-200">
+        <tr>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">ユーザー名</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">表示名</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">ロール</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">最終同期</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @users.each do |user| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 text-gray-800">@<%= user.username %></td>
+            <td class="px-6 py-4 text-gray-800"><%= user.display_name %></td>
+            <td class="px-6 py-4">
+              <% if user.admin? %>
+                <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">管理者</span>
+              <% elsif user.role %>
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full"><%= user.role.name %></span>
+              <% else %>
+                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">未設定</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              <% if user.last_synced_at %>
+                <%= l(user.last_synced_at, format: :short) %>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4">
+              <%= link_to admin_user_path(user), class: "text-primary hover:text-primary-dark font-medium text-sm" do %>
+                詳細
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-sm text-gray-600 mt-4">
+    合計: <span class="font-bold"><%= @users.count %></span> ユーザー
+  </p>
+</div>
