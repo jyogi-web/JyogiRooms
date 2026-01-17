@@ -1,5 +1,8 @@
 class ReservationsController < ApplicationController
   before_action :authenticate_user!
+  before_action :set_reservation, only: [:edit, :update, :destroy]
+  before_action :ensure_owner, only: [:edit, :update, :destroy]
+
   def index
     # Determine the month to display
     @current_month = begin
@@ -54,6 +57,24 @@ class ReservationsController < ApplicationController
     end
   end
 
+  def edit
+    @existing_reservations = fetch_existing_reservations(@reservation.reservation_date)
+  end
+
+  def update
+    if @reservation.update(reservation_params)
+      redirect_to reservations_path, notice: "予約を更新しました"
+    else
+      @existing_reservations = fetch_existing_reservations(@reservation.reservation_date)
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @reservation.destroy
+    redirect_to reservations_path, notice: "予約を削除しました", status: :see_other
+  end
+
   private
 
   def reservation_params
@@ -66,5 +87,15 @@ class ReservationsController < ApplicationController
     Reservation.includes(:user)
                .where(start_at: date.beginning_of_day..date.end_of_day)
                .order(:start_at)
+  end
+
+  def set_reservation
+    @reservation = Reservation.find(params[:id])
+  end
+
+  def ensure_owner
+    unless @reservation.user == current_user
+      redirect_to reservations_path, alert: "他のユーザーの予約は編集・削除できません"
+    end
   end
 end

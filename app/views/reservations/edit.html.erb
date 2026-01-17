@@ -3,7 +3,7 @@
     <%= link_to reservations_path(start_date: @reservation.reservation_date&.beginning_of_month), class: "text-gray-500 hover:text-gray-700 mr-4" do %>
       <%= render Icons::ArrowLeftComponent.new(classes: "w-6 h-6") %>
     <% end %>
-    <h1 class="text-2xl font-bold text-gray-800">予約</h1>
+    <h1 class="text-2xl font-bold text-gray-800">予約の編集</h1>
   </div>
 
   <!-- Existing Reservations Section -->
@@ -21,13 +21,9 @@
         <% end %>
       </div>
     </div>
-  <% elsif params[:date].present? %>
-    <div class="mb-8 p-4 bg-gray-50 border border-gray-100 rounded-xl text-center text-sm text-gray-500">
-      この日の予約はまだありません
-    </div>
   <% end %>
 
   <div class="card p-6">
-    <%= render partial: "form", locals: { reservation: @reservation, submit_text: "予約を作成する" } %>
+    <%= render partial: "form", locals: { reservation: @reservation, submit_text: "予約を更新する" } %>
   </div>
 </div>
