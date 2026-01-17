@@ -17,10 +17,10 @@
         <%= render Icons::CalendarComponent.new(classes: "h-5 w-5 text-gray-400") %>
       </div>
       <!-- Display for User -->
-      <input type="text" 
-             value="<%= format_date_with_weekday(reservation.reservation_date) %>" 
-             disabled 
-             class="bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg block w-full pl-10 p-2.5 font-medium cursor-not-allowed">
+      <%= tag.input type: "text", 
+             value: format_date_with_weekday(reservation.reservation_date), 
+             disabled: true, 
+             class: "bg-gray-50 border border-gray-300 text-gray-800 text-sm rounded-lg block w-full pl-10 p-2.5 font-medium cursor-not-allowed" %>
       
       <!-- Hidden Value for Submission -->
       <%= f.hidden_field :reservation_date %>
