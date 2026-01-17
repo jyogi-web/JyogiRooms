@@ -1,0 +1,49 @@
+<!-- Trigger Button (Trash Icon) -->
+<button onclick="document.getElementById('<%= @id %>').showModal()" class="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center" title="削除">
+  <%= @trigger_icon %>
+</button>
+
+<!-- Modal (Dialog) -->
+<dialog id="<%= @id %>" class="m-auto p-0 rounded-lg shadow-xl backdrop:bg-gray-900/50 open:animate-fade-in backdrop:open:animate-backdrop-in">
+  <!-- Dialog Content -->
+  <div class="bg-white p-6 max-w-sm w-full relative">
+    <h3 class="text-lg font-bold text-gray-900 mb-2"><%= @title %></h3>
+    <p class="text-sm text-gray-600 mb-6">
+      本当にこの操作を実行しますか？<br>この操作は取り消せません。
+    </p>
+
+    <div class="flex items-center justify-end gap-3">
+      <!-- Cancel (Close) -->
+      <form method="dialog">
+        <button class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <%= @cancel_text %>
+        </button>
+      </form>
+
+      <!-- Confirm (Yielded Button) -->
+      <%= content %>
+    </div>
+  </div>
+</dialog>
+
+<style>
+  dialog::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+  }
+  
+  dialog[open] {
+    animation: zoom-in 0.2s ease-out;
+  }
+
+  @keyframes zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+</style>
