@@ -51,7 +51,7 @@
         <%= link_to edit_reservation_path(@reservation), class: "text-gray-400 hover:text-blue-500 p-1 rounded-full hover:bg-blue-50 transition-colors", title: "編集" do %>
           <%= render Icons::PencilComponent.new(classes: "w-4 h-4") %>
         <% end %>
-        <%= link_to reservation_path(@reservation), data: { turbo_method: :delete, turbo_confirm: "本当に予約を削除しますか？" }, class: "text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors", title: "削除" do %>
+        <%= button_to reservation_path(@reservation), method: :delete, data: { turbo_confirm: "本当に予約を削除しますか？" }, class: "text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 transition-colors bg-transparent border-0 cursor-pointer flex items-center justify-center", title: "削除" do %>
           <%= render Icons::TrashComponent.new(classes: "w-4 h-4") %>
         <% end %>
       </div>
