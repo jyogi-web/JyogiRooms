@@ -115,7 +115,7 @@ class ReservationsController < ApplicationController
     query = query.where.not(id: exclude_id) if exclude_id
 
     query.order(:start_at)
-  rescue Date::Error
+  rescue ArgumentError
     []
   end
 
