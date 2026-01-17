@@ -36,7 +36,7 @@
            <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
          </div>
          <%= f.time_field :start_time, 
-             class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5", 
+             class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 #{'border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' if reservation.errors[:start_time].any?}", 
              required: true %>
       </div>
     </div>
@@ -47,7 +47,7 @@
            <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
          </div>
         <%= f.time_field :end_time, 
-            class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5", 
+            class: "bg-white border border-gray-300 text-gray-900 text-lg rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 #{'border-red-500 text-red-900 placeholder-red-700 focus:ring-red-500 focus:border-red-500' if reservation.errors[:end_time].any?}", 
             required: true %>
       </div>
     </div>
@@ -61,9 +61,5 @@
 
   <div class="pt-6">
     <%= f.submit submit_text, class: "btn btn-primary w-full justify-center py-3 text-base shadow-lg shadow-primary/30" %>
-    
-    <p class="text-xs text-center text-gray-500 mt-4">
-      ※ 他の予約と時間が重なっている場合は登録できません
-    </p>
   </div>
 <% end %>
