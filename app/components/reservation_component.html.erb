@@ -8,7 +8,7 @@
           <%= start_time %> ~ <%= end_time %>
         </p>
       </div>
-      <% if purpose %>
+      <% if purpose.present? %>
         <div class="flex-1 px-3 text-left min-w-0">
           <span class="text-sm font-medium text-gray-700 truncate block"><%= purpose %></span>
         </div>
@@ -38,7 +38,7 @@
         </div>
       </div>
     </div>
-    <% if purpose %>
+    <% if purpose.present? %>
       <div class="ml-4 truncate text-sm text-gray-700 font-medium">
         <%= purpose %>
       </div>
