@@ -1,7 +1,7 @@
 class ReservationsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_reservation, only: [:edit, :update, :destroy]
-  before_action :ensure_owner, only: [:edit, :update, :destroy]
+  before_action :set_reservation, only: [ :edit, :update, :destroy ]
+  before_action :ensure_owner, only: [ :edit, :update, :destroy ]
 
   def index
     # Determine the month to display
