@@ -2,6 +2,7 @@ class User < ApplicationRecord
   belongs_to :role, optional: true, inverse_of: :users
   has_many :reservations
   has_many :access_tokens, dependent: :destroy
+  has_many :keys, dependent: :destroy
 
   # Validations
   validates :jyogi_user_id, uniqueness: true, allow_nil: true, length: { maximum: 36 }
