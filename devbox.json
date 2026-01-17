@@ -23,6 +23,9 @@
       ],
       "setup": [
         "./bin/setup"
+      ],
+      "test": [
+        "./bin/rails db:test:prepare test"
       ]
     }
   }
