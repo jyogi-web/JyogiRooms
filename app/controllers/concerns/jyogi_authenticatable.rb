@@ -100,6 +100,21 @@ module JyogiAuthenticatable
 
     session[:access_token_id] = access_token.id
     @current_user = user
+
+    # ログイン時にロール情報をセッションに保存（UI最適化用）
+    # 認可判定は current_user.admin? で行い、このフラグには依存しない
+    store_user_role_in_session(user)
+  end
+
+  # ユーザーのロール情報をセッションに保存
+  # @param user [User] ロール情報を保存するユーザー
+  def store_user_role_in_session(user)
+    # ロールが未ロードの場合は再取得
+    user = User.includes(:role).find(user.id) unless user.association(:role).loaded?
+    session[:user_role] = user.role&.name
+    session[:is_admin] = user.admin?
+  rescue => e
+    Rails.logger.warn("[Auth] Failed to store role in session: #{e.class}: #{e.message}")
   end
 
   # ログアウト処理
