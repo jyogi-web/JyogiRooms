@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  belongs_to :role, optional: true
   has_many :reservations
   has_many :access_tokens, dependent: :destroy
 
@@ -32,5 +33,9 @@ class User < ApplicationRecord
   # @return [Boolean] 同期済みかどうか
   def synced_with_jyogi_auth?
     jyogi_user_id.present?
+  end
+
+  def admin?
+    role&.name == "admin"
   end
 end

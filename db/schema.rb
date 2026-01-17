@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_12_015055) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_17_093000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -59,6 +59,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_12_015055) do
     t.index ["user_id"], name: "index_reservations_on_user_id"
   end
 
+  create_table "roles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_roles_on_name", unique: true
+  end
+
   create_table "rooms", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -74,12 +81,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_12_015055) do
     t.string "display_name"
     t.string "guild_nickname"
     t.jsonb "guild_roles", default: {}
+    t.boolean "is_admin", default: false, null: false
     t.string "jyogi_user_id", limit: 36
     t.datetime "last_synced_at"
+    t.bigint "role_id"
     t.datetime "updated_at", null: false
     t.string "username"
     t.index ["discord_id"], name: "index_users_on_discord_id", unique: true
     t.index ["jyogi_user_id"], name: "index_users_on_jyogi_user_id", unique: true
+    t.index ["role_id"], name: "index_users_on_role_id"
   end
 
   add_foreign_key "access_tokens", "users"
@@ -89,4 +99,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_12_015055) do
   add_foreign_key "keys", "rooms"
   add_foreign_key "keys", "users"
   add_foreign_key "reservations", "users"
+  add_foreign_key "users", "roles"
 end
