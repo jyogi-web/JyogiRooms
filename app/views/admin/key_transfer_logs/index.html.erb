@@ -1,0 +1,96 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-800">管理画面</h1>
+
+  <!-- Admin Navigation Dropdown -->
+  <div class="mb-6">
+    <% current_path = request.path %>
+    <% nav_items = [
+      { label: "ユーザー管理", path: admin_roles_path },
+      { label: "譲渡履歴", path: admin_key_transfer_logs_path }
+    ] %>
+    
+    <select 
+      onchange="if(this.value) window.location.href = this.value"
+      class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white text-gray-800 cursor-pointer"
+    >
+      <option value="" disabled>メニューを選択</option>
+      <% nav_items.each do |item| %>
+        <option value="<%= item[:path] %>" <%= "selected" if current_path == item[:path] %>>
+          <%= item[:label] %>
+        </option>
+      <% end %>
+    </select>
+  </div>
+
+  <h2 class="text-xl font-bold text-gray-800 mb-6">鍵譲渡履歴</h2>
+
+  <% if @key_transfer_logs.any? %>
+    <div class="overflow-x-auto card">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">部屋</th>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">譲渡元</th>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700"></th>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">譲渡先</th>
+            <th class="px-6 py-3 text-left font-semibold text-gray-700">日時</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @key_transfer_logs.each do |log| %>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4">
+                <div>
+                  <p class="font-semibold text-gray-800"><%= log.room.name %></p>
+                  <p class="text-xs text-gray-500"><%= log.room.room_number %></p>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <% if log.from_user %>
+                  <div>
+                    <p class="font-medium text-gray-800"><%= log.from_user.display_name %></p>
+                    <p class="text-xs text-gray-500">@<%= log.from_user.username %></p>
+                  </div>
+                <% else %>
+                  <span class="text-gray-400 text-sm">-</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </td>
+              <td class="px-6 py-4">
+                <% if log.to_user %>
+                  <div>
+                    <p class="font-medium text-gray-800"><%= log.to_user.display_name %></p>
+                    <p class="text-xs text-gray-500">@<%= log.to_user.username %></p>
+                  </div>
+                <% else %>
+                  <span class="text-gray-400 text-sm">-</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600">
+                <div>
+                  <p class="font-medium text-gray-800"><%= l(log.created_at, format: :short) %></p>
+                  <p class="text-xs text-gray-500"><%= time_ago_in_words(log.created_at) %>前</p>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-sm text-gray-600 mt-4">
+      合計: <span class="font-bold"><%= @key_transfer_logs.count %></span> 件の譲渡履歴
+    </p>
+  <% else %>
+    <div class="card p-8 text-center text-gray-500">
+      <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      <p>譲渡履歴がありません</p>
+    </div>
+  <% end %>
+</div>
