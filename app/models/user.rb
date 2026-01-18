@@ -4,6 +4,9 @@ class User < ApplicationRecord
   has_many :access_tokens, dependent: :destroy
   has_many :keys, dependent: :destroy
 
+  # Callbacks
+  after_create :assign_default_role
+
   # Validations
   validates :jyogi_user_id, uniqueness: true, allow_nil: true, length: { maximum: 36 }
   validates :discord_id, uniqueness: true, allow_nil: true
@@ -41,5 +44,17 @@ class User < ApplicationRecord
   # @return [Boolean] 管理者かどうか
   def admin?
     role&.name == Role::ADMIN
+  end
+
+  private
+
+  # 新規ユーザーにデフォルトロールを割り当てる
+  # ユーザーID 1の場合はadmin、それ以外はmemberを割り当てる
+  def assign_default_role
+    if id == 1
+      self.update_column(:role_id, Role.find_by(name: Role::ADMIN)&.id)
+    else
+      self.update_column(:role_id, Role.find_by(name: Role::MEMBER)&.id)
+    end
   end
 end

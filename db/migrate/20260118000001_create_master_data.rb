@@ -28,5 +28,27 @@ class CreateRolesAndAddRoleToUsers < ActiveRecord::Migration[8.1]
         add_index :users, :role_id
       end
     end
+
+    # デフォルトロールを作成
+    Role.find_or_create_by!(name: "admin")
+    Role.find_or_create_by!(name: "member")
+
+    # 部屋マスターデータ
+    rooms_data = [
+      { name: "第１部室", room_number: "322" },
+      { name: "第２部室", room_number: "321" },
+      { name: "第３部室", room_number: "224" }
+    ]
+
+    rooms_data.each do |room_data|
+      room = Room.find_or_create_by!(room_number: room_data[:room_number]) do |r|
+        r.name = room_data[:name]
+      end
+
+      # 各部屋に5本の鍵を作成
+      5.times do |i|
+        Key.find_or_create_by!(room_id: room.id, user_id: nil) rescue nil
+      end
+    end
   end
 end

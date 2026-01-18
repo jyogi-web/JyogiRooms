@@ -1,20 +1,22 @@
 # Guard against accidental deletion in production
 return unless Rails.env.development? || Rails.env.test?
 
-# Clear existing data
+# Clear existing data（マスターデータは残す）
 puts "Cleaning up database..."
 KeyTransferLog.delete_all
-Key.delete_all
+Key.where(user_id: nil).delete_all  # マスターデータの鍵は残す
 AccessToken.delete_all
 Reservation.delete_all
-Room.delete_all
 User.delete_all
 
-# Create Rooms
-puts "Creating Rooms..."
-room1 = Room.create!(name: "第１部室", room_number: "322")
-room2 = Room.create!(name: "第２部室", room_number: "321")
-room3 = Room.create!(name: "第３部室", room_number: "224")
+# Get master data (created by migration)
+puts "Getting master rooms and roles..."
+room1 = Room.find_by(room_number: "322")
+room2 = Room.find_by(room_number: "321")
+room3 = Room.find_by(room_number: "224")
+
+admin_role = Role.find_by(name: Role::ADMIN)
+member_role = Role.find_by(name: Role::MEMBER)
 
 # Create Users
 puts "Creating Users..."
@@ -39,13 +41,14 @@ user5 = User.create!(
   display_name: "5(テストユーザー)"
 )
 
-# Create Roles and assign to users
-puts "Creating Roles and assigning users..."
-admin_role = Role.find_or_create_by!(name: Role::ADMIN)
-member_role = Role.find_or_create_by!(name: "member")
+# Create Roles
+puts "Creating Roles..."
+# ロールはマイグレーションで既に作成されている
 
-# Default all to member
-[ user1, user2, user3, user4, user5 ].each do |u|
+# Assign admin role to user1, member role to others
+puts "Assigning roles to users..."
+user1.update!(role: admin_role)
+[ user2, user3, user4, user5 ].each do |u|
   u.update!(role: member_role)
 end
 
@@ -61,13 +64,22 @@ end
 
 # Create Keys (鍵の所有状態)
 puts "Creating Keys..."
-key1 = Key.create!(room: room1, user: user1)  # user1が第1部室の鍵を持つ
-# パターン1: 1人が複数の部屋の鍵を持つ
-key2 = Key.create!(room: room1, user: user2)  # user2が第1部室の鍵を持つ
-key3 = Key.create!(room: room2, user: user2)  # user2が第2部室の鍵も持つ
-# パターン2: 複数人が同じ部屋の鍵を持つ
-key4 = Key.create!(room: room3, user: user3)  # user3も第3部室の鍵を持つ
-key5 = Key.create!(room: room3, user: user4)  # user4も第3部室の鍵を持つ
+# マスターデータとしての空き鍵は既にマイグレーションで作成済み
+# ここではユーザーに鍵を割り当てる
+key1 = Key.find_by(room: room1, user_id: nil)
+key1.update!(user: user1) if key1  # user1が第1部室の鍵を持つ
+
+key2 = Key.find_by(room: room1, user_id: nil)
+key2.update!(user: user2) if key2  # user2が第1部室の別の鍵を持つ
+
+key3 = Key.find_by(room: room2, user_id: nil)
+key3.update!(user: user2) if key3  # user2が第2部室の鍵も持つ
+
+key4 = Key.find_by(room: room3, user_id: nil)
+key4.update!(user: user3) if key4  # user3が第3部室の鍵を持つ
+
+key5 = Key.find_by(room: room3, user_id: nil)
+key5.update!(user: user4) if key5  # user4が第3部室の別の鍵を持つ
 
 # user5は鍵を持っていない（譲渡先として使用）
 

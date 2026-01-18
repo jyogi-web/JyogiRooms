@@ -43,7 +43,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_093000) do
     t.datetime "created_at", null: false
     t.bigint "room_id", null: false
     t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
     t.index ["room_id", "user_id"], name: "index_keys_on_room_id_and_user_id", unique: true
     t.index ["room_id"], name: "index_keys_on_room_id"
     t.index ["user_id"], name: "index_keys_on_user_id"
@@ -82,7 +82,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_093000) do
     t.string "display_name"
     t.string "guild_nickname"
     t.jsonb "guild_roles", default: {}
-    t.boolean "is_admin", default: false, null: false
     t.string "jyogi_user_id", limit: 36
     t.datetime "last_synced_at"
     t.bigint "role_id"
