@@ -133,8 +133,12 @@ async function handleCheckCommand(interaction: ChatInputCommandInteraction) {
         if (reservations.length === 0) {
             embed.setDescription('予約はありません。');
         } else {
+            const MAX_LENGTH = 4096;
             let description = '';
-            for (const res of reservations) {
+            let omittedCount = 0;
+
+            for (let i = 0; i < reservations.length; i++) {
+                const res = reservations[i];
                 const s = new Date(res.start_at);
                 const e = new Date(res.end_at);
                 const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
@@ -148,7 +152,19 @@ async function handleCheckCommand(interaction: ChatInputCommandInteraction) {
                     }
                 }
 
-                description += `**${timeStr}**\n${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+                const entry = `**${timeStr}**\n${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+
+                const OMISSION_BUFFER = 50;
+                if (description.length + entry.length + OMISSION_BUFFER > MAX_LENGTH) {
+                    omittedCount = reservations.length - i;
+                    break;
+                }
+
+                description += entry;
+            }
+
+            if (omittedCount > 0) {
+                description += `...省略: 他 ${omittedCount} 件`;
             }
             embed.setDescription(description);
         }
