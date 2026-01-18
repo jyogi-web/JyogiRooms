@@ -1,4 +1,4 @@
-class CreateRolesAndAddRoleToUsers < ActiveRecord::Migration[8.1]
+class CreateMasterData < ActiveRecord::Migration[8.1]
   def change
     # rolesテーブルが存在しない場合のみ作成
     unless table_exists?(:roles)
