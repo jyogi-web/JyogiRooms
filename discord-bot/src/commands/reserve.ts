@@ -48,8 +48,8 @@ export const reserveCommand = {
 /**
  * 柔軟な日付解析を行うヘルパー
  * - "today", "tomorrow"
- * - "MM/DD", "M-D" (今年は現在の年)
- * - "YYYY/MM/DD", "YYYY-MM-DD"
+ * - "MM/DD", "M-D", "MM.DD" (今年は現在の年)
+ * - "YYYY/MM/DD", "YYYY-MM-DD", "YYYY.MM.DD"
  */
 function parseDateInput(input: string): Date | null {
     const now = new Date();
