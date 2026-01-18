@@ -6,6 +6,7 @@ Rails.application.routes.draw do
 
   resources :rooms, only: [] do
     resource :key, only: [] do
+      get :transfer_form
       post :transfer
     end
   end
