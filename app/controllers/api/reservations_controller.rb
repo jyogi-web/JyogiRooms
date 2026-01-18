@@ -74,7 +74,7 @@ module Api
     private
 
     def reservation_params
-      params.require(:reservation).permit(:start_at, :end_at)
+      params.require(:reservation).permit(:start_at, :end_at, :purpose)
     end
 
     def parse_time(string)
