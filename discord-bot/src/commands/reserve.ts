@@ -9,6 +9,17 @@ export const reserveCommand = {
             subcommand
                 .setName('list')
                 .setDescription('今後の予約一覧を表示します')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('check')
+                .setDescription('指定した日の予約を確認します')
+                .addStringOption(option =>
+                    option
+                        .setName('date')
+                        .setDescription('日付 (例: 11/23, 2025/01/01)')
+                        .setRequired(false)
+                )
         ),
 
     async execute(interaction: ChatInputCommandInteraction) {
@@ -16,11 +27,110 @@ export const reserveCommand = {
 
         if (subcommand === 'list') {
             await handleListCommand(interaction);
+        } else if (subcommand === 'check') {
+            await handleCheckCommand(interaction);
         } else {
             await interaction.reply({ content: '不明なコマンドです', ephemeral: true });
         }
     },
 };
+
+/**
+ * 柔軟な日付解析を行うヘルパー
+ * - "today", "tomorrow"
+ * - "MM/DD", "M-D" (今年は現在の年)
+ * - "YYYY/MM/DD", "YYYY-MM-DD"
+ */
+function parseDateInput(input: string): Date | null {
+    const now = new Date();
+    const normalized = input.toLowerCase().trim();
+
+    if (!normalized || normalized === 'today') {
+        return now;
+    }
+    if (normalized === 'tomorrow') {
+        const d = new Date(now);
+        d.setDate(d.getDate() + 1);
+        return d;
+    }
+
+    // YYYY/MM/DD or YYYY-MM-DD
+    const ymdMatch = normalized.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+    if (ymdMatch) {
+        const year = parseInt(ymdMatch[1], 10);
+        const month = parseInt(ymdMatch[2], 10) - 1;
+        const day = parseInt(ymdMatch[3], 10);
+        return new Date(year, month, day);
+    }
+
+    // MM/DD or MM-DD (Current Year)
+    const mdMatch = normalized.match(/^(\d{1,2})[-/.](\d{1,2})$/);
+    if (mdMatch) {
+        const month = parseInt(mdMatch[1], 10) - 1;
+        const day = parseInt(mdMatch[2], 10);
+        return new Date(now.getFullYear(), month, day);
+    }
+
+    return null;
+}
+
+async function handleCheckCommand(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
+
+    const dateInput = interaction.options.getString('date') || 'today';
+    const targetDate = parseDateInput(dateInput);
+
+    if (!targetDate || isNaN(targetDate.getTime())) {
+        await interaction.editReply(`日付の形式が正しくありません。\n例: \`11/23\`, \`2025/01/01\`, \`today\``);
+        return;
+    }
+
+    // 検索範囲: 指定日の 00:00:00 〜 23:59:59
+    const start = new Date(targetDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(targetDate);
+    end.setHours(23, 59, 59, 999);
+
+    try {
+        const reservations = await api.fetchReservations(start.toISOString(), end.toISOString());
+
+        const dateDisplay = start.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
+        const embed = new EmbedBuilder()
+            .setTitle(`📅 ${dateDisplay} の予約一覧`)
+            .setColor('#0099ff')
+            .setTimestamp();
+
+        if (reservations.length === 0) {
+            embed.setDescription('予約はありません。');
+        } else {
+            let description = '';
+            for (const res of reservations) {
+                const s = new Date(res.start_at);
+                const e = new Date(res.end_at);
+                const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+
+                let userDisplay = `User ${res.user_id}`;
+                if (res.user) {
+                    if (res.user.discord_id) {
+                        userDisplay = `<@${res.user.discord_id}>`;
+                    } else {
+                        userDisplay = res.user.display_name || res.user.username;
+                    }
+                }
+
+                description += `**${timeStr}**\n${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+            }
+            embed.setDescription(description);
+        }
+
+        await interaction.editReply({ content: '', embeds: [embed] });
+
+    } catch (error) {
+        console.error(error);
+        await interaction.editReply('予約情報の取得中にエラーが発生しました。');
+    }
+}
 
 async function handleListCommand(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
@@ -70,8 +180,8 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
                 }
             }
 
-            const entry = `**${dateStr} ${timeStr}**\n👤${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
-            
+            const entry = `**${dateStr} ${timeStr}**\n${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+
             const OMISSION_BUFFER = 50;
             if (description.length + entry.length + OMISSION_BUFFER > MAX_LENGTH) {
                 omittedCount = reservations.length - i;
