@@ -30,6 +30,27 @@ export const reserveCommand = {
                         .setDescription('日付指定 (例: 11/23, 2025/01/01)')
                         .setRequired(false)
                 )
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('create')
+                .setDescription('予約を新規作成します')
+                .addStringOption(option =>
+                    option.setName('date')
+                        .setDescription('日付 (例: 12/25, 2026/01/01, today)')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('start')
+                        .setDescription('開始時刻 (例: 10:00)')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('end')
+                        .setDescription('終了時刻 (例: 12:00)')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('purpose')
+                        .setDescription('利用目的 (任意)')
+                        .setRequired(false))
         ),
 
     async execute(interaction: ChatInputCommandInteraction) {
@@ -39,6 +60,8 @@ export const reserveCommand = {
             await handleListCommand(interaction);
         } else if (subcommand === 'check') {
             await handleCheckCommand(interaction);
+        } else if (subcommand === 'create') {
+            await handleCreateCommand(interaction);
         } else {
             await interaction.reply({ content: '不明なコマンドです', ephemeral: true });
         }
@@ -246,5 +269,67 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
     } catch (error) {
         console.error(error);
         await interaction.editReply('予約情報の取得中にエラーが発生しました。');
+    }
+}
+
+async function handleCreateCommand(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
+
+    const dateInput = interaction.options.getString('date', true);
+    const startInput = interaction.options.getString('start', true);
+    const endInput = interaction.options.getString('end', true);
+    const purpose = interaction.options.getString('purpose') || '';
+
+    // 日付解析 (parseDateInput を利用)
+    const date = parseDateInput(dateInput);
+    if (!date) {
+        await interaction.editReply('日付の形式が正しくありません。\n例: `12/25`, `2026/01/01`, `today`');
+        return;
+    }
+
+    // 時刻解析
+    const timeRegex = /^(\d{1,2}):(\d{2})$/;
+    const startMatch = startInput.match(timeRegex);
+    const endMatch = endInput.match(timeRegex);
+
+    if (!startMatch || !endMatch) {
+        await interaction.editReply('時刻の形式が正しくありません。\n例: `10:00`');
+        return;
+    }
+
+    const setTime = (d: Date, h: string, m: string) => {
+        const newD = new Date(d);
+        newD.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+        return newD;
+    };
+
+    const startAt = setTime(date, startMatch[1], startMatch[2]);
+    const endAt = setTime(date, endMatch[1], endMatch[2]);
+
+    if (startAt < new Date()) {
+        await interaction.editReply('過去の日時は予約できません。');
+        return;
+    }
+
+    if (startAt >= endAt) {
+        await interaction.editReply('終了時刻は開始時刻より後である必要があります。');
+        return;
+    }
+
+    try {
+        const res = await api.createReservation({
+            start_at: startAt.toISOString(),
+            end_at: endAt.toISOString(),
+            purpose
+        });
+
+        const dateStr = startAt.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
+        const timeStr = `${startAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${endAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+
+        await interaction.editReply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
+
+    } catch (e: any) {
+        console.error(e);
+        await interaction.editReply(`予約作成に失敗しました。\n${e.message || 'Unknown error'}`);
     }
 }
