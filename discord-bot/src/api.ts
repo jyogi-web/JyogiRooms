@@ -1,0 +1,50 @@
+import 'dotenv/config';
+
+// Rails API Base URL
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
+
+export interface Reservation {
+    id: number;
+    user_id: number;
+    start_at: string;
+    end_at: string;
+    purpose: string;
+    // user information loaded via includes
+    user?: {
+        id: number;
+        username: string;
+        display_name: string;
+        discord_id?: string;
+        avatar_url?: string;
+    };
+}
+
+export const api = {
+    /**
+     * 予約一覧を取得する
+     * @param startFrom この日時以降の予約を取得 (ISOString)
+     * @returns 予約の配列
+     */
+    async fetchReservations(startFrom?: string): Promise<Reservation[]> {
+        const url = new URL(`${API_BASE_URL}/reservations`);
+
+        if (startFrom) {
+            url.searchParams.append('start_from', startFrom);
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+        try {
+            const response = await fetch(url.toString(), { signal: controller.signal });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json() as Reservation[];
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+};
