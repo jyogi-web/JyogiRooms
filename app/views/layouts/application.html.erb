@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Jyogi Rooms" %></title>
+    <title><%= page_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="description" content="<%= content_for(:description) || "JyogiRoomsは部員による部員のための部室・鍵管理システムです。Discordと連携してセキュアでスムーズな管理を実現します。" %>">
+    <meta name="description" content="<%= page_description %>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Jyogi Rooms">
     <meta name="mobile-web-app-capable" content="yes">
@@ -11,19 +11,19 @@
     <%= csp_meta_tag %>
 
     <%# Open Graph Protocol (OGP) %>
-    <meta property="og:title" content="<%= content_for(:title) || "Jyogi Rooms" %>">
-    <meta property="og:description" content="<%= content_for(:description) || "JyogiRoomsは部員による部員のための部室・鍵管理システムです。Discordと連携してセキュアでスムーズな管理を実現します。" %>">
+    <meta property="og:title" content="<%= page_title %>">
+    <meta property="og:description" content="<%= page_description %>">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="<%= content_for(:og_url) || "https://jyogi-rooms.onrender.com#{request.fullpath}" %>">
-    <meta property="og:image" content="<%= content_for(:og_image) || "https://jyogi-rooms.onrender.com/JyogiRoomsIcon.png" %>">
+    <meta property="og:url" content="<%= page_og_url %>">
+    <meta property="og:image" content="<%= page_og_image %>">
     <meta property="og:site_name" content="Jyogi Rooms">
     <meta property="og:locale" content="ja_JP">
 
     <%# Twitter Card %>
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="<%= content_for(:title) || "Jyogi Rooms" %>">
-    <meta name="twitter:description" content="<%= content_for(:description) || "JyogiRoomsは部員による部員のための部室・鍵管理システムです。Discordと連携してセキュアでスムーズな管理を実現します。" %>">
-    <meta name="twitter:image" content="<%= content_for(:og_image) || "https://jyogi-rooms.onrender.com/JyogiRoomsIcon.png" %>">
+    <meta name="twitter:title" content="<%= page_title %>">
+    <meta name="twitter:description" content="<%= page_description %>">
+    <meta name="twitter:image" content="<%= page_og_image %>">
 
     <%= yield :head %>
 
