@@ -52,5 +52,42 @@ export const api = {
         } finally {
             clearTimeout(timeoutId);
         }
+    },
+
+    /**
+     * 予約を作成する
+     * @param reservation 予約情報
+     */
+    async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }): Promise<Reservation> {
+        const url = new URL(`${API_BASE_URL}/reservations`);
+        const headers = {
+            'X-Api-Key': process.env.API_ACCESS_TOKEN || '',
+            'Content-Type': 'application/json'
+        };
+        const body = JSON.stringify({ reservation });
+
+        const response = await fetch(url.toString(), {
+            method: 'POST',
+            headers,
+            body
+        });
+
+        if (!response.ok) {
+            // Try to read error message from body if possible, otherwise use status text
+            let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+            try {
+                const errorBody = await response.json();
+                if (errorBody && errorBody.error) {
+                    errorMessage += ` - ${errorBody.error}`;
+                } else if (errorBody && errorBody.errors) {
+                    errorMessage += ` - ${JSON.stringify(errorBody.errors)}`;
+                }
+            } catch (e) {
+                // ignore json parse error
+            }
+            throw new Error(errorMessage);
+        }
+
+        return await response.json() as Reservation;
     }
 };
