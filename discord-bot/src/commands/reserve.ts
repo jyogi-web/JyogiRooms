@@ -70,15 +70,24 @@ function parseDateInput(input: string): Date | null {
         const year = parseInt(ymdMatch[1], 10);
         const month = parseInt(ymdMatch[2], 10) - 1;
         const day = parseInt(ymdMatch[3], 10);
-        return new Date(year, month, day);
+        const d = new Date(year, month, day);
+        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) {
+            return null;
+        }
+        return d;
     }
 
     // MM/DD or MM-DD (Current Year)
     const mdMatch = normalized.match(/^(\d{1,2})[-/.](\d{1,2})$/);
     if (mdMatch) {
+        const year = now.getFullYear();
         const month = parseInt(mdMatch[1], 10) - 1;
         const day = parseInt(mdMatch[2], 10);
-        return new Date(now.getFullYear(), month, day);
+        const d = new Date(year, month, day);
+        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) {
+            return null;
+        }
+        return d;
     }
 
     return null;
