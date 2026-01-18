@@ -40,7 +40,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root "roles#index"
     resources :roles, only: %i[index show update]
-    resources :users, only: %i[show]
+    resources :users, only: %i[show update]
     resources :key_transfer_logs, only: %i[index show]
   end
 
