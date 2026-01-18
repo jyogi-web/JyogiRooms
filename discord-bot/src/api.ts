@@ -25,11 +25,14 @@ export const api = {
      * @param startFrom この日時以降の予約を取得 (ISOString)
      * @returns 予約の配列
      */
-    async fetchReservations(startFrom?: string): Promise<Reservation[]> {
+    async fetchReservations(startFrom?: string, endTo?: string): Promise<Reservation[]> {
         const url = new URL(`${API_BASE_URL}/reservations`);
 
         if (startFrom) {
             url.searchParams.append('start_from', startFrom);
+        }
+        if (endTo) {
+            url.searchParams.append('end_to', endTo);
         }
 
         const controller = new AbortController();
