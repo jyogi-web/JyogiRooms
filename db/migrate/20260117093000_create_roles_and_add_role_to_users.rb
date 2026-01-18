@@ -4,8 +4,8 @@ class CreateRolesAndAddRoleToUsers < ActiveRecord::Migration[8.1]
       t.string :name, null: false
 
       t.timestamps
-      t.index :name, unique: true
     end
+    add_index :roles, :name, unique: true
 
     add_reference :users, :role, foreign_key: { to_table: :roles }
   end
