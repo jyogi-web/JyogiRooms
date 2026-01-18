@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "npm start",
+    "dev": "tsx watch src/index.ts",
     "deploy-commands": "npm run build && node dist/deploy-commands.js",
     "build": "tsc",
     "prestart": "npm run build",
@@ -23,6 +23,7 @@
   "devDependencies": {
     "@types/node": "^25.0.5",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
