@@ -1,5 +1,9 @@
 module Api
   class ReservationsController < BaseController
+    # Botアクセスのためユーザー認証はスキップし、代わりにAPI Key認証を行う
+    skip_before_action :authenticate_user!, only: [ :index ]
+    before_action :authenticate_api_key!, only: [ :index ]
+
     # GET /api/reservations
     def index
       # TODO: Implement Authentication - currently returns all reservations
@@ -21,7 +25,9 @@ module Api
       end
 
       # Order by start time
-      render json: reservations.order(start_at: :asc)
+      render json: reservations.order(start_at: :asc), include: {
+        user: { only: [ :id, :username, :display_name, :discord_id, :avatar_url ] }
+      }
     end
 
     # POST /api/reservations

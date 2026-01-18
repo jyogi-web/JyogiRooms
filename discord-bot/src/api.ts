@@ -36,7 +36,10 @@ export const api = {
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         try {
-            const response = await fetch(url.toString(), { signal: controller.signal });
+            const headers = {
+                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
+            };
+            const response = await fetch(url.toString(), { signal: controller.signal, headers });
 
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
