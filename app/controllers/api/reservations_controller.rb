@@ -25,7 +25,9 @@ module Api
       end
 
       # Order by start time
-      render json: reservations.order(start_at: :asc), include: :user
+      render json: reservations.order(start_at: :asc), include: {
+        user: { only: [:id, :username, :display_name, :discord_id, :avatar_url] }
+      }
     end
 
     # POST /api/reservations
