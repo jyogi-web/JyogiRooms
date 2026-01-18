@@ -131,7 +131,7 @@ module JyogiAuth
     end
 
     test "clear_cache calls Rails.cache.delete with correct key" do
-        Rails.cache.write("jyogi_auth_users", ["dummy"])
+        Rails.cache.write("jyogi_auth_users", [ "dummy" ])
         JyogiAuth::User.clear_cache
         assert_nil Rails.cache.read("jyogi_auth_users")
       end

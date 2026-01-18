@@ -35,7 +35,7 @@ module JyogiAuth
     # @param access_token [String] 認証トークン
     # @return [Array<JyogiAuth::User>]
     def self.fetch_all_from_api(access_token)
-      response = JyogiAuthClient.fetch_users(access_token: access_token)
+      response = JyogiAuthClient.fetch_users(access_token: access_token) || {}
       users_data = response["users"] || response[:users] || []
       users_data.map { |user_attrs| new(user_attrs) }
     end
