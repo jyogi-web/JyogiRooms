@@ -16,8 +16,18 @@ export const reserveCommand = {
                 .setDescription('指定した日の予約を確認します')
                 .addStringOption(option =>
                     option
+                        .setName('preset')
+                        .setDescription('日付プリセット')
+                        .setRequired(false)
+                        .addChoices(
+                            { name: '今日 (Today)', value: 'today' },
+                            { name: '明日 (Tomorrow)', value: 'tomorrow' }
+                        )
+                )
+                .addStringOption(option =>
+                    option
                         .setName('date')
-                        .setDescription('日付 (例: 11/23, 2025/01/01)')
+                        .setDescription('日付指定 (例: 11/23, 2025/01/01)')
                         .setRequired(false)
                 )
         ),
@@ -77,8 +87,18 @@ function parseDateInput(input: string): Date | null {
 async function handleCheckCommand(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
 
-    const dateInput = interaction.options.getString('date') || 'today';
-    const targetDate = parseDateInput(dateInput);
+    const preset = interaction.options.getString('preset');
+    const dateInput = interaction.options.getString('date');
+
+    // 優先順位: preset > date > today(default)
+    let targetDateStr = 'today';
+    if (preset) {
+        targetDateStr = preset;
+    } else if (dateInput) {
+        targetDateStr = dateInput;
+    }
+
+    const targetDate = parseDateInput(targetDateStr);
 
     if (!targetDate || isNaN(targetDate.getTime())) {
         await interaction.editReply(`日付の形式が正しくありません。\n例: \`11/23\`, \`2025/01/01\`, \`today\``);
