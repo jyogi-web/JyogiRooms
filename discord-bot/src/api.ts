@@ -57,14 +57,18 @@ export const api = {
     /**
      * 予約を作成する
      * @param reservation 予約情報
+     * @param discordUserId DiscordユーザーID (ユーザー特定用)
      */
-    async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }): Promise<Reservation> {
+    async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }, discordUserId?: string): Promise<Reservation> {
         const url = new URL(`${API_BASE_URL}/reservations`);
         const headers = {
             'X-Api-Key': process.env.API_ACCESS_TOKEN || '',
             'Content-Type': 'application/json'
         };
-        const body = JSON.stringify({ reservation });
+        const body = JSON.stringify({
+            reservation,
+            discord_user_id: discordUserId
+        });
 
         const response = await fetch(url.toString(), {
             method: 'POST',

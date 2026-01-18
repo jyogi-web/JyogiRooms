@@ -321,7 +321,7 @@ async function handleCreateCommand(interaction: ChatInputCommandInteraction) {
             start_at: startAt.toISOString(),
             end_at: endAt.toISOString(),
             purpose
-        });
+        }, interaction.user.id);
 
         const dateStr = startAt.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
         const timeStr = `${startAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${endAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
