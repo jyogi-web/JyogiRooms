@@ -10,7 +10,7 @@ class Admin::UsersController < Admin::BaseController
       redirect_to admin_user_path(@user), notice: "ユーザー「#{@user.display_name}」を更新しました"
     else
       @roles = Role.order(:name)
-      redirect_to admin_user_path(@user), alert: "更新に失敗しました"
+      render :show, status: :unprocessable_entity
     end
   end
 
