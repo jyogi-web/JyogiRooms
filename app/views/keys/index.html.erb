@@ -34,6 +34,10 @@
                   <p class="text-xs text-gray-700 font-medium text-center line-clamp-2" title="<%= key.user.display_name %>">
                     <%= key.user.display_name %>
                   </p>
+                  <% if current_user.admin? || key.user_id == current_user.id %>
+                    <%= link_to "譲渡", transfer_form_room_key_path(room.id, from_user_id: key.user_id),
+                        class: "w-full px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-md text-center hover:bg-primary-dark transition-colors" %>
+                  <% end %>
                 </div>
               <% end %>
             <% else %>
@@ -41,28 +45,6 @@
             <% end %>
           </div>
         </div>
-
-        <!-- Key Transfer Form -->
-        <% if room.keys.any? { |k| k.user_id == current_user.id } %>
-          <div>
-            <p class="text-sm font-semibold text-gray-600 mb-3">鍵を譲渡</p>
-            <%= form_with url: transfer_room_key_path(room.id), method: :post, local: true, class: "space-y-3" do |form| %>
-              <!-- User Select -->
-              <div>
-                <%= form.select :to_user_id, 
-                    options_for_select(@users.map { |u| [u.display_name, u.id] }), 
-                    { prompt: "ユーザーを選択" },
-                    class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" %>
-              </div>
-
-              <!-- Submit Button -->
-              <div>
-                <%= form.submit "譲渡する", 
-                    class: "w-full px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors text-sm" %>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
       </div>
     <% end %>
   </div>

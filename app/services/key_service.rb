@@ -3,6 +3,9 @@
 # - トランザクション管理を行う
 # - 失敗時は例外を投げ、ハンドリングは呼び出し元に委ねる
 class KeyService
+  # 譲渡に関する業務例外
+  class TransferError < StandardError; end
+
   # 鍵を譲渡する
   #
   # @param room_id [Integer]
@@ -11,6 +14,7 @@ class KeyService
   #
   # @raise [ActiveRecord::RecordNotFound]
   # @raise [ActiveRecord::RecordInvalid]
+  # @raise [KeyService::TransferError]
   def self.transfer(room_id:, from_user:, to_user_id:)
     ActiveRecord::Base.transaction do
       # 1. 現在の鍵を取得
@@ -23,6 +27,11 @@ class KeyService
       # 2. 譲渡先ユーザーを取得
       to_user = User.find(to_user_id)
 
+      # 2.5 譲渡先がすでに同室の鍵を保持している場合はエラー
+      if Key.exists?(room_id: room_id, user_id: to_user.id)
+        raise TransferError, "譲渡先ユーザーは既にこの部屋の鍵を所持しています"
+      end
+
       # 3. 鍵の所有者を更新
       key.update!(user: to_user)
 
@@ -33,5 +42,8 @@ class KeyService
         to_user: to_user
       )
     end
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => e
+    raise TransferError, "譲渡先ユーザーは既にこの部屋の鍵を所持しています" if e.message.match?(/unique|uniq|duplicate/i)
+    raise
   end
 end
