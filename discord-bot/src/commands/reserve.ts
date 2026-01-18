@@ -297,14 +297,25 @@ async function handleCreateCommand(interaction: ChatInputCommandInteraction) {
         return;
     }
 
-    const setTime = (d: Date, h: string, m: string) => {
+    const startH = parseInt(startMatch[1], 10);
+    const startM = parseInt(startMatch[2], 10);
+    const endH = parseInt(endMatch[1], 10);
+    const endM = parseInt(endMatch[2], 10);
+
+    if (startH < 0 || startH > 23 || startM < 0 || startM > 59 ||
+        endH < 0 || endH > 23 || endM < 0 || endM > 59) {
+        await interaction.editReply('時刻の形式が正しくありません。\n例: `10:00`');
+        return;
+    }
+
+    const setTime = (d: Date, h: number, m: number) => {
         const newD = new Date(d);
-        newD.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+        newD.setHours(h, m, 0, 0);
         return newD;
     };
 
-    const startAt = setTime(date, startMatch[1], startMatch[2]);
-    const endAt = setTime(date, endMatch[1], endMatch[2]);
+    const startAt = setTime(date, startH, startM);
+    const endAt = setTime(date, endH, endM);
 
     if (startAt < new Date()) {
         await interaction.editReply('過去の日時は予約できません。');
