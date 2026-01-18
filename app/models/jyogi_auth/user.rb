@@ -95,7 +95,7 @@ module JyogiAuth
 
     def parse_time(value)
       return nil if value.nil?
-      value.is_a?(String) ? Time.parse(value) : value
+      value.is_a?(String) ? Time.zone.parse(value) : value
     rescue ArgumentError
       nil
     end

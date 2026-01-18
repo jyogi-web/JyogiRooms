@@ -28,8 +28,8 @@ module JyogiAuth
       assert_equal "https://example.com/avatar.png", user.avatar_url
       assert_equal({ "role1" => "value1" }, user.guild_roles)
       assert_equal "Test Nickname", user.guild_nickname
-      assert_instance_of Time, user.created_at
-      assert_instance_of Time, user.updated_at
+      assert_instance_of ActiveSupport::TimeWithZone, user.created_at
+      assert_instance_of ActiveSupport::TimeWithZone, user.updated_at
     end
 
     test "initializes with symbol keys" do
@@ -131,10 +131,9 @@ module JyogiAuth
     end
 
     test "clear_cache calls Rails.cache.delete with correct key" do
-      # clear_cache がエラーなく実行されることを確認
-      assert_nothing_raised do
+        Rails.cache.write("jyogi_auth_users", ["dummy"])
         JyogiAuth::User.clear_cache
+        assert_nil Rails.cache.read("jyogi_auth_users")
       end
-    end
   end
 end
