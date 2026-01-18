@@ -49,8 +49,9 @@
             <%= form_with url: transfer_room_key_path(room.id), method: :post, local: true, class: "space-y-3" do |form| %>
               <!-- User Select -->
               <div>
-                <%= form.select :to_user_id, 
-                    options_for_select(@users.map { |u| [u.display_name, u.id] }), 
+                <% eligible_users = @users.reject { |u| room.keys.any? { |k| k.user_id == u.id } } %>
+                <%= form.select :to_user_id,
+                    options_for_select(eligible_users.map { |u| [u.display_name, u.id] }),
                     { prompt: "ユーザーを選択" },
                     class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" %>
               </div>

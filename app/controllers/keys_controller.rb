@@ -22,6 +22,8 @@ class KeysController < ApplicationController
     redirect_to keys_path, alert: "指定された部屋または譲渡先ユーザーが見つかりません"
   rescue ActiveRecord::RecordInvalid => e
     redirect_to keys_path, alert: "鍵の譲渡に失敗しました：#{e.message}"
+  rescue KeyService::TransferError => e
+    redirect_to keys_path, alert: e.message
   end
 
   private
