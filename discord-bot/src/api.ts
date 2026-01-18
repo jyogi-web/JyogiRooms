@@ -32,16 +32,19 @@ export const api = {
             url.searchParams.append('start_from', startFrom);
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
         try {
-            const response = await fetch(url.toString());
+            const response = await fetch(url.toString(), { signal: controller.signal });
+
             if (!response.ok) {
-                console.error(`API Error: ${response.status} ${response.statusText}`);
-                return [];
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
             }
+
             return await response.json() as Reservation[];
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            return [];
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 };
