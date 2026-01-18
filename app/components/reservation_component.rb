@@ -27,6 +27,7 @@ class ReservationComponent < ViewComponent::Base
   end
 
   def owned_by_current_user?
-    helpers.current_user.present? && helpers.current_user == @reservation.user
+    return false unless helpers.current_user.present?
+    helpers.current_user.admin? || helpers.current_user == @reservation.user
   end
 end
