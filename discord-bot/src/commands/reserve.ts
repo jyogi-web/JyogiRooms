@@ -35,15 +35,25 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
             return;
         }
 
-        // Create embed list (max 10 for Discord limit)
         const embed = new EmbedBuilder()
             .setTitle('📅 今後の予約一覧')
             .setColor('#0099ff')
             .setTimestamp();
 
+        const MAX_ITEMS = 10;
+        const MAX_LENGTH = 4096;
         let description = '';
+        let omittedCount = 0;
 
-        for (const res of reservations) {
+        for (let i = 0; i < reservations.length; i++) {
+            const res = reservations[i];
+
+            // Item count limit check
+            if (i >= MAX_ITEMS) {
+                omittedCount = reservations.length - i;
+                break;
+            }
+
             const start = new Date(res.start_at);
             const end = new Date(res.end_at);
 
@@ -60,7 +70,19 @@ async function handleListCommand(interaction: ChatInputCommandInteraction) {
                 }
             }
 
-            description += `**${dateStr} ${timeStr}**\n👤${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+            const entry = `**${dateStr} ${timeStr}**\n👤${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+            
+            const OMISSION_BUFFER = 50;
+            if (description.length + entry.length + OMISSION_BUFFER > MAX_LENGTH) {
+                omittedCount = reservations.length - i;
+                break;
+            }
+
+            description += entry;
+        }
+
+        if (omittedCount > 0) {
+            description += `...省略: 他 ${omittedCount} 件`;
         }
 
         embed.setDescription(description);
