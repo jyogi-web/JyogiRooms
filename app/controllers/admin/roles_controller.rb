@@ -1,6 +1,6 @@
 class Admin::RolesController < Admin::BaseController
   def index
-    @roles = Role.includes(:users).order(:name)
+    @roles = Role.left_joins(:users).group(:id).select("roles.*, COUNT(users.id) AS users_count").order(:name)
     @users = User.includes(:role).order(:username)
   end
 
