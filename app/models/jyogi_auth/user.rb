@@ -22,8 +22,11 @@ module JyogiAuth
     # @param cache [Boolean] キャッシュを使用するか（デフォルト: true）
     # @return [Array<JyogiAuth::User>]
     def self.all(access_token:, cache: true)
+      raise ArgumentError, "access_token cannot be nil" if access_token.nil?
+
       if cache
-        Rails.cache.fetch("jyogi_auth_users", expires_in: 5.minutes) do
+        cache_key = cache_key_for_token(access_token)
+        Rails.cache.fetch(cache_key, expires_in: 5.minutes) do
           fetch_all_from_api(access_token)
         end
       else
@@ -40,6 +43,16 @@ module JyogiAuth
       users_data.map { |user_attrs| new(user_attrs) }
     end
     private_class_method :fetch_all_from_api
+
+    # access_tokenに基づいてキャッシュキーを生成
+    # トークンのハッシュを使用して、異なるトークン間でキャッシュが共有されないようにする
+    # @param access_token [String] 認証トークン
+    # @return [String] キャッシュキー
+    def self.cache_key_for_token(access_token)
+      token_hash = Digest::SHA256.hexdigest(access_token)[0, 16]
+      "jyogi_auth_users:#{token_hash}"
+    end
+    private_class_method :cache_key_for_token
 
     # JyogiAuth APIから特定のユーザーを取得
     # @param id [String] JyogiAuthのユーザーID
@@ -87,8 +100,12 @@ module JyogiAuth
     end
 
     # キャッシュの手動クリア
-    def self.clear_cache
-      Rails.cache.delete("jyogi_auth_users")
+    # @param access_token [String] 認証トークン(特定のトークンのキャッシュのみをクリア)
+    def self.clear_cache(access_token:)
+      raise ArgumentError, "access_token cannot be nil" if access_token.nil?
+
+      cache_key = cache_key_for_token(access_token)
+      Rails.cache.delete(cache_key)
     end
 
     private

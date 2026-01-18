@@ -18,6 +18,15 @@ module JyogiAuth
       }
     end
 
+    # キャッシュを有効にしてブロックを実行するヘルパーメソッド
+    def with_caching
+      original_cache = Rails.cache
+      Rails.cache = ActiveSupport::Cache::MemoryStore.new
+      yield
+    ensure
+      Rails.cache = original_cache
+    end
+
     test "initializes with string keys" do
       user = JyogiAuth::User.new(@valid_attributes)
 
@@ -130,10 +139,104 @@ module JyogiAuth
       assert_equal time, user.created_at
     end
 
-    test "clear_cache calls Rails.cache.delete with correct key" do
-        Rails.cache.write("jyogi_auth_users", [ "dummy" ])
-        JyogiAuth::User.clear_cache
-        assert_nil Rails.cache.read("jyogi_auth_users")
+    test "clear_cache deletes cache for specific token" do
+      with_caching do
+        access_token = "test_token_123"
+        cache_key = JyogiAuth::User.send(:cache_key_for_token, access_token)
+
+        Rails.cache.write(cache_key, ["dummy"])
+        JyogiAuth::User.clear_cache(access_token: access_token)
+        assert_nil Rails.cache.read(cache_key)
       end
+    end
+
+    test "clear_cache raises error when access_token is nil" do
+      assert_raises(ArgumentError) do
+        JyogiAuth::User.clear_cache(access_token: nil)
+      end
+    end
+
+    test "clear_cache only deletes cache for specified token" do
+      with_caching do
+        token1 = "token_1"
+        token2 = "token_2"
+        cache_key1 = JyogiAuth::User.send(:cache_key_for_token, token1)
+        cache_key2 = JyogiAuth::User.send(:cache_key_for_token, token2)
+
+        # Write cache for both tokens
+        Rails.cache.write(cache_key1, ["dummy1"])
+        Rails.cache.write(cache_key2, ["dummy2"])
+
+        # Verify both caches exist before clearing
+        assert_equal ["dummy1"], Rails.cache.read(cache_key1), "cache_key1 should contain dummy1"
+        assert_equal ["dummy2"], Rails.cache.read(cache_key2), "cache_key2 should contain dummy2"
+
+        # Clear only token1's cache
+        JyogiAuth::User.clear_cache(access_token: token1)
+
+        # Verify only token1's cache was deleted
+        assert_nil Rails.cache.read(cache_key1), "cache_key1 should be deleted"
+        assert_equal ["dummy2"], Rails.cache.read(cache_key2), "cache_key2 should still exist"
+      end
+    end
+
+    test "User.all generates different cache keys for different tokens" do
+      token1 = "token_1"
+      token2 = "token_2"
+
+      cache_key1 = JyogiAuth::User.send(:cache_key_for_token, token1)
+      cache_key2 = JyogiAuth::User.send(:cache_key_for_token, token2)
+
+      # Different tokens should produce different cache keys
+      refute_equal cache_key1, cache_key2
+      assert_match(/^jyogi_auth_users:[0-9a-f]{16}$/, cache_key1)
+      assert_match(/^jyogi_auth_users:[0-9a-f]{16}$/, cache_key2)
+    end
+
+    test "User.all uses token-specific cache key" do
+      with_caching do
+        token = "test_token_456"
+        expected_cache_key = JyogiAuth::User.send(:cache_key_for_token, token)
+
+        # Pre-populate cache with dummy data
+        dummy_users = [JyogiAuth::User.new({ "id" => "cached_user", "username" => "cached" })]
+        Rails.cache.write(expected_cache_key, dummy_users)
+
+        # Read the cache back to verify it was written correctly
+        cached_data = Rails.cache.read(expected_cache_key)
+        assert_not_nil cached_data, "Cache should contain data"
+        assert_equal 1, cached_data.length
+        assert_equal "cached_user", cached_data.first.id
+        assert_equal "cached", cached_data.first.username
+      end
+    end
+
+    test "User.all raises error when access_token is nil" do
+      assert_raises(ArgumentError) do
+        JyogiAuth::User.all(access_token: nil)
+      end
+    end
+
+    test "cache_key_for_token generates consistent hash for same token" do
+      token = "consistent_token"
+
+      key1 = JyogiAuth::User.send(:cache_key_for_token, token)
+      key2 = JyogiAuth::User.send(:cache_key_for_token, token)
+
+      # Same token should always generate the same cache key
+      assert_equal key1, key2
+    end
+
+    test "cache_key_for_token uses SHA256 hash" do
+      token = "test_token_for_hash"
+      cache_key = JyogiAuth::User.send(:cache_key_for_token, token)
+
+      # Verify the format includes a 16-character hex hash
+      assert_match(/^jyogi_auth_users:[0-9a-f]{16}$/, cache_key)
+
+      # Verify it's actually the first 16 chars of SHA256
+      expected_hash = Digest::SHA256.hexdigest(token)[0, 16]
+      assert_equal "jyogi_auth_users:#{expected_hash}", cache_key
+    end
   end
 end
