@@ -1,11 +1,6 @@
-<div class="space-y-6 px-4 py-6 md:px-8">
-  <h1 class="text-2xl font-bold text-gray-800">管理画面</h1>
+<h2 class="text-xl font-bold text-gray-800 mb-6">ユーザー詳細: <%= @user.display_name %></h2>
 
-  <%= render 'admin/nav' %>
-
-  <h2 class="text-xl font-bold text-gray-800 mb-6">ユーザー詳細: <%= @user.display_name %></h2>
-
-  <div class="grid gap-6 md:grid-cols-2">
+<div class="grid gap-6 md:grid-cols-2">
     <!-- ユーザー基本情報 -->
     <div class="card p-6">
       <h2 class="text-lg font-bold text-gray-800 mb-4">基本情報</h2>
@@ -23,13 +18,7 @@
         
         <div>
           <p class="text-sm text-gray-600">ロール</p>
-          <% if @user.admin? %>
-            <span class="inline-block px-3 py-1 bg-red-100 text-red-700 text-sm font-semibold rounded-full">管理者</span>
-          <% elsif @user.role %>
-            <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full"><%= @user.role.name %></span>
-          <% else %>
-            <span class="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-semibold rounded-full">未設定</span>
-          <% end %>
+          <%= user_role_badge(@user) %>
         </div>
         
         <div>

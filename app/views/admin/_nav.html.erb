@@ -12,7 +12,7 @@
   >
     <option value="" disabled>メニューを選択</option>
     <% nav_items.each do |item| %>
-      <option value="<%= item[:path] %>" <%= "selected" if current_path == item[:path] %>>
+      <option value="<%= item[:path] %>" <%= "selected" if current_path.start_with?(item[:path]) %>>
         <%= item[:label] %>
       </option>
     <% end %>

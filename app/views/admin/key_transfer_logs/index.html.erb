@@ -1,11 +1,6 @@
-<div class="space-y-6 px-4 py-6 md:px-8">
-  <h1 class="text-2xl font-bold text-gray-800">管理画面</h1>
+<h2 class="text-xl font-bold text-gray-800 mb-6">鍵譲渡履歴</h2>
 
-  <%= render 'admin/nav' %>
-
-  <h2 class="text-xl font-bold text-gray-800 mb-6">鍵譲渡履歴</h2>
-
-  <% if @key_transfer_logs.any? %>
+<% if @key_transfer_logs.any? %>
     <div class="overflow-x-auto card">
       <table class="w-full text-sm">
         <thead class="bg-gray-100 border-b border-gray-200">
@@ -64,7 +59,7 @@
     </div>
 
     <p class="text-sm text-gray-600 mt-4">
-      合計: <span class="font-bold"><%= @key_transfer_logs.count %></span> 件の譲渡履歴
+      合計: <span class="font-bold"><%= @key_transfer_logs.size %></span> 件の譲渡履歴
     </p>
   <% else %>
     <div class="card p-8 text-center text-gray-500">
