@@ -1,12 +1,18 @@
 class CreateRolesAndAddRoleToUsers < ActiveRecord::Migration[8.1]
   def change
-    create_table :roles do |t|
-      t.string :name, null: false
+    # rolesテーブルが存在しない場合のみ作成
+    unless table_exists?(:roles)
+      create_table :roles do |t|
+        t.string :name, null: false
 
-      t.timestamps
+        t.timestamps
+      end
+      add_index :roles, :name, unique: true
     end
-    add_index :roles, :name, unique: true
 
-    add_reference :users, :role, foreign_key: { to_table: :roles }
+    # role_idカラムが存在しない場合のみ追加
+    unless column_exists?(:users, :role_id)
+      add_reference :users, :role, foreign_key: { to_table: :roles }
+    end
   end
 end
