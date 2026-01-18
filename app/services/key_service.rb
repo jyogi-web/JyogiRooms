@@ -14,6 +14,7 @@ class KeyService
   #
   # @raise [ActiveRecord::RecordNotFound]
   # @raise [ActiveRecord::RecordInvalid]
+  # @raise [KeyService::TransferError]
   def self.transfer(room_id:, from_user:, to_user_id:)
     ActiveRecord::Base.transaction do
       # 1. 現在の鍵を取得
@@ -41,5 +42,8 @@ class KeyService
         to_user: to_user
       )
     end
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => e
+    raise TransferError, "譲渡先ユーザーは既にこの部屋の鍵を所持しています" if e.message.match?(/unique|uniq|duplicate/i)
+    raise
   end
 end

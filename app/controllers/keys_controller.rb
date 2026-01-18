@@ -11,6 +11,8 @@ class KeysController < ApplicationController
 
   # GET /rooms/:room_id/key/transfer_form
   def transfer_form
+    return if performed?
+
     @from_user = resolve_from_user
     return if performed?
 
@@ -28,8 +30,15 @@ class KeysController < ApplicationController
   # POST /rooms/:room_id/key/transfer
   # 鍵を譲渡する
   def transfer
+    return if performed?
+
     from_user = resolve_from_user
     return if performed?
+
+    unless transfer_params[:to_user_id].present?
+      redirect_back fallback_location: keys_path, alert: "譲渡先を選択してください"
+      return
+    end
 
     KeyService.transfer(
       room_id: @room.id,
@@ -50,6 +59,9 @@ class KeysController < ApplicationController
 
   def set_room
     @room = Room.includes(keys: :user).find(params[:room_id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to keys_path, alert: "指定された部屋が見つかりません"
+    @room = nil
   end
 
   def resolve_from_user

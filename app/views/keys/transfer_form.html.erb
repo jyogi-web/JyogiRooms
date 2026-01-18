@@ -29,8 +29,9 @@
           <div>
             <%= form.select :to_user_id,
                 options_for_select(@eligible_users.map { |u| [u.display_name, u.id] }),
-                { prompt: "ユーザーを選択" },
-                class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" %>
+              { prompt: "ユーザーを選択" },
+              class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
+              required: true %>
           </div>
           <div>
             <%= form.submit "譲渡する", class: "w-full px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors text-sm" %>
