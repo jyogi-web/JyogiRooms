@@ -1,7 +1,6 @@
 module Api
   class ReservationsController < BaseController
     # Botアクセスのためユーザー認証はスキップし、代わりにAPI Key認証を行う
-    # Botアクセスのためユーザー認証はスキップし、代わりにAPI Key認証を行う
     skip_before_action :authenticate_user!
     before_action :authenticate_api_key!
 
