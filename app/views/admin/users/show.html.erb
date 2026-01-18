@@ -1,0 +1,91 @@
+<h1 class="text-2xl font-bold text-gray-900 mb-6">管理画面</h1>
+
+<%= render "admin/nav" %>
+
+<h2 class="text-xl font-bold text-gray-800 mb-6">ユーザー詳細: <%= @user.display_name %></h2>
+
+<div class="grid gap-6 md:grid-cols-2">
+    <!-- ユーザー基本情報 -->
+    <div class="card p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">基本情報</h2>
+      
+      <div class="space-y-3">
+        <div>
+          <p class="text-sm text-gray-600">ユーザー名</p>
+          <p class="font-medium text-gray-800">@<%= @user.username %></p>
+        </div>
+        
+        <div>
+          <p class="text-sm text-gray-600">表示名</p>
+          <p class="font-medium text-gray-800"><%= @user.display_name %></p>
+        </div>
+        
+        <div>
+          <p class="text-sm text-gray-600">ロール</p>
+          <%= user_role_badge(@user) %>
+        </div>
+        
+        <div>
+          <p class="text-sm text-gray-600">登録日時</p>
+          <p class="font-medium text-gray-800"><%= l(@user.created_at, format: :short) %></p>
+        </div>
+        
+        <div>
+          <p class="text-sm text-gray-600">最終同期</p>
+          <p class="font-medium text-gray-800">
+            <% if @user.last_synced_at %>
+              <%= l(@user.last_synced_at, format: :short) %>
+            <% else %>
+              <span class="text-gray-400">未同期</span>
+            <% end %>
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 統計情報 -->
+    <div class="card p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">統計情報</h2>
+      
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+          <div>
+            <p class="text-sm text-gray-600">予約数</p>
+            <p class="text-2xl font-bold text-blue-700"><%= @user.reservations.count %></p>
+          </div>
+          <svg class="w-8 h-8 text-blue-200" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+          </svg>
+        </div>
+        
+        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+          <div>
+            <p class="text-sm text-gray-600">保有中の鍵</p>
+            <p class="text-2xl font-bold text-green-700"><%= @user.keys.count %></p>
+          </div>
+          <svg class="w-8 h-8 text-green-200" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"/>
+          </svg>
+        </div>
+        
+        <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+          <div>
+            <p class="text-sm text-gray-600">アクティブなトークン</p>
+            <p class="text-2xl font-bold text-purple-700"><%= @user.access_tokens.active.count %></p>
+          </div>
+          <svg class="w-8 h-8 text-purple-200" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-18-10.5a6 6 0 0 1 12 0c0 1.657-.672 3.157-1.757 4.243A4 4 0 0 0 6.75 19.5H2.25v-2.25a2.25 2.25 0 0 1 2.25-2.25h.75a2.25 2.25 0 0 0 2.25-2.25v-.75A6 6 0 0 0 1.5 10.5Z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <%= link_to admin_roles_path, class: "px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors inline-flex items-center gap-2" do %>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      ユーザー管理に戻る
+    <% end %>
+  </div>

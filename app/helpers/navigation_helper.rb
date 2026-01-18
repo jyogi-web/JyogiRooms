@@ -8,7 +8,7 @@ module NavigationHelper
 
     # 管理者のみ管理画面へのリンクを表示
     if current_user&.admin?
-      items << { path: "#", icon: :shield, label: "管理画面", active: false }
+      items << { path: admin_roles_path, icon: :shield, label: "管理画面", active: controller_path.start_with?("admin/") }
     end
 
     items << { path: "#", icon: :cog, label: "設定", active: false }
@@ -37,5 +37,25 @@ module NavigationHelper
     end
 
     tag.svg(content, xmlns: "http://www.w3.org/2000/svg", fill: "none", viewBox: "0 0 24 24", stroke_width: "1.5", stroke: "currentColor", class: classes)
+  end
+
+  # ユーザーのロール表示バッジを生成
+  # @param user [User] 対象ユーザー
+  # @param size [Symbol] バッジサイズ (:sm, :base)
+  # @return [ActiveSupport::SafeBuffer] HTML バッジ
+  def user_role_badge(user, size = :base)
+    if user.admin?
+      label = "管理者"
+      badge_class = "bg-red-100 text-red-700"
+    elsif user.role
+      label = user.role.name
+      badge_class = "bg-blue-100 text-blue-700"
+    else
+      label = "未設定"
+      badge_class = "bg-gray-100 text-gray-700"
+    end
+
+    size_class = size == :sm ? "text-xs" : "text-sm"
+    content_tag(:span, label, class: "inline-block px-3 py-1 #{badge_class} #{size_class} font-semibold rounded-full")
   end
 end

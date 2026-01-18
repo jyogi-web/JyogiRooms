@@ -1,0 +1,73 @@
+<h1 class="text-2xl font-bold text-gray-900 mb-6">管理画面</h1>
+
+<%= render "admin/nav" %>
+
+<h2 class="text-xl font-bold text-gray-800 mb-6">ロール管理</h2>
+
+<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <% @roles.each do |role| %>
+      <div class="card p-6">
+        <div class="flex items-start justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800"><%= role.name %></h2>
+          <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+            <%= role.users_count %> ユーザー
+          </span>
+        </div>
+        
+        <div class="space-y-2">
+          <!-- ロール詳細へのリンク -->
+          <%= link_to admin_role_path(role), class: "inline-flex items-center gap-2 text-primary hover:text-primary-dark font-medium text-sm" do %>
+            詳細を表示
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- ユーザー一覧セクション -->
+  <h2 class="text-xl font-bold text-gray-800 mb-6 mt-8">ユーザー一覧</h2>
+
+  <div class="overflow-x-auto card">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-100 border-b border-gray-200">
+        <tr>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">ユーザー名</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">表示名</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">ロール</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">最終同期</th>
+          <th class="px-6 py-3 text-left font-semibold text-gray-700">操作</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% @users.each do |user| %>
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 text-gray-800">@<%= user.username %></td>
+            <td class="px-6 py-4 text-gray-800"><%= user.display_name %></td>
+            <td class="px-6 py-4">
+              <%= user_role_badge(user, :sm) %>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              <% if user.last_synced_at %>
+                <%= l(user.last_synced_at, format: :short) %>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4">
+              <%= link_to admin_user_path(user), class: "text-primary hover:text-primary-dark font-medium text-sm" do %>
+                詳細
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-sm text-gray-600 mt-4">
+    合計: <span class="font-bold"><%= @users.size %></span> ユーザー
+  </p>
+</div>

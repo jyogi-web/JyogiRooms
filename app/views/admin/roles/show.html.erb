@@ -1,0 +1,44 @@
+<h1 class="text-2xl font-bold text-gray-900 mb-6">管理画面</h1>
+
+<%= render "admin/nav" %>
+
+<h2 class="text-xl font-bold text-gray-800 mb-6">ロール詳細: <%= @role.name %></h2>
+
+<div class="card p-6 mb-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">このロールに属するユーザー</h2>
+    
+    <% if @users.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 text-left font-semibold text-gray-700">ユーザー名</th>
+              <th class="px-4 py-2 text-left font-semibold text-gray-700">表示名</th>
+              <th class="px-4 py-2 text-left font-semibold text-gray-700">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% @users.each do |user| %>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3 text-gray-800">@<%= user.username %></td>
+                <td class="px-4 py-3 text-gray-800"><%= user.display_name %></td>
+                <td class="px-4 py-3">
+                  <%= link_to admin_user_path(user), class: "text-primary hover:text-primary-dark font-medium text-xs" do %>
+                    詳細
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-gray-500">このロールに属するユーザーはいません</p>
+    <% end %>
+  </div>
+
+  <div class="flex gap-4">
+    <%= link_to admin_roles_path, class: "px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors" do %>
+      ← ロール一覧に戻る
+    <% end %>
+  </div>
