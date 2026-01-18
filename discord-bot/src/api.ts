@@ -70,28 +70,36 @@ export const api = {
             discord_user_id: discordUserId
         });
 
-        const response = await fetch(url.toString(), {
-            method: 'POST',
-            headers,
-            body
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
-        if (!response.ok) {
-            // Try to read error message from body if possible, otherwise use status text
-            let errorMessage = `API Error: ${response.status} ${response.statusText}`;
-            try {
-                const errorBody = await response.json();
-                if (errorBody && errorBody.error) {
-                    errorMessage += ` - ${errorBody.error}`;
-                } else if (errorBody && errorBody.errors) {
-                    errorMessage += ` - ${JSON.stringify(errorBody.errors)}`;
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers,
+                body,
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                // Try to read error message from body if possible, otherwise use status text
+                let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+                try {
+                    const errorBody = await response.json();
+                    if (errorBody && errorBody.error) {
+                        errorMessage += ` - ${errorBody.error}`;
+                    } else if (errorBody && errorBody.errors) {
+                        errorMessage += ` - ${JSON.stringify(errorBody.errors)}`;
+                    }
+                } catch (e) {
+                    // ignore json parse error
                 }
-            } catch (e) {
-                // ignore json parse error
+                throw new Error(errorMessage);
             }
-            throw new Error(errorMessage);
-        }
 
-        return await response.json() as Reservation;
+            return await response.json() as Reservation;
+        } finally {
+            clearTimeout(timeoutId);
+        }
     }
 };
