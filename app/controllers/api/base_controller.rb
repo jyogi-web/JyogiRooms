@@ -9,6 +9,9 @@ module Api
     # レスポンスをJSON形式に設定
     before_action :set_json_format
 
+    # APIリクエストではCSRF対策を無効化（APIキー認証を使用するため）
+    protect_from_forgery with: :null_session
+
     private
 
     def set_json_format
