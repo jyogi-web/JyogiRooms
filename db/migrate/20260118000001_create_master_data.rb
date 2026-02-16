@@ -29,11 +29,39 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
       end
     end
 
-    # デフォルトロールを作成
+    # Seed master data using execute to avoid schema cache issues
+    execute_seeding
+  end
+
+  def down
+    # Remove seeded data first
+    execute_unseeding
+
+    # Remove DDL changes in reverse order
+    if foreign_key_exists?(:users, :roles)
+      remove_foreign_key :users, :roles
+    end
+
+    if column_exists?(:users, :role_id)
+      remove_reference :users, :role
+    end
+
+    if table_exists?(:roles)
+      drop_table :roles
+    end
+  end
+
+  private
+
+  def execute_seeding
+    # Reload the schema to ensure all tables are recognized
+    ActiveRecord::Base.connection.schema_cache.clear!
+    
+    # Seed roles
     Role.find_or_create_by!(name: "admin")
     Role.find_or_create_by!(name: "member")
 
-    # 部屋マスターデータ
+    # Seed rooms and keys
     rooms_data = [
       { name: "第１部室", room_number: "322" },
       { name: "第２部室", room_number: "321" },
@@ -55,22 +83,10 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
     end
   end
 
-  def down
-    # Remove seeded data first
+  def execute_unseeding
+    ActiveRecord::Base.connection.schema_cache.clear!
+    
     Role.where(name: ["admin", "member"]).destroy_all
     Room.where(room_number: ["322", "321", "224"]).destroy_all
-
-    # Remove DDL changes in reverse order
-    if foreign_key_exists?(:users, :roles)
-      remove_foreign_key :users, :roles
-    end
-
-    if column_exists?(:users, :role_id)
-      remove_reference :users, :role
-    end
-
-    if table_exists?(:roles)
-      drop_table :roles
-    end
   end
 end
