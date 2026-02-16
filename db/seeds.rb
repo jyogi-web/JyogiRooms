@@ -4,7 +4,7 @@ return unless Rails.env.development? || Rails.env.test?
 # Clear existing data（マスターデータは残す）
 puts "Cleaning up database..."
 KeyTransferLog.delete_all
-Key.where(user_id: nil).delete_all  # マスターデータの鍵は残す
+Key.where.not(user_id: nil).update_all(user_id: nil)  # リセット: 割り当てられたキーのみuser_idをクリア
 AccessToken.delete_all
 Reservation.delete_all
 User.delete_all

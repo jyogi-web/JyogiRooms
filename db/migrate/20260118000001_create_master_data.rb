@@ -1,5 +1,5 @@
 class CreateMasterData < ActiveRecord::Migration[8.1]
-  def change
+  def up
     # rolesテーブルが存在しない場合のみ作成
     unless table_exists?(:roles)
       create_table :roles do |t|
@@ -45,10 +45,32 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
         r.name = room_data[:name]
       end
 
-      # 各部屋に5本の鍵を作成
-      5.times do |i|
-        Key.find_or_create_by!(room_id: room.id, user_id: nil) rescue nil
+      # 各部屋に5本の鍵を作成（既存分を除く）
+      existing_keys_count = Key.where(room_id: room.id, user_id: nil).count
+      missing_keys_count = 5 - existing_keys_count
+
+      missing_keys_count.times do
+        Key.create!(room_id: room.id, user_id: nil)
       end
+    end
+  end
+
+  def down
+    # Remove seeded data first
+    Role.where(name: ["admin", "member"]).destroy_all
+    Room.where(room_number: ["322", "321", "224"]).destroy_all
+
+    # Remove DDL changes in reverse order
+    if foreign_key_exists?(:users, :roles)
+      remove_foreign_key :users, :roles
+    end
+
+    if column_exists?(:users, :role_id)
+      remove_reference :users, :role
+    end
+
+    if table_exists?(:roles)
+      drop_table :roles
     end
   end
 end
