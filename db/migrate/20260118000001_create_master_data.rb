@@ -1,4 +1,17 @@
 class CreateMasterData < ActiveRecord::Migration[8.1]
+  # Stub classes to avoid dependency on external model code/validations/callbacks
+  class Role < ActiveRecord::Base
+    self.table_name = "roles"
+  end
+
+  class Room < ActiveRecord::Base
+    self.table_name = "rooms"
+  end
+
+  class Key < ActiveRecord::Base
+    self.table_name = "keys"
+  end
+
   def up
     # rolesテーブルが存在しない場合のみ作成
     unless table_exists?(:roles)
@@ -56,7 +69,7 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
   def execute_seeding
     # Reload the schema to ensure all tables are recognized
     ActiveRecord::Base.connection.schema_cache.clear!
-    
+
     # Seed roles
     Role.find_or_create_by!(name: "admin")
     Role.find_or_create_by!(name: "member")
@@ -85,8 +98,14 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
 
   def execute_unseeding
     ActiveRecord::Base.connection.schema_cache.clear!
-    
-    Role.where(name: ["admin", "member"]).destroy_all
-    Room.where(room_number: ["322", "321", "224"]).destroy_all
+
+    # Delete keys for target rooms first (due to dependent: :restrict_with_error on Room.has_many :keys)
+    target_room_numbers = [ "322", "321", "224" ]
+    target_room_ids = Room.where(room_number: target_room_numbers).pluck(:id)
+    Key.where(room_id: target_room_ids).destroy_all
+
+    # Now delete the roles and rooms
+    Role.where(name: [ "admin", "member" ]).destroy_all
+    Room.where(room_number: target_room_numbers).destroy_all
   end
 end

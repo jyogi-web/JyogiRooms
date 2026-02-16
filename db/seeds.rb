@@ -11,12 +11,12 @@ User.delete_all
 
 # Get master data (created by migration)
 puts "Getting master rooms and roles..."
-room1 = Room.find_by(room_number: "322")
-room2 = Room.find_by(room_number: "321")
-room3 = Room.find_by(room_number: "224")
+room1 = Room.find_by!(room_number: "322")
+room2 = Room.find_by!(room_number: "321")
+room3 = Room.find_by!(room_number: "224")
 
-admin_role = Role.find_by(name: Role::ADMIN)
-member_role = Role.find_by(name: Role::MEMBER)
+admin_role = Role.find_by!(name: "admin")
+member_role = Role.find_by!(name: "member")
 
 # Create Users
 puts "Creating Users..."
@@ -41,12 +41,12 @@ user5 = User.create!(
   display_name: "5(テストユーザー)"
 )
 
-# Create Roles
-puts "Creating Roles..."
+# Assign Roles to Users
+puts "Assigning Roles to Users..."
 # ロールはマイグレーションで既に作成されている
 
 # Assign admin role to user1, member role to others
-puts "Assigning roles to users..."
+puts "Assigning roles..."
 user1.update!(role: admin_role)
 [ user2, user3, user4, user5 ].each do |u|
   u.update!(role: member_role)
