@@ -1,5 +1,6 @@
 class CreateMasterData < ActiveRecord::Migration[8.1]
   # Stub classes to avoid dependency on external model code/validations/callbacks
+  # This pattern is safe for migrations to decouple from application model changes
   class Role < ActiveRecord::Base
     self.table_name = "roles"
   end
