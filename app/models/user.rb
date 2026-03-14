@@ -6,6 +6,7 @@ class User < ApplicationRecord
 
   # Callbacks
   after_create :assign_default_role
+  before_save :assign_admin_role_from_env
 
   # Validations
   validates :jyogi_user_id, uniqueness: true, allow_nil: true, length: { maximum: 36 }
@@ -25,6 +26,19 @@ class User < ApplicationRecord
       guild_nickname: user_info["guild_nickname"],
       last_synced_at: Time.current
     )
+  end
+
+  # 環境変数 ADMIN_DISCORD_IDS に含まれるユーザーに管理者ロールを付与する
+  # 新規作成時や同期時に呼び出される
+  def assign_admin_role_from_env
+    return if discord_id.blank?
+
+    admin_ids = ENV.fetch("ADMIN_DISCORD_IDS", "").split(",").map(&:strip)
+    if admin_ids.include?(discord_id)
+      admin_role = Role.find_or_create_by!(name: Role::ADMIN)
+      # update! ではなくオブジェクトへのアサインに留める（呼び出し元で save されるため）
+      self.role = admin_role if role_id != admin_role.id
+    end
   end
 
   # キャッシュが新鮮かどうかをチェック（5分以内）
