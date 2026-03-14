@@ -48,10 +48,7 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
   end
 
   def down
-    # Remove seeded data first
-    execute_unseeding
-
-    # Remove DDL changes in reverse order
+    # Remove FK and column first to avoid constraint violations when deleting role rows
     if foreign_key_exists?(:users, :roles)
       remove_foreign_key :users, :roles
     end
@@ -59,6 +56,9 @@ class CreateMasterData < ActiveRecord::Migration[8.1]
     if column_exists?(:users, :role_id)
       remove_reference :users, :role
     end
+
+    # Now safe to delete seeded data
+    execute_unseeding
 
     if table_exists?(:roles)
       drop_table :roles
