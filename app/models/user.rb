@@ -4,6 +4,8 @@ class User < ApplicationRecord
   has_many :access_tokens, dependent: :destroy
   has_many :keys, dependent: :destroy
 
+  # Callbacks
+  after_create :assign_default_role
   before_save :assign_admin_role_from_env
 
   # Validations
@@ -56,5 +58,14 @@ class User < ApplicationRecord
   # @return [Boolean] 管理者かどうか
   def admin?
     role&.name == Role::ADMIN
+  end
+
+  private
+
+  # 新規ユーザーにデフォルトロール（member）を割り当てる
+  # adminが既に設定されている場合はスキップする
+  def assign_default_role
+    return if role_id.present?
+    update_column(:role_id, Role.find_by(name: Role::MEMBER)&.id)
   end
 end

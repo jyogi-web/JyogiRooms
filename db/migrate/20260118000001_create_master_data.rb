@@ -1,0 +1,112 @@
+class CreateMasterData < ActiveRecord::Migration[8.1]
+  # Stub classes to avoid dependency on external model code/validations/callbacks
+  # This pattern is safe for migrations to decouple from application model changes
+  class Role < ActiveRecord::Base
+    self.table_name = "roles"
+  end
+
+  class Room < ActiveRecord::Base
+    self.table_name = "rooms"
+  end
+
+  class Key < ActiveRecord::Base
+    self.table_name = "keys"
+  end
+
+  def up
+    # rolesテーブルが存在しない場合のみ作成
+    unless table_exists?(:roles)
+      create_table :roles do |t|
+        t.string :name, null: false
+
+        t.timestamps
+      end
+    end
+
+    # rolesテーブルのユニークインデックスを確認・追加
+    if table_exists?(:roles) && !index_exists?(:roles, :name, unique: true)
+      add_index :roles, :name, unique: true
+    end
+
+    # role_idカラムが存在しない場合のみ追加（外部キーとインデックス含む）
+    unless column_exists?(:users, :role_id)
+      add_reference :users, :role, foreign_key: { to_table: :roles }
+    else
+      # カラムは存在するが外部キーが無い場合
+      unless foreign_key_exists?(:users, :roles)
+        add_foreign_key :users, :roles, column: :role_id
+      end
+
+      # カラムは存在するがインデックスが無い場合
+      unless index_exists?(:users, :role_id)
+        add_index :users, :role_id
+      end
+    end
+
+    # Seed master data using execute to avoid schema cache issues
+    execute_seeding
+  end
+
+  def down
+    # Remove FK and column first to avoid constraint violations when deleting role rows
+    if foreign_key_exists?(:users, :roles)
+      remove_foreign_key :users, :roles
+    end
+
+    if column_exists?(:users, :role_id)
+      remove_reference :users, :role
+    end
+
+    # Now safe to delete seeded data
+    execute_unseeding
+
+    if table_exists?(:roles)
+      drop_table :roles
+    end
+  end
+
+  private
+
+  def execute_seeding
+    # Reload the schema to ensure all tables are recognized
+    ActiveRecord::Base.connection.schema_cache.clear!
+
+    # Seed roles
+    Role.find_or_create_by!(name: "admin")
+    Role.find_or_create_by!(name: "member")
+
+    # Seed rooms and keys
+    rooms_data = [
+      { name: "第１部室", room_number: "322" },
+      { name: "第２部室", room_number: "321" },
+      { name: "第３部室", room_number: "224" }
+    ]
+
+    rooms_data.each do |room_data|
+      room = Room.find_or_create_by!(room_number: room_data[:room_number]) do |r|
+        r.name = room_data[:name]
+      end
+
+      # 各部屋に5本の鍵を作成（既存分を除く）
+      existing_keys_count = Key.where(room_id: room.id, user_id: nil).count
+      missing_keys_count = 5 - existing_keys_count
+
+      missing_keys_count.times do
+        Key.create!(room_id: room.id, user_id: nil)
+      end
+    end
+  end
+
+  def execute_unseeding
+    ActiveRecord::Base.connection.schema_cache.clear!
+
+    # Delete keys for target rooms first (due to dependent: :restrict_with_error on Room.has_many :keys)
+    target_room_numbers = [ "322", "321", "224" ]
+    target_room_ids = Room.where(room_number: target_room_numbers).pluck(:id)
+    Key.where(room_id: target_room_ids).destroy_all
+
+    # Now delete the roles and rooms
+    Role.where(name: [ "admin", "member" ]).destroy_all
+    Room.where(room_number: target_room_numbers).destroy_all
+  end
+end

@@ -25,14 +25,15 @@
         <div class="mb-6 pb-6 border-b border-gray-200">
           <p class="text-sm font-semibold text-gray-600 mb-3">現在の鍵持ち</p>
           <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <% if room.keys.any? %>
-              <% room.keys.each do |key| %>
+            <% assigned_keys = room.keys.select(&:user_id) %>
+            <% if assigned_keys.any? %>
+              <% assigned_keys.each do |key| %>
                 <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col items-center gap-2">
                   <div class="relative group cursor-pointer">
                     <%= render(UserAvatarComponent.new(user: key.user, size: :small)) %>
                   </div>
-                  <p class="text-xs text-gray-700 font-medium text-center line-clamp-2" title="<%= key.user.display_name %>">
-                    <%= key.user.display_name %>
+                  <p class="text-xs text-gray-700 font-medium text-center line-clamp-2" title="<%= key.user&.display_name %>">
+                    <%= key.user&.display_name %>
                   </p>
                   <% if current_user.admin? || key.user_id == current_user.id %>
                     <%= link_to "譲渡", transfer_form_room_key_path(room.id, from_user_id: key.user_id),
