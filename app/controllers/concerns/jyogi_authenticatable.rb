@@ -78,7 +78,10 @@ module JyogiAuthenticatable
 
     begin
       user_info = JyogiAuthClient.fetch_user_info(access_token: access_token.token)
-      unless user.sync_from_jyogi_auth(user_info)
+      if user.sync_from_jyogi_auth(user_info)
+        # ユーザー情報が更新されたらセッション内のロール情報も同期する
+        store_user_role_in_session(user)
+      else
         Rails.logger.warn "Failed to persist synced user info: #{user.errors.full_messages.join(', ')}"
       end
     rescue JyogiAuthClient::Error => e

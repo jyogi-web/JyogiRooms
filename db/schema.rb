@@ -82,7 +82,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_093000) do
     t.string "display_name"
     t.string "guild_nickname"
     t.jsonb "guild_roles", default: {}
-    t.boolean "is_admin", default: false, null: false
     t.string "jyogi_user_id", limit: 36
     t.datetime "last_synced_at"
     t.bigint "role_id"
