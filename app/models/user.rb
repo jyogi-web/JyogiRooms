@@ -12,16 +12,33 @@ class User < ApplicationRecord
   # @param user_info [Hash] jyogi-authから取得したユーザー情報
   # @return [Boolean] 同期成功かどうか
   def sync_from_jyogi_auth(user_info)
-    update(
-      jyogi_user_id: user_info["id"],
-      discord_id: user_info["discord_id"],
-      username: user_info["username"],
-      display_name: user_info["display_name"],
-      avatar_url: user_info["avatar_url"],
-      guild_roles: user_info["guild_roles"] || {},
-      guild_nickname: user_info["guild_nickname"],
-      last_synced_at: Time.current
-    )
+    transaction do
+      update!(
+        jyogi_user_id: user_info["id"],
+        discord_id: user_info["discord_id"],
+        username: user_info["username"],
+        display_name: user_info["display_name"],
+        avatar_url: user_info["avatar_url"],
+        guild_roles: user_info["guild_roles"] || {},
+        guild_nickname: user_info["guild_nickname"],
+        last_synced_at: Time.current
+      )
+      assign_admin_role_from_env
+    end
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
+  # 環境変数 ADMIN_DISCORD_IDS に含まれるユーザーに管理者ロールを付与する
+  def assign_admin_role_from_env
+    return if discord_id.blank?
+
+    admin_ids = ENV.fetch("ADMIN_DISCORD_IDS", "").split(",").map(&:strip)
+    if admin_ids.include?(discord_id)
+      admin_role = Role.find_or_create_by!(name: Role::ADMIN)
+      update!(role: admin_role) if role_id != admin_role.id
+    end
   end
 
   # キャッシュが新鮮かどうかをチェック（5分以内）
