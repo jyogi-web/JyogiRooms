@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_17_093000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_14_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -82,7 +82,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_093000) do
     t.string "display_name"
     t.string "guild_nickname"
     t.jsonb "guild_roles", default: {}
-    t.boolean "is_admin", default: false, null: false
     t.string "jyogi_user_id", limit: 36
     t.datetime "last_synced_at"
     t.bigint "role_id"

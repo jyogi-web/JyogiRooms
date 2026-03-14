@@ -78,7 +78,10 @@ module JyogiAuthenticatable
 
     begin
       user_info = JyogiAuthClient.fetch_user_info(access_token: access_token.token)
-      unless user.sync_from_jyogi_auth(user_info)
+      if user.sync_from_jyogi_auth(user_info)
+        # ユーザー情報が更新されたらセッション内のロール情報も同期する
+        store_user_role_in_session(user)
+      else
         Rails.logger.warn "Failed to persist synced user info: #{user.errors.full_messages.join(', ')}"
       end
     rescue JyogiAuthClient::Error => e
@@ -112,6 +115,7 @@ module JyogiAuthenticatable
     # ロールが未ロードの場合は再取得
     user = User.includes(:role).find(user.id) unless user.association(:role).loaded?
     session[:user_role] = user.role&.name
+    # UI表示制御用のフラグ（認可判定は current_user.admin? を使用すること）
     session[:is_admin] = user.admin?
   rescue => e
     Rails.logger.warn("[Auth] Failed to store role in session: #{e.class}: #{e.message}")
