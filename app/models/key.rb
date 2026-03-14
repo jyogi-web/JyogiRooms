@@ -1,5 +1,5 @@
 class Key < ApplicationRecord
-  belongs_to :user
+  belongs_to :user, optional: true
   belongs_to :room
 
   # 指定した room_id の現在の鍵持ちを返す
