@@ -48,13 +48,10 @@ class User < ApplicationRecord
 
   private
 
-  # 新規ユーザーにデフォルトロールを割り当てる
-  # ユーザーID 1の場合はadmin、それ以外はmemberを割り当てる
+  # 新規ユーザーにデフォルトロール（member）を割り当てる
+  # before_save :assign_admin_role_from_env によってadminが既に設定されている場合はスキップする
   def assign_default_role
-    if id == 1
-      self.update_column(:role_id, Role.find_by(name: Role::ADMIN)&.id)
-    else
-      self.update_column(:role_id, Role.find_by(name: Role::MEMBER)&.id)
-    end
+    return if role_id.present?
+    update_column(:role_id, Role.find_by(name: Role::MEMBER)&.id)
   end
 end
