@@ -112,6 +112,7 @@ module JyogiAuthenticatable
     # ロールが未ロードの場合は再取得
     user = User.includes(:role).find(user.id) unless user.association(:role).loaded?
     session[:user_role] = user.role&.name
+    # UI表示制御用のフラグ（認可判定は current_user.admin? を使用すること）
     session[:is_admin] = user.admin?
   rescue => e
     Rails.logger.warn("[Auth] Failed to store role in session: #{e.class}: #{e.message}")
