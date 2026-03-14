@@ -3,7 +3,7 @@ class User < ApplicationRecord
   has_many :reservations
   has_many :access_tokens, dependent: :destroy
   has_many :keys, dependent: :destroy
-  
+
   before_save :assign_admin_role_from_env
 
   # Validations
