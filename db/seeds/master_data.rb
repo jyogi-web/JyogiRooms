@@ -16,7 +16,7 @@ rooms_data.each do |room_data|
     r.name = room_data[:name]
   end
 
-  existing_keys_count = Key.where(room_id: room.id, user_id: nil).count
+  existing_keys_count = Key.where(room_id: room.id).count
   missing_keys_count = 5 - existing_keys_count
   missing_keys_count.times do
     Key.create!(room_id: room.id, user_id: nil)
