@@ -56,3 +56,4 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}:${{ github.sha }}
           project_id: ${{ env.PROJECT_ID }}
+          flags: '--port=3000'
