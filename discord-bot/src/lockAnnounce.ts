@@ -1,21 +1,27 @@
 import cron from "node-cron";
-import { Client, TextChannel } from "discord.js";
+import { REST, Routes } from "discord.js";
 
 const CRON_EXPRESSION =
-  process.env.LOCK_ANNOUNCE_CRON || "0 11 * * *";// Note: デフォルトで日本時間20:00を設定する
+  process.env.LOCK_ANNOUNCE_CRON || "0 11 * * *"; // デフォルトで日本時間20:00を設定
 
 const CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
 let task: cron.ScheduledTask | null = null;
 
-export function startLockAnnounceCron(client: Client) {
+export function startLockAnnounceCron() {
   if (!cron.validate(CRON_EXPRESSION)) {
     console.error(`❌ 無効なcron式です: ${CRON_EXPRESSION}`);
     process.exit(1);
-    }
+  }
 
   if (!CHANNEL_ID) {
     console.error("❌ ANNOUNCE_CHANNEL_ID is not set");
+    return;
+  }
+
+  if (!BOT_TOKEN) {
+    console.error("❌ DISCORD_BOT_TOKEN is not set (required for announcements)");
     return;
   }
 
@@ -24,22 +30,15 @@ export function startLockAnnounceCron(client: Client) {
     return;
   }
 
+  const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
+
   task = cron.schedule(CRON_EXPRESSION, async () => {
     try {
-      const channel = await client.channels.fetch(CHANNEL_ID);
-
-      if (!channel || !channel.isTextBased()) {
-        console.error("❌ チャンネルが見つからない or Text ではありません");
-        return;
-      }
-
-      const now = new Date().toLocaleString("ja-JP", {
-        timeZone: "Asia/Tokyo",
+      await rest.post(Routes.channelMessages(CHANNEL_ID), {
+        body: {
+          content: `🔒 **施錠のお知らせ**\n\n部室の施錠時間です!\n鍵持ちの部員は各部室が施錠されているか確認をお願いします。`,
+        },
       });
-
-      await (channel as TextChannel).send(
-        `🔒 **施錠のお知らせ**\n\n部室の施錠時間です!\n鍵持ちの部員は各部室が施錠されているか確認をお願いします。`
-      );
 
       console.log("✅ 施錠アナウンスを送信しました");
     } catch (err) {
