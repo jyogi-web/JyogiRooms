@@ -8,6 +8,8 @@ Rails.application.routes.draw do
     resource :key, only: [] do
       get :transfer_form
       post :transfer
+      get :assign_form
+      post :assign
     end
   end
 

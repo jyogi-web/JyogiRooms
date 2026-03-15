@@ -1,6 +1,6 @@
 class KeysController < ApplicationController
-  before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer ]
-  before_action :set_room, only: [ :transfer_form, :transfer ]
+  before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer, :assign_form, :assign ]
+  before_action :set_room, only: [ :transfer_form, :transfer, :assign_form, :assign ]
 
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
@@ -51,6 +51,52 @@ class KeysController < ApplicationController
     redirect_to keys_path, alert: "指定された部屋または譲渡先ユーザーが見つかりません"
   rescue ActiveRecord::RecordInvalid => e
     redirect_to keys_path, alert: "鍵の譲渡に失敗しました：#{e.message}"
+  rescue KeyService::TransferError => e
+    redirect_to keys_path, alert: e.message
+  end
+
+  # GET /rooms/:room_id/key/assign_form
+  # 管理者が未割り当ての鍵を割り当てるフォーム
+  def assign_form
+    return if performed?
+
+    unless current_user.admin?
+      redirect_to keys_path, alert: "権限がありません"
+      return
+    end
+
+    unless @room.keys.any? { |k| k.user_id.nil? }
+      redirect_to keys_path, alert: "この部屋には未割り当ての鍵がありません"
+      return
+    end
+
+    existing_holder_ids = @room.keys.select(&:user_id).map(&:user_id)
+    @eligible_users = User.where.not(id: existing_holder_ids).order(:display_name)
+  end
+
+  # POST /rooms/:room_id/key/assign
+  # 管理者が未割り当ての鍵をユーザーに割り当てる
+  def assign
+    return if performed?
+
+    unless current_user.admin?
+      redirect_to keys_path, alert: "権限がありません"
+      return
+    end
+
+    unless params[:to_user_id].present?
+      redirect_back fallback_location: keys_path, alert: "割り当て先を選択してください"
+      return
+    end
+
+    KeyService.assign(
+      room_id: @room.id,
+      to_user_id: params[:to_user_id]
+    )
+
+    redirect_to keys_path, notice: "鍵を割り当てました"
+  rescue ActiveRecord::RecordNotFound
+    redirect_to keys_path, alert: "指定された部屋またはユーザーが見つかりません"
   rescue KeyService::TransferError => e
     redirect_to keys_path, alert: e.message
   end
