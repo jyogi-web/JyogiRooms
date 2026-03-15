@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { REST, Routes } from "discord.js";
 
 const CRON_EXPRESSION =
-  process.env.LOCK_ANNOUNCE_CRON || "0 11 * * *"; // デフォルトで日本時間20:00を設定
+  process.env.LOCK_ANNOUNCE_CRON || "0 20 * * *"; // 日本時間20:00（TZ=Asia/Tokyo前提）
 
 const CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
@@ -49,7 +49,7 @@ export function startLockAnnounceCron() {
   });
 
   console.log(
-    `🕰️ 施錠アナウンス cron を開始しました (${CRON_EXPRESSION} UTC / 20:00 JST)`
+    `🕰️ 施錠アナウンス cron を開始しました (${CRON_EXPRESSION} JST)`
   );
 }
 
