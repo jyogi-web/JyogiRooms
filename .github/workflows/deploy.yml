@@ -2,7 +2,7 @@ name: Deploy to Cloud Run
 
 on:
   push:
-    branches: [rita/fix_cloudrun_cicd]
+    branches: [develop]
 
 env:
   PROJECT_ID: jyogirooms
