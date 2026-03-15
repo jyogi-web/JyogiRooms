@@ -19,6 +19,25 @@ export interface Reservation {
     };
 }
 
+export interface KeyHolder {
+    id: number;
+    username: string;
+    display_name: string;
+    discord_id?: string;
+}
+
+export interface KeyInfo {
+    id: number;
+    holder: KeyHolder | null;
+}
+
+export interface RoomKeys {
+    room_id: number;
+    room_name: string;
+    room_number: string;
+    keys: KeyInfo[];
+}
+
 export const api = {
     /**
      * 予約一覧を取得する
@@ -59,6 +78,27 @@ export const api = {
      * @param reservation 予約情報
      * @param discordUserId DiscordユーザーID (ユーザー特定用)
      */
+    async fetchKeys(): Promise<RoomKeys[]> {
+        const url = new URL(`${API_BASE_URL}/keys`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        try {
+            const headers = {
+                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
+            };
+            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json() as RoomKeys[];
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    },
+
     async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }, discordUserId?: string): Promise<Reservation> {
         const url = new URL(`${API_BASE_URL}/reservations`);
         const headers = {

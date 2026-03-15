@@ -33,6 +33,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :reservations, only: %i[index create destroy]
+    resources :keys, only: %i[index]
 
     # ユーザー情報
     get "users/me", to: "users#me"
