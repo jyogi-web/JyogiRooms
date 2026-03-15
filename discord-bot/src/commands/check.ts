@@ -1,71 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api } from '../api.js';
-import { InteractionResponseType } from 'discord-interactions';
 import type { Interaction } from './types.js';
-
-const STRING_TYPE = 3;
-
-function getStringOption(interaction: Interaction, name: string): string | null {
-    const options = interaction.data.options;
-    if (!options) return null;
-    const opt = options.find(o => o.name === name && o.type === STRING_TYPE);
-    return opt?.value ?? null;
-}
-
-function parseDateInput(input: string): Date | null {
-    const now = new Date();
-    const normalized = input.toLowerCase().trim();
-
-    if (!normalized || normalized === 'today') return now;
-    if (normalized === 'tomorrow') {
-        const d = new Date(now);
-        d.setDate(d.getDate() + 1);
-        return d;
-    }
-
-    const ymdMatch = normalized.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
-    if (ymdMatch) {
-        const year = parseInt(ymdMatch[1], 10);
-        const month = parseInt(ymdMatch[2], 10) - 1;
-        const day = parseInt(ymdMatch[3], 10);
-        const d = new Date(year, month, day);
-        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
-        return d;
-    }
-
-    const mdMatch = normalized.match(/^(\d{1,2})[-/.](\d{1,2})$/);
-    if (mdMatch) {
-        const year = now.getFullYear();
-        const month = parseInt(mdMatch[1], 10) - 1;
-        const day = parseInt(mdMatch[2], 10);
-        const d = new Date(year, month, day);
-        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
-        return d;
-    }
-
-    return null;
-}
-
-function reply(content: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content },
-    };
-}
-
-function replyEmbed(title: string, description: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-            embeds: [{
-                title,
-                description,
-                color: 0x0099ff,
-                timestamp: new Date().toISOString(),
-            }],
-        },
-    };
-}
+import { getStringOption, parseDateInput, reply, replyEmbed } from './utils.js';
 
 export const checkCommand = {
     data: new SlashCommandBuilder()
@@ -91,6 +27,10 @@ export const checkCommand = {
     async execute(interaction: Interaction): Promise<object> {
         const preset = getStringOption(interaction, 'preset');
         const dateInput = getStringOption(interaction, 'date');
+
+        if (preset && dateInput) {
+            return reply('`preset`と`date`は同時に指定できません。どちらか一方を指定してください。');
+        }
 
         let targetDateStr = 'today';
         if (preset) targetDateStr = preset;

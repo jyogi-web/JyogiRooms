@@ -1,28 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api } from '../api.js';
-import { InteractionResponseType } from 'discord-interactions';
 import type { Interaction } from './types.js';
-
-function reply(content: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content },
-    };
-}
-
-function replyEmbed(title: string, description: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-            embeds: [{
-                title,
-                description,
-                color: 0x0099ff,
-                timestamp: new Date().toISOString(),
-            }],
-        },
-    };
-}
+import { reply, replyEmbed } from './utils.js';
 
 export const listCommand = {
     data: new SlashCommandBuilder()
@@ -31,8 +10,11 @@ export const listCommand = {
 
     async execute(_interaction: Interaction): Promise<object> {
         try {
-            const now = new Date().toISOString();
-            const reservations = await api.fetchReservations(now);
+            const now = new Date();
+            const endDate = new Date(now);
+            endDate.setDate(endDate.getDate() + 30);
+
+            const reservations = await api.fetchReservations(now.toISOString(), endDate.toISOString());
 
             if (reservations.length === 0) {
                 return reply('今後の予約はありません。');

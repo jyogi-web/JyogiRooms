@@ -1,61 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api } from '../api.js';
-import { InteractionResponseType } from 'discord-interactions';
 import type { Interaction } from './types.js';
-
-const STRING_TYPE = 3;
-
-function getStringOption(interaction: Interaction, name: string): string | null {
-    const options = interaction.data.options;
-    if (!options) return null;
-    const opt = options.find(o => o.name === name && o.type === STRING_TYPE);
-    return opt?.value ?? null;
-}
-
-function getUserId(interaction: Interaction): string {
-    return interaction.member?.user?.id ?? interaction.user?.id ?? 'unknown';
-}
-
-function parseDateInput(input: string): Date | null {
-    const now = new Date();
-    const normalized = input.toLowerCase().trim();
-
-    if (!normalized || normalized === 'today') return now;
-    if (normalized === 'tomorrow') {
-        const d = new Date(now);
-        d.setDate(d.getDate() + 1);
-        return d;
-    }
-
-    const ymdMatch = normalized.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
-    if (ymdMatch) {
-        const year = parseInt(ymdMatch[1], 10);
-        const month = parseInt(ymdMatch[2], 10) - 1;
-        const day = parseInt(ymdMatch[3], 10);
-        const d = new Date(year, month, day);
-        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
-        return d;
-    }
-
-    const mdMatch = normalized.match(/^(\d{1,2})[-/.](\d{1,2})$/);
-    if (mdMatch) {
-        const year = now.getFullYear();
-        const month = parseInt(mdMatch[1], 10) - 1;
-        const day = parseInt(mdMatch[2], 10);
-        const d = new Date(year, month, day);
-        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
-        return d;
-    }
-
-    return null;
-}
-
-function reply(content: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content },
-    };
-}
+import { getStringOption, getUserId, parseDateInput, reply } from './utils.js';
 
 export const createCommand = {
     data: new SlashCommandBuilder()
@@ -128,8 +74,12 @@ export const createCommand = {
         if (startAt < new Date()) return reply('過去の日時は予約できません。');
         if (startAt >= endAt) return reply('終了時刻は開始時刻より後である必要があります。');
 
+        const discordUserId = getUserId(interaction);
+        if (!discordUserId) {
+            return reply('ユーザー情報を取得できませんでした。');
+        }
+
         try {
-            const discordUserId = getUserId(interaction);
             const res = await api.createReservation({
                 start_at: startAt.toISOString(),
                 end_at: endAt.toISOString(),
@@ -141,8 +91,8 @@ export const createCommand = {
 
             return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
         } catch (e: any) {
-            console.error(e);
-            return reply(`予約作成に失敗しました。\n${e.message || 'Unknown error'}`);
+            console.error('予約作成エラー:', e);
+            return reply('予約作成に失敗しました。時間をおいて再度お試しください。');
         }
     },
 };

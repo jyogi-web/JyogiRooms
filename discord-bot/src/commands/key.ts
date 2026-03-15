@@ -1,28 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api } from '../api.js';
-import { InteractionResponseType } from 'discord-interactions';
 import type { Interaction } from './types.js';
-
-function replyEmbed(title: string, description: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-            embeds: [{
-                title,
-                description,
-                color: 0x0099ff,
-                timestamp: new Date().toISOString(),
-            }],
-        },
-    };
-}
-
-function reply(content: string) {
-    return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content },
-    };
-}
+import { reply, replyEmbed } from './utils.js';
 
 export const keyCommand = {
     data: new SlashCommandBuilder()
@@ -37,26 +16,16 @@ export const keyCommand = {
                 return reply('部室情報が登録されていません。');
             }
 
+            const MAX_LENGTH = 4096;
             let description = '';
 
             for (const room of rooms) {
-                description += `### 🚪 ${room.room_name}（${room.room_number}）\n`;
-
-                const holders = room.keys.filter(k => k.holder !== null);
-
-                if (holders.length === 0) {
-                    description += '鍵持ちはいません\n\n';
-                    continue;
+                const section = buildRoomSection(room);
+                if (description.length + section.length + 50 > MAX_LENGTH) {
+                    description += '...省略: 表示しきれない部室があります';
+                    break;
                 }
-
-                for (const key of holders) {
-                    const holder = key.holder!;
-                    const userDisplay = holder.discord_id
-                        ? `<@${holder.discord_id}>`
-                        : (holder.display_name || holder.username);
-                    description += `🔑 ${userDisplay}\n`;
-                }
-                description += '\n';
+                description += section;
             }
 
             return replyEmbed('🔑 鍵持ち一覧', description);
@@ -66,3 +35,24 @@ export const keyCommand = {
         }
     },
 };
+
+function buildRoomSection(room: { room_name: string; room_number: string; keys: { holder: { discord_id?: string; display_name: string; username: string } | null }[] }): string {
+    let section = `### 🚪 ${room.room_name}（${room.room_number}）\n`;
+
+    const holders = room.keys.filter(k => k.holder !== null);
+
+    if (holders.length === 0) {
+        section += '鍵持ちはいません\n\n';
+        return section;
+    }
+
+    for (const key of holders) {
+        const holder = key.holder!;
+        const userDisplay = holder.discord_id
+            ? `<@${holder.discord_id}>`
+            : (holder.display_name || holder.username);
+        section += `🔑 ${userDisplay}\n`;
+    }
+    section += '\n';
+    return section;
+}
