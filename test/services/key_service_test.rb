@@ -72,6 +72,26 @@ class KeyServiceTest < ActiveSupport::TestCase
   end
 
   # =====================
+  # unassign
+  # =====================
+
+  test "unassign removes user from key" do
+    key = Key.create!(room: @room, user: @from_user)
+
+    KeyService.unassign(room_id: @room.id, user_id: @from_user.id)
+
+    assert_nil key.reload.user_id
+  end
+
+  test "unassign raises error when user does not have key" do
+    Key.create!(room: @room, user: nil)
+
+    assert_raises ActiveRecord::RecordNotFound do
+      KeyService.unassign(room_id: @room.id, user_id: @from_user.id)
+    end
+  end
+
+  # =====================
   # transfer (error cases)
   # =====================
 
