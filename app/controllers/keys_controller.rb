@@ -1,6 +1,7 @@
 class KeysController < ApplicationController
   before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer, :assign_form, :assign, :unassign ]
   before_action :set_room, only: [ :transfer_form, :transfer, :assign_form, :assign, :unassign ]
+  before_action :require_admin!, only: [ :assign_form, :assign, :unassign ]
 
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
@@ -60,11 +61,6 @@ class KeysController < ApplicationController
   def assign_form
     return if performed?
 
-    unless current_user.admin?
-      redirect_to keys_path, alert: "権限がありません"
-      return
-    end
-
     unless @room.keys.any? { |k| k.user_id.nil? }
       redirect_to keys_path, alert: "この部屋には未割り当ての鍵がありません"
       return
@@ -79,19 +75,14 @@ class KeysController < ApplicationController
   def assign
     return if performed?
 
-    unless current_user.admin?
-      redirect_to keys_path, alert: "権限がありません"
-      return
-    end
-
-    unless params[:to_user_id].present?
+    unless assign_params[:to_user_id].present?
       redirect_back fallback_location: keys_path, alert: "割り当て先を選択してください"
       return
     end
 
     KeyService.assign(
       room_id: @room.id,
-      to_user_id: params[:to_user_id]
+      to_user_id: assign_params[:to_user_id]
     )
 
     redirect_to keys_path, notice: "鍵を割り当てました"
@@ -106,19 +97,14 @@ class KeysController < ApplicationController
   def unassign
     return if performed?
 
-    unless current_user.admin?
-      redirect_to keys_path, alert: "権限がありません"
-      return
-    end
-
-    unless params[:user_id].present?
+    unless unassign_params[:user_id].present?
       redirect_to keys_path, alert: "対象ユーザーが指定されていません"
       return
     end
 
     KeyService.unassign(
       room_id: @room.id,
-      user_id: params[:user_id]
+      user_id: unassign_params[:user_id]
     )
 
     redirect_to keys_path, notice: "鍵の割り当てを解除しました"
@@ -148,7 +134,21 @@ class KeysController < ApplicationController
     end
   end
 
+  def require_admin!
+    unless current_user.admin?
+      redirect_to keys_path, alert: "権限がありません"
+    end
+  end
+
   def transfer_params
     params.permit(:to_user_id, :from_user_id)
+  end
+
+  def assign_params
+    params.permit(:to_user_id)
+  end
+
+  def unassign_params
+    params.permit(:user_id)
   end
 end

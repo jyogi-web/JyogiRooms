@@ -82,7 +82,6 @@ class KeyService
   # @param user_id [Integer]
   #
   # @raise [ActiveRecord::RecordNotFound]
-  # @raise [KeyService::TransferError]
   def self.unassign(room_id:, user_id:)
     ActiveRecord::Base.transaction do
       key = Key.lock.find_by!(room_id: room_id, user_id: user_id)
