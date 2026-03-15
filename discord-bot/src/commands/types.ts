@@ -1,7 +1,7 @@
 export interface InteractionOption {
     name: string;
     type: number;
-    value?: string;
+    value?: string | number | boolean;
     options?: InteractionOption[];
 }
 

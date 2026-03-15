@@ -74,9 +74,8 @@ export const api = {
     },
 
     /**
-     * 予約を作成する
-     * @param reservation 予約情報
-     * @param discordUserId DiscordユーザーID (ユーザー特定用)
+     * 各部室の鍵持ち情報を取得する
+     * @returns 部室ごとの鍵情報の配列
      */
     async fetchKeys(): Promise<RoomKeys[]> {
         const url = new URL(`${API_BASE_URL}/keys`);
@@ -99,6 +98,12 @@ export const api = {
         }
     },
 
+    /**
+     * 予約を作成する
+     * @param reservation 予約情報
+     * @param discordUserId DiscordユーザーID (ユーザー特定用)
+     * @returns 作成された予約
+     */
     async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }, discordUserId?: string): Promise<Reservation> {
         const url = new URL(`${API_BASE_URL}/reservations`);
         const headers = {
