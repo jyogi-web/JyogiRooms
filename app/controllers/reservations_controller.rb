@@ -124,6 +124,9 @@ class ReservationsController < ApplicationController
   end
 
   def ensure_owner
+    # 管理者は全ての予約を編集・削除できる
+    return if current_user.admin?
+
     unless @reservation.user == current_user
       redirect_to reservations_path, alert: "他のユーザーの予約は編集・削除できません" and return
     end

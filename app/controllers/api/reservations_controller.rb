@@ -1,5 +1,9 @@
 module Api
   class ReservationsController < BaseController
+    # Botアクセスのためユーザー認証はスキップし、代わりにAPI Key認証を行う
+    skip_before_action :authenticate_user!
+    before_action :authenticate_api_key!
+
     # GET /api/reservations
     def index
       # TODO: Implement Authentication - currently returns all reservations
@@ -21,7 +25,9 @@ module Api
       end
 
       # Order by start time
-      render json: reservations.order(start_at: :asc)
+      render json: reservations.order(start_at: :asc), include: {
+        user: { only: [ :id, :username, :display_name, :discord_id, :avatar_url ] }
+      }
     end
 
     # POST /api/reservations
@@ -29,14 +35,15 @@ module Api
       # TODO: Implement proper Authentication & Authorization (Issue #TBD)
       # Currently using MOCK AUTH for development.
 
-      unless params[:user_id].present?
-        return render json: { error: "user_id parameter is required" }, status: :bad_request
+      user = nil
+      if params[:user_id].present?
+        user = User.find_by(id: params[:user_id])
+      elsif params[:discord_user_id].present?
+        user = User.find_by(discord_id: params[:discord_user_id])
       end
 
-      user = User.find_by(id: params[:user_id])
-
       if user.nil?
-        return render json: { error: "User not found" }, status: :not_found
+        return render json: { error: "User not found (user_id or discord_user_id required)" }, status: :not_found
       end
 
       reservation = user.reservations.build(reservation_params)
@@ -66,7 +73,7 @@ module Api
     private
 
     def reservation_params
-      params.require(:reservation).permit(:start_at, :end_at)
+      params.require(:reservation).permit(:start_at, :end_at, :purpose)
     end
 
     def parse_time(string)
