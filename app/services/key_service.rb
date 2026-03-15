@@ -75,4 +75,18 @@ class KeyService
     raise TransferError, "このユーザーは既にこの部屋の鍵を所持しています" if e.message.match?(/unique|uniq|duplicate/i)
     raise
   end
+
+  # 割り当て済みの鍵を未割り当てに戻す（管理者用）
+  #
+  # @param room_id [Integer]
+  # @param user_id [Integer]
+  #
+  # @raise [ActiveRecord::RecordNotFound]
+  # @raise [KeyService::TransferError]
+  def self.unassign(room_id:, user_id:)
+    ActiveRecord::Base.transaction do
+      key = Key.lock.find_by!(room_id: room_id, user_id: user_id)
+      key.update!(user: nil)
+    end
+  end
 end

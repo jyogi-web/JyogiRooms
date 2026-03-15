@@ -1,6 +1,6 @@
 class KeysController < ApplicationController
-  before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer, :assign_form, :assign ]
-  before_action :set_room, only: [ :transfer_form, :transfer, :assign_form, :assign ]
+  before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer, :assign_form, :assign, :unassign ]
+  before_action :set_room, only: [ :transfer_form, :transfer, :assign_form, :assign, :unassign ]
 
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
@@ -99,6 +99,31 @@ class KeysController < ApplicationController
     redirect_to keys_path, alert: "指定された部屋またはユーザーが見つかりません"
   rescue KeyService::TransferError => e
     redirect_to keys_path, alert: e.message
+  end
+
+  # POST /rooms/:room_id/key/unassign
+  # 管理者が鍵の割り当てを解除する
+  def unassign
+    return if performed?
+
+    unless current_user.admin?
+      redirect_to keys_path, alert: "権限がありません"
+      return
+    end
+
+    unless params[:user_id].present?
+      redirect_to keys_path, alert: "対象ユーザーが指定されていません"
+      return
+    end
+
+    KeyService.unassign(
+      room_id: @room.id,
+      user_id: params[:user_id]
+    )
+
+    redirect_to keys_path, notice: "鍵の割り当てを解除しました"
+  rescue ActiveRecord::RecordNotFound
+    redirect_to keys_path, alert: "指定されたユーザーはこの部屋の鍵を保持していません"
   end
 
   private

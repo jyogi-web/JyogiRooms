@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       post :transfer
       get :assign_form
       post :assign
+      post :unassign
     end
   end
 
