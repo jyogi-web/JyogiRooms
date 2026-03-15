@@ -2,7 +2,7 @@ name: Deploy to Cloud Run
 
 on:
   push:
-    branches: [main]
+    branches: [rita/fix_cloudrun_cicd]
 
 env:
   PROJECT_ID: jyogirooms
@@ -53,3 +53,4 @@ jobs:
           service: jyogirooms
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}:${{ github.sha }}
+          project_id: ${{ env.PROJECT_ID }}
