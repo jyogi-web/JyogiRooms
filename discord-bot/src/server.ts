@@ -32,7 +32,7 @@ async function handleInteraction(req: IncomingMessage, res: ServerResponse) {
   const rawBody = await readBody(req);
 
   // Discord署名検証
-  const isValid = verifyKey(rawBody, signature, timestamp, DISCORD_PUBLIC_KEY);
+  const isValid = await verifyKey(rawBody, signature, timestamp, DISCORD_PUBLIC_KEY);
   if (!isValid) {
     res.writeHead(401);
     res.end('Invalid request signature');
