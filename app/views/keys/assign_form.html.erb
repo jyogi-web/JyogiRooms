@@ -20,6 +20,7 @@
       <% if @eligible_users.any? %>
         <%= form_with url: assign_room_key_path(@room.id), method: :post, local: true, class: "space-y-4" do |form| %>
           <div>
+            <%= form.label :to_user_id, "割り当て先", class: "sr-only" %>
             <%= form.select :to_user_id,
                 options_for_select(@eligible_users.map { |u| [u.display_name, u.id] }),
               { prompt: "ユーザーを選択" },
