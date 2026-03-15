@@ -46,6 +46,14 @@
             <% end %>
           </div>
         </div>
+
+        <% if current_user.admin? && room.keys.any? { |k| k.user_id.nil? } %>
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-gray-500">未割り当ての鍵: <%= room.keys.count { |k| k.user_id.nil? } %>本</p>
+            <%= link_to "割り当て", assign_form_room_key_path(room.id),
+                class: "px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors" %>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>

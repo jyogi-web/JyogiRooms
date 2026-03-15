@@ -41,6 +41,40 @@ class KeyServiceTest < ActiveSupport::TestCase
     assert_equal @room, log.room
   end
 
+  # =====================
+  # assign
+  # =====================
+
+  test "assign assigns unassigned key to user" do
+    Key.create!(room: @room, user: nil)
+
+    KeyService.assign(room_id: @room.id, to_user_id: @to_user.id)
+
+    key = Key.find_by(room: @room, user: @to_user)
+    assert_not_nil key
+  end
+
+  test "assign raises error when no unassigned key exists" do
+    Key.create!(room: @room, user: @from_user)
+
+    assert_raises KeyService::TransferError do
+      KeyService.assign(room_id: @room.id, to_user_id: @to_user.id)
+    end
+  end
+
+  test "assign raises error when user already has key for that room" do
+    Key.create!(room: @room, user: nil)
+    Key.create!(room: @room, user: @to_user)
+
+    assert_raises KeyService::TransferError do
+      KeyService.assign(room_id: @room.id, to_user_id: @to_user.id)
+    end
+  end
+
+  # =====================
+  # transfer (error cases)
+  # =====================
+
   test "transfer raises error when from_user does not own the key" do
     Key.create!(room: @room, user: @to_user)
 
