@@ -93,18 +93,23 @@ export const createCommand = {
             return reply('日付の形式が正しくありません。\n例: `12/25`, `2026/01/01`, `today`');
         }
 
-        const timeRegex = /^(\d{1,2}):(\d{2})$/;
-        const startMatch = startInput.match(timeRegex);
-        const endMatch = endInput.match(timeRegex);
+        const parseTime = (input: string): [number, number] | null => {
+            const full = input.match(/^(\d{1,2}):(\d{2})$/);
+            if (full) return [parseInt(full[1], 10), parseInt(full[2], 10)];
+            const hourOnly = input.match(/^(\d{1,2})$/);
+            if (hourOnly) return [parseInt(hourOnly[1], 10), 0];
+            return null;
+        };
 
-        if (!startMatch || !endMatch) {
-            return reply('時刻の形式が正しくありません。\n例: `10:00`');
+        const startTime = parseTime(startInput);
+        const endTime = parseTime(endInput);
+
+        if (!startTime || !endTime) {
+            return reply('時刻の形式が正しくありません。\n例: `10:00`, `10`');
         }
 
-        const startH = parseInt(startMatch[1], 10);
-        const startM = parseInt(startMatch[2], 10);
-        const endH = parseInt(endMatch[1], 10);
-        const endM = parseInt(endMatch[2], 10);
+        const [startH, startM] = startTime;
+        const [endH, endM] = endTime;
 
         if (startH < 0 || startH > 23 || startM < 0 || startM > 59 ||
             endH < 0 || endH > 23 || endM < 0 || endM > 59) {
