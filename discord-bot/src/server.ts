@@ -12,6 +12,11 @@ if (!DISCORD_PUBLIC_KEY) {
   process.exit(1);
 }
 
+if (!DISCORD_CLIENT_ID) {
+  console.error('❌ DISCORD_CLIENT_ID is not set');
+  process.exit(1);
+}
+
 const DIRECT_RESPONSE_TIMEOUT_MS = 2500; // 3秒制限に余裕を持たせる
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -30,14 +35,18 @@ function jsonResponse(res: ServerResponse, status: number, data: object) {
 }
 
 async function sendFollowup(interactionToken: string, data: object) {
-  const url = `https://discord.com/api/v10/webhooks/${DISCORD_CLIENT_ID}/${interactionToken}/messages/@original`;
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) {
-    console.error('❌ Follow-up failed:', response.status, await response.text());
+  try {
+    const url = `https://discord.com/api/v10/webhooks/${DISCORD_CLIENT_ID}/${interactionToken}/messages/@original`;
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      console.error('❌ Follow-up failed:', response.status, await response.text());
+    }
+  } catch (error) {
+    console.error('❌ Follow-up request error:', error);
   }
 }
 
@@ -75,8 +84,6 @@ async function handleInteraction(req: IncomingMessage, res: ServerResponse) {
     }
 
     // コマンド実行とタイムアウトを競争させる
-    let responded = false;
-
     const commandPromise = command.execute(interaction).catch((error: unknown) => {
       console.error('Command execution error:', error);
       return {
@@ -93,7 +100,6 @@ async function handleInteraction(req: IncomingMessage, res: ServerResponse) {
 
     if (result === 'timeout') {
       // 2.5秒以内に完了しなかった → Deferredレスポンスを返す
-      responded = true;
       jsonResponse(res, 200, {
         type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
       });
@@ -103,7 +109,6 @@ async function handleInteraction(req: IncomingMessage, res: ServerResponse) {
       await sendFollowup(interaction.token, response.data || { content: 'コマンドを実行しました。' });
     } else {
       // 時間内に完了 → 直接レスポンス
-      responded = true;
       jsonResponse(res, 200, result);
     }
 
