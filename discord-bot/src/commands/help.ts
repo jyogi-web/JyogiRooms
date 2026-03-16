@@ -23,6 +23,10 @@ export const helpCommand = {
             '### 🔑 鍵管理',
             '`/key` — 各部室の鍵持ち一覧を表示',
             '',
+            '### 🌐 Webアプリ',
+            '予約の編集・削除、鍵の受け渡しなどはWebアプリから行えます。',
+            'https://jyogi-rooms.jyogi.net',
+            '',
             '### ❓ その他',
             '`/help` — このヘルプを表示',
         ].join('\n');
