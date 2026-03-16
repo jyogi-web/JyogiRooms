@@ -7,7 +7,7 @@ module Api
 
     # GET /api/keys
     def index
-      rooms = Room.includes(keys: :user).order(:room_number)
+      rooms = Room.includes(keys: :user).order(:id)
 
       render json: rooms.map { |room|
         {
