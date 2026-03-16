@@ -130,24 +130,31 @@ export const server = createServer(async (req, res) => {
   }
 
   if (req.method === 'POST' && req.url === '/notify') {
+    const apiKey = req.headers['x-api-key'] as string || '';
+    const expectedKey = process.env.DISCORD_NOTIFY_API_KEY || '';
+    const isValidKey = expectedKey.length > 0 &&
+      apiKey.length === expectedKey.length &&
+      timingSafeEqual(Buffer.from(apiKey), Buffer.from(expectedKey));
+    if (!isValidKey) {
+      res.writeHead(401);
+      res.end('Unauthorized');
+      return;
+    }
+
+    let body: any;
     try {
-      const apiKey = req.headers['x-api-key'] as string || '';
-      const expectedKey = process.env.DISCORD_NOTIFY_API_KEY || '';
-      const isValidKey = expectedKey.length > 0 &&
-        apiKey.length === expectedKey.length &&
-        timingSafeEqual(Buffer.from(apiKey), Buffer.from(expectedKey));
-      if (!isValidKey) {
-        res.writeHead(401);
-        res.end('Unauthorized');
-        return;
-      }
-      const body = JSON.parse(await readBody(req));
+      body = JSON.parse(await readBody(req));
+    } catch {
+      jsonResponse(res, 400, { error: 'Invalid JSON' });
+      return;
+    }
+
+    try {
       await handleNotification(body);
       jsonResponse(res, 200, { ok: true });
     } catch (error) {
       console.error('Notification handling error:', error);
-      res.writeHead(500);
-      res.end('Internal Server Error');
+      jsonResponse(res, 500, { error: 'Internal Server Error' });
     }
     return;
   }

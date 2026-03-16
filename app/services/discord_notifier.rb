@@ -18,7 +18,10 @@ class DiscordNotifier
     http.use_ssl = uri.scheme == "https"
     http.open_timeout = TIMEOUT_SECONDS
     http.read_timeout = TIMEOUT_SECONDS
-    http.request(request)
+    response = http.request(request)
+    unless response.code.to_i.between?(200, 299)
+      Rails.logger.error("Discord notification HTTP error (#{type}): #{response.code} #{response.body}")
+    end
   rescue => e
     Rails.logger.error("Discord notification failed (#{type}): #{e.message}")
   end
