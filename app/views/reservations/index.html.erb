@@ -43,7 +43,7 @@
     </div>
 
     <!-- Days Grid -->
-    <div class="grid grid-cols-7 auto-rows-fr bg-gray-100 gap-px border-b border-gray-100">
+    <div class="grid grid-cols-7 auto-rows-min bg-gray-100 gap-px border-b border-gray-100">
       <% @calendar_days.each do |date| %>
         <%= render Calendar::DayComponent.new(
               date: date, 
