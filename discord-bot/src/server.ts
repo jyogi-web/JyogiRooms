@@ -5,11 +5,14 @@ import { commands } from './commands/index.js';
 
 const port = Number(process.env.PORT) || 3000;
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || '';
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
 
 if (!DISCORD_PUBLIC_KEY) {
   console.error('❌ DISCORD_PUBLIC_KEY is not set');
   process.exit(1);
 }
+
+const DIRECT_RESPONSE_TIMEOUT_MS = 2500; // 3秒制限に余裕を持たせる
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -24,6 +27,18 @@ function jsonResponse(res: ServerResponse, status: number, data: object) {
   const json = JSON.stringify(data);
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(json);
+}
+
+async function sendFollowup(interactionToken: string, data: object) {
+  const url = `https://discord.com/api/v10/webhooks/${DISCORD_CLIENT_ID}/${interactionToken}/messages/@original`;
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    console.error('❌ Follow-up failed:', response.status, await response.text());
+  }
 }
 
 async function handleInteraction(req: IncomingMessage, res: ServerResponse) {
@@ -59,16 +74,39 @@ async function handleInteraction(req: IncomingMessage, res: ServerResponse) {
       return;
     }
 
-    try {
-      const response = await command.execute(interaction);
-      jsonResponse(res, 200, response);
-    } catch (error) {
+    // コマンド実行とタイムアウトを競争させる
+    let responded = false;
+
+    const commandPromise = command.execute(interaction).catch((error: unknown) => {
       console.error('Command execution error:', error);
-      jsonResponse(res, 200, {
+      return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content: 'コマンドの実行中にエラーが発生しました。', flags: 64 },
+        data: { content: 'コマンドの実行中にエラーが発生しました。' },
+      };
+    });
+
+    const timeoutPromise = new Promise<'timeout'>((resolve) => {
+      setTimeout(() => resolve('timeout'), DIRECT_RESPONSE_TIMEOUT_MS);
+    });
+
+    const result = await Promise.race([commandPromise, timeoutPromise]);
+
+    if (result === 'timeout') {
+      // 2.5秒以内に完了しなかった → Deferredレスポンスを返す
+      responded = true;
+      jsonResponse(res, 200, {
+        type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
       });
+
+      // コマンド完了を待ってフォローアップ送信
+      const response = await commandPromise as any;
+      await sendFollowup(interaction.token, response.data || { content: 'コマンドを実行しました。' });
+    } else {
+      // 時間内に完了 → 直接レスポンス
+      responded = true;
+      jsonResponse(res, 200, result);
     }
+
     return;
   }
 
