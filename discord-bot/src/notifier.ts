@@ -105,8 +105,7 @@ function buildKeyMessage(type: string, data: Record<string, any>): object {
 export async function handleNotification(payload: NotificationPayload): Promise<void> {
   const client = getRest();
   if (!client || !CHANNEL_ID) {
-    console.error('❌ 通知送信不可: BOT_TOKENまたはCHANNEL_IDが未設定');
-    return;
+    throw new Error('通知送信不可: BOT_TOKENまたはCHANNEL_IDが未設定');
   }
 
   let message: object;
@@ -116,8 +115,7 @@ export async function handleNotification(payload: NotificationPayload): Promise<
   } else if (payload.type.startsWith('key_')) {
     message = buildKeyMessage(payload.type, payload.data);
   } else {
-    console.error(`❌ 不明な通知タイプ: ${payload.type}`);
-    return;
+    throw new Error(`不明な通知タイプ: ${payload.type}`);
   }
 
   try {
@@ -125,5 +123,6 @@ export async function handleNotification(payload: NotificationPayload): Promise<
     console.log(`✅ 通知を送信しました: ${payload.type}`);
   } catch (err) {
     console.error(`❌ 通知送信失敗 (${payload.type}):`, err);
+    throw err;
   }
 }
