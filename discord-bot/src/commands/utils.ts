@@ -55,14 +55,14 @@ export function reply(content: string) {
     };
 }
 
-export function replyEmbed(title: string, description: string) {
+export function replyEmbed(title: string, description: string, color: number = 0x0099ff) {
     return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
             embeds: [{
                 title,
                 description,
-                color: 0x0099ff,
+                color,
                 timestamp: new Date().toISOString(),
             }],
         },

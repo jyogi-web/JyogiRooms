@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api, ApiError } from '../api.js';
 import type { Interaction } from './types.js';
-import { getStringOption, getUserId, parseDateInput, reply } from './utils.js';
+import { getStringOption, getUserId, parseDateInput, reply, replyEmbed } from './utils.js';
 import { handleNotification } from '../notifier.js';
 
 export const createCommand = {
@@ -118,7 +118,11 @@ export const createCommand = {
             return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
         } catch (e: any) {
             console.error('予約作成エラー:', e);
-            if (e instanceof ApiError && e.validationErrors.length > 0) {
+            if (e instanceof ApiError && e.status === 422 && e.validationErrors.length > 0) {
+                const hasOverlap = e.validationErrors.some((msg: string) => msg.includes('既に予約が入っています'));
+                if (hasOverlap) {
+                    return await buildOverlapErrorResponse(startAt, endAt, e.validationErrors);
+                }
                 const errorList = e.validationErrors.map((msg: string) => `・${msg}`).join('\n');
                 return reply(`予約を作成できませんでした。\n${errorList}`);
             }
@@ -126,3 +130,40 @@ export const createCommand = {
         }
     },
 };
+
+async function buildOverlapErrorResponse(startAt: Date, endAt: Date, errors: string[]): Promise<object> {
+    const dayStart = new Date(startAt);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(startAt);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    let description = '指定された時間帯に既存の予約があります。\n\n';
+
+    try {
+        const reservations = await api.fetchReservations(dayStart.toISOString(), dayEnd.toISOString());
+        const overlapping = reservations.filter(r => {
+            const rStart = new Date(r.start_at);
+            const rEnd = new Date(r.end_at);
+            return rStart < endAt && rEnd > startAt;
+        });
+
+        if (overlapping.length > 0) {
+            description += '**重複している予約:**\n';
+            for (const res of overlapping) {
+                const s = new Date(res.start_at);
+                const e = new Date(res.end_at);
+                const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+                let userDisplay = `User ${res.user_id}`;
+                if (res.user) {
+                    userDisplay = res.user.discord_id ? `<@${res.user.discord_id}>` : (res.user.display_name || res.user.username);
+                }
+                description += `**${timeStr}**\n${userDisplay}\n📝 ${res.purpose || 'なし'}\n\n`;
+            }
+        }
+    } catch {
+        // 予約取得に失敗した場合はバリデーションエラーをそのまま表示
+        description += errors.map((msg: string) => `・${msg}`).join('\n');
+    }
+
+    return replyEmbed('❌ 予約を作成できませんでした', description, 0xff3333);
+}
