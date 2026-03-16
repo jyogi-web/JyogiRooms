@@ -42,6 +42,14 @@ class KeyService
         to_user: to_user
       )
     end
+
+    # トランザクション成功後に通知
+    room = Room.find(room_id)
+    to_user = User.find(to_user_id)
+    DiscordNotifier.notify(
+      type: "key_transferred",
+      data: DiscordNotifier.key_data(room, from_user: from_user, to_user: to_user)
+    )
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => e
     raise TransferError, "譲渡先ユーザーは既にこの部屋の鍵を所持しています" if e.message.match?(/unique|uniq|duplicate/i)
     raise
@@ -71,6 +79,14 @@ class KeyService
       # 4. 鍵の所有者を更新
       key.update!(user: to_user)
     end
+
+    # トランザクション成功後に通知
+    room = Room.find(room_id)
+    to_user = User.find(to_user_id)
+    DiscordNotifier.notify(
+      type: "key_assigned",
+      data: DiscordNotifier.key_data(room, to_user: to_user)
+    )
   rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid => e
     raise TransferError, "このユーザーは既にこの部屋の鍵を所持しています" if e.message.match?(/unique|uniq|duplicate/i)
     raise
@@ -83,9 +99,17 @@ class KeyService
   #
   # @raise [ActiveRecord::RecordNotFound]
   def self.unassign(room_id:, user_id:)
+    user = User.find(user_id)
     ActiveRecord::Base.transaction do
       key = Key.lock.find_by!(room_id: room_id, user_id: user_id)
       key.update!(user: nil)
     end
+
+    # トランザクション成功後に通知
+    room = Room.find(room_id)
+    DiscordNotifier.notify(
+      type: "key_unassigned",
+      data: DiscordNotifier.key_data(room, from_user: user)
+    )
   end
 end
