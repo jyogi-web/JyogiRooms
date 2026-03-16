@@ -24,7 +24,7 @@ class Calendar::DayComponent < ViewComponent::Base
   end
 
   def container_classes
-    base = "relative bg-white min-h-[120px] p-2 flex flex-col gap-1"
+    base = "relative bg-white min-h-[120px] p-1 md:p-2 flex flex-col gap-0.5 md:gap-1"
 
     if past?
       "#{base} bg-gray-100/50 cursor-not-allowed text-gray-400"
