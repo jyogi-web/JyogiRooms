@@ -149,6 +149,11 @@ export const server = createServer(async (req, res) => {
       return;
     }
 
+    if (!body.type || typeof body.type !== 'string' || !body.data) {
+      jsonResponse(res, 400, { error: 'Missing required fields: type, data' });
+      return;
+    }
+
     try {
       await handleNotification(body);
       jsonResponse(res, 200, { ok: true });
