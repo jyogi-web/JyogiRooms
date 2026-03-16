@@ -28,8 +28,8 @@
   </div>
 
   <!-- Time Selection Grid -->
-  <div class="grid grid-cols-2 gap-2 sm:gap-4">
-      <div class="min-w-0">
+  <div class="grid grid-cols-2 gap-2 sm:gap-4 overflow-hidden">
+      <div class="min-w-0 overflow-hidden">
        <%= f.label :start_time, "開始時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
        <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -41,7 +41,7 @@
               data: { target: "start-time" } %>
        </div>
     </div>
-    <div class="min-w-0">
+    <div class="min-w-0 overflow-hidden">
       <%= f.label :end_time, "終了時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
        <div class="relative">
          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
