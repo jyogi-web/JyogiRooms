@@ -2,6 +2,7 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { verifyKey } from 'discord-interactions';
 import { InteractionType, InteractionResponseType } from 'discord-interactions';
 import { commands } from './commands/index.js';
+import { handleNotification } from './notifier.js';
 
 const port = Number(process.env.PORT) || 3000;
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || '';
@@ -124,6 +125,25 @@ export const server = createServer(async (req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('OK');
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/notify') {
+    try {
+      const apiKey = req.headers['x-api-key'] as string;
+      if (!apiKey || apiKey !== process.env.NOTIFY_API_KEY) {
+        res.writeHead(401);
+        res.end('Unauthorized');
+        return;
+      }
+      const body = JSON.parse(await readBody(req));
+      await handleNotification(body);
+      jsonResponse(res, 200, { ok: true });
+    } catch (error) {
+      console.error('Notification handling error:', error);
+      res.writeHead(500);
+      res.end('Internal Server Error');
+    }
     return;
   }
 
