@@ -14,7 +14,7 @@ module Api
           room_id: room.id,
           room_name: room.name,
           room_number: room.room_number,
-          keys: room.keys.map { |key|
+          keys: room.keys.order(:id).map { |key|
             {
               id: key.id,
               holder: key.user ? {
