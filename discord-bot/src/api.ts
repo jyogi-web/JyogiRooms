@@ -2,6 +2,7 @@ import 'dotenv/config';
 
 // Rails API Base URL
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
+const API_TIMEOUT_MS = 45000; // Cloud Runのコールドスタート(約30秒)を考慮
 
 export class ApiError extends Error {
     constructor(
@@ -66,7 +67,7 @@ export const api = {
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
         try {
             const headers = {
@@ -91,7 +92,7 @@ export const api = {
     async fetchKeys(): Promise<RoomKeys[]> {
         const url = new URL(`${API_BASE_URL}/keys`);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
         try {
             const headers = {
@@ -127,7 +128,7 @@ export const api = {
         });
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
         try {
             const response = await fetch(url.toString(), {
