@@ -3,6 +3,10 @@ import { REST, Routes } from "discord.js";
 const CHANNEL_ID = process.env.ANNOUNCE_CHANNEL_ID;
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
+if (!BOT_TOKEN || !CHANNEL_ID) {
+  console.warn('⚠️ ANNOUNCE_CHANNEL_IDまたはDISCORD_BOT_TOKENが未設定のため通知は無効です');
+}
+
 let rest: REST | null = null;
 
 function getRest(): REST | null {

@@ -8,7 +8,7 @@ class DiscordNotifier
   def self.notify(type:, data:)
     return unless enabled?
 
-    uri = URI("#{bot_base_url}/notify")
+    uri = URI("#{bot_base_url.chomp('/')}/notify")
     request = Net::HTTP::Post.new(uri.request_uri)
     request["Content-Type"] = "application/json"
     request["X-Api-Key"] = notify_api_key

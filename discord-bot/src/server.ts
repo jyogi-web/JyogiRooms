@@ -1,4 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
+import { timingSafeEqual } from 'crypto';
 import { verifyKey } from 'discord-interactions';
 import { InteractionType, InteractionResponseType } from 'discord-interactions';
 import { commands } from './commands/index.js';
@@ -130,8 +131,12 @@ export const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && req.url === '/notify') {
     try {
-      const apiKey = req.headers['x-api-key'] as string;
-      if (!apiKey || apiKey !== process.env.NOTIFY_API_KEY) {
+      const apiKey = req.headers['x-api-key'] as string || '';
+      const expectedKey = process.env.DISCORD_NOTIFY_API_KEY || '';
+      const isValidKey = expectedKey.length > 0 &&
+        apiKey.length === expectedKey.length &&
+        timingSafeEqual(Buffer.from(apiKey), Buffer.from(expectedKey));
+      if (!isValidKey) {
         res.writeHead(401);
         res.end('Unauthorized');
         return;

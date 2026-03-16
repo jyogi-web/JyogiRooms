@@ -16,7 +16,7 @@ class KeyService
   # @raise [ActiveRecord::RecordInvalid]
   # @raise [KeyService::TransferError]
   def self.transfer(room_id:, from_user:, to_user_id:)
-    ActiveRecord::Base.transaction do
+    room, to_user = ActiveRecord::Base.transaction do
       # 1. 現在の鍵を取得
       #    from_user が鍵を持っていない場合は例外を投げる
       key = Key.lock.find_by!(
@@ -41,11 +41,11 @@ class KeyService
         from_user: from_user,
         to_user: to_user
       )
+
+      [ key.room, to_user ]
     end
 
     # トランザクション成功後に通知
-    room = Room.find(room_id)
-    to_user = User.find(to_user_id)
     DiscordNotifier.notify(
       type: "key_transferred",
       data: DiscordNotifier.key_data(room, from_user: from_user, to_user: to_user)
@@ -63,7 +63,7 @@ class KeyService
   # @raise [ActiveRecord::RecordNotFound]
   # @raise [KeyService::TransferError]
   def self.assign(room_id:, to_user_id:)
-    ActiveRecord::Base.transaction do
+    room, to_user = ActiveRecord::Base.transaction do
       # 1. 未割り当ての鍵を取得
       key = Key.lock.find_by(room_id: room_id, user_id: nil)
       raise TransferError, "この部屋には未割り当ての鍵がありません" unless key
@@ -78,11 +78,11 @@ class KeyService
 
       # 4. 鍵の所有者を更新
       key.update!(user: to_user)
+
+      [ key.room, to_user ]
     end
 
     # トランザクション成功後に通知
-    room = Room.find(room_id)
-    to_user = User.find(to_user_id)
     DiscordNotifier.notify(
       type: "key_assigned",
       data: DiscordNotifier.key_data(room, to_user: to_user)
@@ -99,14 +99,15 @@ class KeyService
   #
   # @raise [ActiveRecord::RecordNotFound]
   def self.unassign(room_id:, user_id:)
-    user = User.find(user_id)
-    ActiveRecord::Base.transaction do
+    room, user = ActiveRecord::Base.transaction do
       key = Key.lock.find_by!(room_id: room_id, user_id: user_id)
+      user = key.user
       key.update!(user: nil)
+
+      [ key.room, user ]
     end
 
     # トランザクション成功後に通知
-    room = Room.find(room_id)
     DiscordNotifier.notify(
       type: "key_unassigned",
       data: DiscordNotifier.key_data(room, from_user: user)
