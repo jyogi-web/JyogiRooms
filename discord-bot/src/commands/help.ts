@@ -1,13 +1,29 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { InteractionResponseType } from 'discord-interactions';
 import type { Interaction } from './types.js';
+const BOOLEAN_TYPE = 5;
+
+function getBooleanOption(interaction: Interaction, name: string): boolean | null {
+    const options = interaction.data.options;
+    if (!options) return null;
+    const opt = options.find(o => o.name === name && o.type === BOOLEAN_TYPE);
+    return (opt?.value as boolean) ?? null;
+}
 
 export const helpCommand = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('コマンドの使い方を表示します'),
+        .setDescription('コマンドの使い方を表示します')
+        .addBooleanOption(option =>
+            option
+                .setName('public')
+                .setDescription('チャンネル全体に表示する（デフォルトは自分だけ）')
+                .setRequired(false)
+        ),
 
-    async execute(_interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction): Promise<object> {
+        const isPublic = getBooleanOption(interaction, 'public') === true;
+
         const description = [
             '### 📅 予約関連',
             '`/list` — 今後の予約一覧を表示（最大10件）',
@@ -29,6 +45,7 @@ export const helpCommand = {
             '',
             '### ❓ その他',
             '`/help` — このヘルプを表示',
+            '　　`public`: `True`でチャンネル全体に表示',
         ].join('\n');
 
         return {
@@ -39,7 +56,7 @@ export const helpCommand = {
                     description,
                     color: 0x0099ff,
                 }],
-                flags: 64,
+                ...(isPublic ? {} : { flags: 64 }),
             },
         };
     },
