@@ -1,5 +1,13 @@
-import { reserveCommand } from './reserve.js';
+import { listCommand } from './list.js';
+import { checkCommand } from './check.js';
+import { createCommand } from './create.js';
+import { keyCommand } from './key.js';
+import { helpCommand } from './help.js';
 
 export const commands = [
-    reserveCommand,
+    listCommand,
+    checkCommand,
+    createCommand,
+    keyCommand,
+    helpCommand,
 ];
