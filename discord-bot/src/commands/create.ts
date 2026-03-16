@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
+import { api, ApiError } from '../api.js';
 import type { Interaction } from './types.js';
 import { getStringOption, getUserId, parseDateInput, reply } from './utils.js';
 import { handleNotification } from '../notifier.js';
@@ -118,6 +118,10 @@ export const createCommand = {
             return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
         } catch (e: any) {
             console.error('予約作成エラー:', e);
+            if (e instanceof ApiError && e.validationErrors.length > 0) {
+                const errorList = e.validationErrors.map((msg: string) => `・${msg}`).join('\n');
+                return reply(`予約を作成できませんでした。\n${errorList}`);
+            }
             return reply('予約作成に失敗しました。時間をおいて再度お試しください。');
         }
     },

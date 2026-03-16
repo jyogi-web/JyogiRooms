@@ -3,6 +3,17 @@ import 'dotenv/config';
 // Rails API Base URL
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
 
+export class ApiError extends Error {
+    constructor(
+        message: string,
+        public readonly status: number,
+        public readonly validationErrors: string[]
+    ) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
+
 export interface Reservation {
     id: number;
     user_id: number;
@@ -127,19 +138,19 @@ export const api = {
             });
 
             if (!response.ok) {
-                // Try to read error message from body if possible, otherwise use status text
-                let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+                let errorBody: any = null;
                 try {
-                    const errorBody = await response.json();
-                    if (errorBody && errorBody.error) {
-                        errorMessage += ` - ${errorBody.error}`;
-                    } else if (errorBody && errorBody.errors) {
-                        errorMessage += ` - ${JSON.stringify(errorBody.errors)}`;
-                    }
-                } catch (e) {
+                    errorBody = await response.json();
+                } catch {
                     // ignore json parse error
                 }
-                throw new Error(errorMessage);
+
+                const err = new ApiError(
+                    `API Error: ${response.status} ${response.statusText}`,
+                    response.status,
+                    errorBody?.errors || (errorBody?.error ? [errorBody.error] : [])
+                );
+                throw err;
             }
 
             return await response.json() as Reservation;
