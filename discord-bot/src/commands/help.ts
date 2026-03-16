@@ -25,6 +25,10 @@ export const helpCommand = {
         const isPublic = getBooleanOption(interaction, 'public') === true;
 
         const description = [
+            '**JyogiRooms Bot**は、部室予約・鍵管理Webアプリ「JyogiRooms」の一部機能をDiscordから利用できるBotです。',
+            '予約の確認・作成や鍵持ちの確認がDiscord上で行えます。',
+            '予約の編集・削除や鍵の受け渡しなど、より詳細な操作はWebアプリをご利用ください。',
+            '',
             '### 📅 予約関連',
             '`/list` — 今後の予約一覧を表示（最大10件）',
             '`/check` — 指定した日の予約を確認',
