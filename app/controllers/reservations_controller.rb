@@ -29,6 +29,8 @@ class ReservationsController < ApplicationController
 
   def new
     @reservation = Reservation.new
+    @reservation.start_time = "13:00"
+    @reservation.end_time = "13:00"
 
     # Safe date parsing for pre-filling the form
     if params[:date].present?

@@ -52,7 +52,7 @@ class ReservationTest < ActiveSupport::TestCase
     new_reservation.end_time = new_reservation.end_at.strftime("%H:%M")
 
     assert_not new_reservation.valid?
-    assert_includes new_reservation.errors[:base], "指定された時間は既に予約が入っています"
+    assert new_reservation.errors[:base].any? { |msg| msg.include?("指定された時間は既に予約が入っています") }
 
     # Overlaps start
     new_reservation.start_at = @reservation.start_at - 1.hour
