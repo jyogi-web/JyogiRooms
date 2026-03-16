@@ -49,6 +49,7 @@ class ReservationsController < ApplicationController
     @reservation.user = current_user
 
     if @reservation.save
+      DiscordNotifier.notify(type: "reservation_created", data: DiscordNotifier.reservation_data(@reservation))
       redirect_to reservations_path, notice: "予約を作成しました"
     else
       # Re-populate existing reservations for the view
@@ -72,6 +73,7 @@ class ReservationsController < ApplicationController
 
   def update
     if @reservation.update(reservation_params)
+      DiscordNotifier.notify(type: "reservation_updated", data: DiscordNotifier.reservation_data(@reservation))
       redirect_to reservations_path, notice: "予約を更新しました"
     else
       # Use original date if available (in case of date change failure), otherwise current input date
@@ -89,7 +91,9 @@ class ReservationsController < ApplicationController
   end
 
   def destroy
+    notification_data = DiscordNotifier.reservation_data(@reservation)
     if @reservation.destroy
+      DiscordNotifier.notify(type: "reservation_destroyed", data: notification_data)
       redirect_to reservations_path, notice: "予約を削除しました", status: :see_other
     else
       redirect_to reservations_path, alert: "予約の削除に失敗しました"
