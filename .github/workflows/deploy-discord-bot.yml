@@ -2,7 +2,7 @@ name: Deploy Discord Bot to Cloud Run
 
 on:
   push:
-    branches: [develop,214/rita/add_key_command]
+    branches: [develop]
     paths:
       - 'discord-bot/**'
 
