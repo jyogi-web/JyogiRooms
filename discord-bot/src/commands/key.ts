@@ -25,7 +25,7 @@ export const keyCommand = {
                 if (!room) {
                     return reply(`ID ${roomId} の部室が見つかりません。`);
                 }
-                return replyEmbed(`🔑 ${room.room_name}（${room.room_number}）の鍵持ち`, buildRoomSection(room));
+                return replyEmbed(`🔑 鍵持ち`, buildRoomSection(room));
             }
 
             const MAX_LENGTH = 4096;
