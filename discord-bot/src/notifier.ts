@@ -36,7 +36,12 @@ function formatDateTime(startAt: string, endAt: string): string {
   return `${dateStr} ${startTime} ~ ${endTime}`;
 }
 
-function buildReservationMessage(type: string, data: Record<string, any>): object {
+interface ReservationMessages {
+  embed: object;
+  mentionMessage?: object;
+}
+
+function buildReservationMessages(type: string, data: Record<string, any>): ReservationMessages {
   const user = formatUserMention(data.user_discord_id, data.user_display_name);
   const dateTime = formatDateTime(data.start_at, data.end_at);
   const purpose = data.purpose || 'なし';
@@ -50,17 +55,7 @@ function buildReservationMessage(type: string, data: Record<string, any>): objec
 
   const description = `${user} の予約\n📅 ${dateTime}\n📝 ${purpose}`;
 
-  // 鍵持ちへのメンションはcontent（通常テキスト）に出すことで通知を届ける
-  let content: string | undefined;
-  const keyHolders: { discord_id?: string; display_name?: string }[] = data.key_holders || [];
-  const holders = keyHolders.filter(h => h.discord_id);
-  if (holders.length > 0 && type === 'reservation_created') {
-    const mentions = holders.map(h => `<@${h.discord_id}>`).join(' ');
-    content = `🔑 ${mentions}\n上記の日時に部室を開けられる方はリアクションをお願いします！`;
-  }
-
-  return {
-    ...(content ? { content } : {}),
+  const embed = {
     embeds: [{
       title,
       description,
@@ -68,6 +63,19 @@ function buildReservationMessage(type: string, data: Record<string, any>): objec
       timestamp: new Date().toISOString(),
     }],
   };
+
+  // 鍵持ちへのメンションは別メッセージとして送信し、通知を届ける
+  let mentionMessage: object | undefined;
+  const keyHolders: { discord_id?: string; display_name?: string }[] = data.key_holders || [];
+  const holders = keyHolders.filter(h => h.discord_id);
+  if (holders.length > 0 && type === 'reservation_created') {
+    const mentions = holders.map(h => `<@${h.discord_id}>`).join(' ');
+    mentionMessage = {
+      content: `🔑 ${mentions}\n上記の日時に部室を開けられる方はリアクションをお願いします！`,
+    };
+  }
+
+  return { embed, mentionMessage };
 }
 
 function buildKeyMessage(type: string, data: Record<string, any>): object {
@@ -110,18 +118,19 @@ export async function handleNotification(payload: NotificationPayload): Promise<
     throw new Error('通知送信不可: BOT_TOKENまたはCHANNEL_IDが未設定');
   }
 
-  let message: object;
-
-  if (payload.type.startsWith('reservation_')) {
-    message = buildReservationMessage(payload.type, payload.data);
-  } else if (payload.type.startsWith('key_')) {
-    message = buildKeyMessage(payload.type, payload.data);
-  } else {
-    throw new Error(`不明な通知タイプ: ${payload.type}`);
-  }
-
   try {
-    await client.post(Routes.channelMessages(CHANNEL_ID), { body: message });
+    if (payload.type.startsWith('reservation_')) {
+      const { embed, mentionMessage } = buildReservationMessages(payload.type, payload.data);
+      await client.post(Routes.channelMessages(CHANNEL_ID), { body: embed });
+      if (mentionMessage) {
+        await client.post(Routes.channelMessages(CHANNEL_ID), { body: mentionMessage });
+      }
+    } else if (payload.type.startsWith('key_')) {
+      const message = buildKeyMessage(payload.type, payload.data);
+      await client.post(Routes.channelMessages(CHANNEL_ID), { body: message });
+    } else {
+      throw new Error(`不明な通知タイプ: ${payload.type}`);
+    }
     console.log(`✅ 通知を送信しました: ${payload.type}`);
   } catch (err) {
     console.error(`❌ 通知送信失敗 (${payload.type}):`, err);
