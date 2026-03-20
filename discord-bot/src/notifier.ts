@@ -48,17 +48,19 @@ function buildReservationMessage(type: string, data: Record<string, any>): objec
   };
   const { title, color } = labels[type] || { title: '📅 予約通知', color: 0x0099ff };
 
-  let description = `${user} の予約\n📅 ${dateTime}\n📝 ${purpose}`;
+  const description = `${user} の予約\n📅 ${dateTime}\n📝 ${purpose}`;
 
-  // 鍵持ちへのメンション
+  // 鍵持ちへのメンションはcontent（通常テキスト）に出すことで通知を届ける
+  let content: string | undefined;
   const keyHolders: { discord_id?: string; display_name?: string }[] = data.key_holders || [];
   const holders = keyHolders.filter(h => h.discord_id);
   if (holders.length > 0 && type === 'reservation_created') {
     const mentions = holders.map(h => `<@${h.discord_id}>`).join(' ');
-    description += `\n\n🔑 ${mentions}\n上記の日時に部室を開けられる方はリアクションをお願いします！`;
+    content = `🔑 ${mentions}\n上記の日時に部室を開けられる方はリアクションをお願いします！`;
   }
 
   return {
+    ...(content ? { content } : {}),
     embeds: [{
       title,
       description,
