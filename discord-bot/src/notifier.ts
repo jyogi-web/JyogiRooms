@@ -67,7 +67,7 @@ function buildReservationMessages(type: string, data: Record<string, any>): Rese
   // 鍵持ちへのメンションは別メッセージとして送信し、通知を届ける
   let mentionMessage: object | undefined;
   const keyHolders: { discord_id?: string; display_name?: string }[] = data.key_holders || [];
-  const holders = keyHolders.filter(h => h.discord_id);
+  const holders = keyHolders.filter((h): h is { discord_id: string; display_name?: string } => h.discord_id != null);
   if (holders.length > 0 && type === 'reservation_created') {
     const mentions = holders.map(h => `<@${h.discord_id}>`).join(' ');
     mentionMessage = {
