@@ -2,12 +2,20 @@ import { InteractionResponseType } from 'discord-interactions';
 import type { Interaction } from './types.js';
 
 export const STRING_TYPE = 3;
+export const INTEGER_TYPE = 4;
 
 export function getStringOption(interaction: Interaction, name: string): string | null {
     const options = interaction.data.options;
     if (!options) return null;
     const opt = options.find(o => o.name === name && o.type === STRING_TYPE);
     return (opt?.value as string) ?? null;
+}
+
+export function getIntegerOption(interaction: Interaction, name: string): number | null {
+    const options = interaction.data.options;
+    if (!options) return null;
+    const opt = options.find(o => o.name === name && o.type === INTEGER_TYPE);
+    return (opt?.value as number) ?? null;
 }
 
 export function getUserId(interaction: Interaction): string | null {

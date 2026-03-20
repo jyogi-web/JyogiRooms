@@ -1,19 +1,31 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api } from '../api.js';
 import type { Interaction } from './types.js';
-import { reply, replyEmbed } from './utils.js';
+import { getIntegerOption, reply, replyEmbed } from './utils.js';
 
 export const keyCommand = {
     data: new SlashCommandBuilder()
         .setName('key')
-        .setDescription('各部室の鍵持ち一覧を表示します'),
+        .setDescription('各部室の鍵持ち一覧を表示します')
+        .addIntegerOption(option =>
+            option.setName('room_id').setDescription('部室ID（省略時は全部室を表示）').setRequired(false)
+        ),
 
-    async execute(_interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction): Promise<object> {
         try {
+            const roomId = getIntegerOption(interaction, 'room_id');
             const rooms = await api.fetchKeys();
 
             if (rooms.length === 0) {
                 return reply('部室情報が登録されていません。');
+            }
+
+            if (roomId !== null) {
+                const room = rooms.find(r => r.room_id === roomId);
+                if (!room) {
+                    return reply(`ID ${roomId} の部室が見つかりません。`);
+                }
+                return replyEmbed(`🔑 鍵持ち`, buildRoomSection(room));
             }
 
             const MAX_LENGTH = 4096;
