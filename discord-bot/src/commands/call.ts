@@ -44,7 +44,7 @@ export const callCommand = {
             return {
                 type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: `🔑 **${room.room_name}（${room.room_number}）** の鍵持ち:\n${mentions}`,
+                    content: `🔑 **${room.room_name}** の鍵持ちメンション:\n${mentions}`,
                 },
             };
         } catch (error) {
