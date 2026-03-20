@@ -31,7 +31,8 @@
   <!-- ユーザーリストセクション -->
   <h2 class="text-xl font-bold text-gray-800 mb-6 mt-8">ユーザーリスト</h2>
 
-  <div class="overflow-x-auto card">
+  <!-- デスクトップ: テーブル表示 -->
+  <div class="hidden md:block overflow-x-auto card">
     <table class="w-full text-sm">
       <thead class="bg-gray-100 border-b border-gray-200">
         <tr>
@@ -66,6 +67,24 @@
         <% end %>
       </tbody>
     </table>
+  </div>
+
+  <!-- モバイル: カード表示 -->
+  <div class="md:hidden space-y-3">
+    <% @users.each do |user| %>
+      <%= link_to admin_user_path(user), class: "block card p-4 hover:bg-gray-50 transition-colors" do %>
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="font-medium text-gray-800"><%= user.display_name %></p>
+            <p class="text-xs text-gray-500">@<%= user.username %></p>
+          </div>
+          <%= user_role_badge(user, :sm) %>
+        </div>
+        <% if user.last_synced_at %>
+          <p class="text-xs text-gray-400">最終同期: <%= l(user.last_synced_at, format: :short) %></p>
+        <% end %>
+      <% end %>
+    <% end %>
   </div>
 
   <p class="text-sm text-gray-600 mt-4">
