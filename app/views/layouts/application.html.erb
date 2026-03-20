@@ -70,7 +70,7 @@
           </button>
           <!-- Dropdown Menu -->
           <div class="absolute bottom-full left-4 right-4 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200">
-            <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors", data: { turbo_confirm: "ログアウトしますか？" } do %>
+            <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
               </svg>
@@ -95,7 +95,7 @@
             <p class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></p>
             <p class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></p>
           </div>
-          <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors", data: { turbo_confirm: "ログアウトしますか？" } do %>
+          <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
