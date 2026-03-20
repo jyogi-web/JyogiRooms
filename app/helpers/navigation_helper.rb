@@ -37,7 +37,7 @@ module NavigationHelper
   # @return [ActiveSupport::SafeBuffer] HTML バッジ
   def user_role_badge(user, size = :base)
     if user.admin?
-      label = "管理者"
+      label = "admin"
       badge_class = "bg-red-100 text-red-700"
     elsif user.role
       label = user.role.name
