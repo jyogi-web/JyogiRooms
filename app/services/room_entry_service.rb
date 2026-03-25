@@ -14,6 +14,7 @@ class RoomEntryService
   # @return [RoomVisit]
   def self.enter(room:, user:, source: "web")
     auto_exited_room = nil
+    auto_closed_previous_room = false
     auto_opened = false
 
     visit = ActiveRecord::Base.transaction do
@@ -32,7 +33,10 @@ class RoomEntryService
         # その部室が空になったら閉室
         if RoomVisit.active.for_room(auto_exited_room).none?
           active_session = RoomSession.active.for_room(auto_exited_room).lock.first
-          active_session&.update!(closed_at: Time.current, closed_by: user)
+          if active_session
+            active_session.update!(closed_at: Time.current, closed_by: user)
+            auto_closed_previous_room = true
+          end
         end
       end
 
@@ -48,6 +52,7 @@ class RoomEntryService
     # トランザクション成功後に通知
     if auto_exited_room
       DiscordNotifier.notify(type: "room_exited", data: room_entry_data(auto_exited_room, user))
+      DiscordNotifier.notify(type: "room_closed", data: room_entry_data(auto_exited_room, user)) if auto_closed_previous_room
     end
     DiscordNotifier.notify(type: "room_opened", data: room_entry_data(room, user)) if auto_opened
     DiscordNotifier.notify(type: "room_entered", data: room_entry_data(room, user))
