@@ -6,15 +6,15 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, raspi]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create .env.production
+      - name: Build and deploy
         run: |
-          cat <<EOF > .env.production
+          cat <<'EOF' > .env.production
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           RAILS_MASTER_KEY=${{ secrets.RAILS_MASTER_KEY }}
           CLIENT_ID=${{ secrets.CLIENT_ID }}
@@ -27,9 +27,6 @@ jobs:
           DISCORD_NOTIFY_API_KEY=${{ secrets.DISCORD_NOTIFY_API_KEY }}
           ADMIN_DISCORD_IDS=${{ secrets.ADMIN_DISCORD_IDS }}
           EOF
-
-      - name: Build and deploy
-        run: |
           docker compose -f docker-compose.raspi.yml build
           docker compose -f docker-compose.raspi.yml up -d
 
