@@ -46,6 +46,7 @@ Rails.application.routes.draw do
     resources :roles, only: %i[index show update]
     resources :users, only: %i[show update]
     resources :key_transfer_logs, only: %i[index show]
+    resources :scheduled_announcements, only: %i[edit update]
   end
 
   if Rails.env.test?
