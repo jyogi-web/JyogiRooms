@@ -2,7 +2,6 @@ import { SlashCommandBuilder } from 'discord.js';
 import { api, ApiError } from '../api.js';
 import type { Interaction } from './types.js';
 import { getStringOption, getUserId, parseDateInput, reply, replyEmbed } from './utils.js';
-import { handleNotification } from '../notifier.js';
 
 export const createCommand = {
     data: new SlashCommandBuilder()
@@ -89,33 +88,6 @@ export const createCommand = {
 
             const dateStr = startAt.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
             const timeStr = `${startAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${endAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
-
-            // Discord通知を送信（コマンド応答をブロックしないよう非同期で実行）
-            (async () => {
-                try {
-                    const notifyRoomId = Number(process.env.NOTIFY_ROOM_ID) || 3;
-                    const rooms = await api.fetchKeys();
-                    const targetRoom = rooms.find(r => r.room_id === notifyRoomId);
-                    const keyHolders = targetRoom
-                        ? targetRoom.keys.filter(k => k.holder).map(k => ({
-                            discord_id: k.holder!.discord_id,
-                            display_name: k.holder!.display_name,
-                        }))
-                        : [];
-                    await handleNotification({
-                        type: 'reservation_created',
-                        data: {
-                            user_discord_id: discordUserId,
-                            start_at: startAt.toISOString(),
-                            end_at: endAt.toISOString(),
-                            purpose: res.purpose,
-                            key_holders: keyHolders,
-                        },
-                    });
-                } catch (notifyErr) {
-                    console.error('通知送信エラー:', notifyErr);
-                }
-            })();
 
             return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
         } catch (e: any) {

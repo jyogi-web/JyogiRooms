@@ -1,7 +1,6 @@
 // src/index.ts
 import 'dotenv/config';
 import { server } from "./server.js";
-import { startLockAnnounceCron, stopLockAnnounceCron } from "./lockAnnounce.js";
 
 // =====================
 // Environment variables
@@ -18,11 +17,6 @@ if (!publicKey) {
   process.exit(1);
 }
 
-// =====================
-// Start cron jobs
-// =====================
-startLockAnnounceCron();
-
 console.log('🤖 Discord bot started (HTTP Interactions mode)');
 
 // =====================
@@ -30,8 +24,6 @@ console.log('🤖 Discord bot started (HTTP Interactions mode)');
 // =====================
 const shutdown = async (signal: string) => {
   console.log(`🛑 Received ${signal}. Shutting down...`);
-
-  stopLockAnnounceCron();
 
   try {
     await new Promise<void>((resolve) => {

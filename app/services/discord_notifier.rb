@@ -62,6 +62,16 @@ class DiscordNotifier
     }
   end
 
+  # 施錠アナウンスを送信する
+  def self.send_lock_announce
+    post_message({
+      content: "🔒 **施錠のお知らせ**\n\n部室の施錠時間です!\n鍵持ちの部員は各部室が施錠されているか確認をお願いします。"
+    })
+    Rails.logger.info("施錠アナウンスを送信しました")
+  rescue => e
+    Rails.logger.error("施錠アナウンス送信失敗: #{e.message}")
+  end
+
   def self.enabled?
     bot_token.present? && channel_id.present?
   end
