@@ -33,5 +33,12 @@ jobs:
           docker compose -f docker-compose.raspi.yml build
           docker compose -f docker-compose.raspi.yml up -d
 
+      - name: Show container status and logs
+        if: always()
+        run: |
+          docker ps -a
+          echo "--- App Logs ---"
+          docker logs jyogirooms-app-1 --tail 100
+
       - name: Clean up old images
         run: docker image prune -f
