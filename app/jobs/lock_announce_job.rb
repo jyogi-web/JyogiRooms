@@ -4,6 +4,9 @@ class LockAnnounceJob < ApplicationJob
   def perform
     return unless DiscordNotifier.enabled?
 
-    DiscordNotifier.send_lock_announce
+    announcement = ScheduledAnnouncement.find_by(enabled: true)
+    return unless announcement
+
+    DiscordNotifier.send_lock_announce(announcement.message)
   end
 end

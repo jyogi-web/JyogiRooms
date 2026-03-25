@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_14_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_25_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_14_100000) do
     t.string "room_number", null: false
     t.datetime "updated_at", null: false
     t.index ["room_number"], name: "index_rooms_on_room_number", unique: true
+  end
+
+  create_table "scheduled_announcements", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false
+    t.integer "hour", default: 20, null: false
+    t.text "message", null: false
+    t.integer "minute", default: 0, null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
