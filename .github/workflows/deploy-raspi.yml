@@ -1,0 +1,37 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, raspi]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env.production
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          JYOGI_AUTH_URL: ${{ secrets.JYOGI_AUTH_URL }}
+          REDIRECT_URI: ${{ secrets.REDIRECT_URI }}
+          API_ACCESS_TOKEN: ${{ secrets.API_ACCESS_TOKEN }}
+          DISCORD_BOT_URL: ${{ secrets.DISCORD_BOT_URL }}
+          DISCORD_NOTIFY_API_KEY: ${{ secrets.DISCORD_NOTIFY_API_KEY }}
+          ADMIN_DISCORD_IDS: ${{ secrets.ADMIN_DISCORD_IDS }}
+        run: |
+          env | grep -E '^(DATABASE_URL|RAILS_MASTER_KEY|CLIENT_ID|CLIENT_SECRET|FRONTEND_URL|JYOGI_AUTH_URL|REDIRECT_URI|API_ACCESS_TOKEN|DISCORD_BOT_URL|DISCORD_NOTIFY_API_KEY|ADMIN_DISCORD_IDS)=' > .env.production
+
+      - name: Build and deploy
+        run: |
+          docker compose -f docker-compose.raspi.yml build
+          docker compose -f docker-compose.raspi.yml up -d
+
+      - name: Clean up old images
+        run: docker image prune -f
