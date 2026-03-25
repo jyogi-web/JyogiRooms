@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_000006) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,7 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000005) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["card_uid"], name: "index_nfc_cards_on_card_uid", unique: true
-    t.index ["user_id"], name: "index_nfc_cards_on_user_id"
+    t.index ["user_id"], name: "index_nfc_cards_on_user_id", unique: true
   end
 
   create_table "nfc_registration_requests", force: :cascade do |t|
