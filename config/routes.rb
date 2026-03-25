@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   root "dashboard#index"
   resources :reservations, except: [ :show ]
   resources :keys, only: [ :index ]
+  resources :nfc_cards, only: %i[index destroy]
 
   resources :rooms, only: [] do
     resource :key, only: [] do
@@ -38,6 +39,18 @@ Rails.application.routes.draw do
     # ユーザー情報
     get "users/me", to: "users#me"
     resources :users, only: %i[index show create update destroy]
+
+    # NFC入退室
+    resources :rooms, only: [] do
+      post :touch, to: "rooms/touches#create"
+    end
+
+    # NFC登録
+    resources :nfc_registrations, only: %i[create show destroy] do
+      member do
+        patch :confirm
+      end
+    end
   end
 
   # 管理者画面
