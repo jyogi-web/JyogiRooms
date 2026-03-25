@@ -17,8 +17,12 @@ class RoomEntryService
     auto_opened = false
 
     visit = ActiveRecord::Base.transaction do
+      # 行ロックで同時リクエストをシリアライズ
+      user.lock!
+      room.lock!
+
       # 別の部室に入室中なら先に退室
-      current_visit = RoomVisit.active.for_user(user).lock.first
+      current_visit = RoomVisit.active.for_user(user).first
       if current_visit
         raise EntryError, "既にこの部室に入室中です" if current_visit.room_id == room.id
 
@@ -60,7 +64,10 @@ class RoomEntryService
     auto_closed = false
 
     visit = ActiveRecord::Base.transaction do
-      visit = RoomVisit.active.for_room(room).for_user(user).lock.first
+      # ユーザー行ロックで同一ユーザーの同時リクエストをシリアライズ
+      user.lock!
+
+      visit = RoomVisit.active.for_room(room).for_user(user).first
       raise EntryError, "この部室に入室していません" unless visit
 
       visit.update!(exited_at: Time.current)

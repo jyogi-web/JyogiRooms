@@ -12,6 +12,9 @@ class RoomStateService
   # @return [RoomSession]
   def self.open(room:, user:)
     session = ActiveRecord::Base.transaction do
+      # 部室行ロックで同一部室の同時リクエストをシリアライズ
+      room.lock!
+
       raise StateError, "この部室は既に開室しています" if RoomSession.active.for_room(room).exists?
 
       RoomSession.create!(room: room, opened_by: user, opened_at: Time.current)
@@ -29,7 +32,10 @@ class RoomStateService
   # @return [RoomSession]
   def self.close(room:, user:)
     session = ActiveRecord::Base.transaction do
-      session = RoomSession.active.for_room(room).lock.first
+      # 部室行ロックで同一部室の同時リクエストをシリアライズ
+      room.lock!
+
+      session = RoomSession.active.for_room(room).first
       raise StateError, "この部室は開室していません" unless session
 
       RoomVisit.active.for_room(room).update_all(exited_at: Time.current)
