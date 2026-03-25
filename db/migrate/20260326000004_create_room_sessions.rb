@@ -12,6 +12,6 @@ class CreateRoomSessions < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :room_sessions, [:room_id, :closed_at]
+    add_index :room_sessions, [ :room_id, :closed_at ]
   end
 end

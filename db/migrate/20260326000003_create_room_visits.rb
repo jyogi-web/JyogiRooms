@@ -12,7 +12,7 @@ class CreateRoomVisits < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :room_visits, [:user_id, :exited_at]
-    add_index :room_visits, [:room_id, :exited_at]
+    add_index :room_visits, [ :user_id, :exited_at ]
+    add_index :room_visits, [ :room_id, :exited_at ]
   end
 end
