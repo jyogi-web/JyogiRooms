@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_25_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,6 +49,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_100000) do
     t.index ["user_id"], name: "index_keys_on_user_id"
   end
 
+  create_table "nfc_cards", force: :cascade do |t|
+    t.string "card_uid", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["card_uid"], name: "index_nfc_cards_on_card_uid", unique: true
+    t.index ["user_id"], name: "index_nfc_cards_on_user_id"
+  end
+
+  create_table "nfc_registration_requests", force: :cascade do |t|
+    t.string "card_uid"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["expires_at"], name: "index_nfc_registration_requests_on_expires_at"
+    t.index ["user_id"], name: "index_nfc_registration_requests_on_user_id"
+  end
+
   create_table "reservations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "end_at", null: false
@@ -65,6 +84,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_100000) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_roles_on_name", unique: true
+  end
+
+  create_table "room_sessions", force: :cascade do |t|
+    t.datetime "closed_at"
+    t.bigint "closed_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "opened_at", null: false
+    t.bigint "opened_by_id", null: false
+    t.bigint "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["closed_by_id"], name: "index_room_sessions_on_closed_by_id"
+    t.index ["opened_by_id"], name: "index_room_sessions_on_opened_by_id"
+    t.index ["room_id", "closed_at"], name: "index_room_sessions_on_room_id_and_closed_at"
+    t.index ["room_id"], name: "index_room_sessions_on_room_id"
+    t.index ["room_id"], name: "index_room_sessions_on_room_id_active_unique", unique: true, where: "(closed_at IS NULL)"
+  end
+
+  create_table "room_visits", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "entered_at", null: false
+    t.datetime "exited_at"
+    t.bigint "room_id", null: false
+    t.string "source", default: "nfc", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["room_id", "exited_at"], name: "index_room_visits_on_room_id_and_exited_at"
+    t.index ["room_id"], name: "index_room_visits_on_room_id"
+    t.index ["user_id", "exited_at"], name: "index_room_visits_on_user_id_and_exited_at"
+    t.index ["user_id"], name: "index_room_visits_on_user_id"
   end
 
   create_table "rooms", force: :cascade do |t|
@@ -107,6 +155,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_100000) do
   add_foreign_key "key_transfer_logs", "users", column: "to_user_id"
   add_foreign_key "keys", "rooms"
   add_foreign_key "keys", "users"
+  add_foreign_key "nfc_cards", "users"
+  add_foreign_key "nfc_registration_requests", "users"
   add_foreign_key "reservations", "users"
+  add_foreign_key "room_sessions", "rooms"
+  add_foreign_key "room_sessions", "users", column: "closed_by_id"
+  add_foreign_key "room_sessions", "users", column: "opened_by_id"
+  add_foreign_key "room_visits", "rooms"
+  add_foreign_key "room_visits", "users"
   add_foreign_key "users", "roles"
 end
