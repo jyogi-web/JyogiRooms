@@ -36,6 +36,7 @@ jobs:
       - name: Show container status and logs
         if: always()
         run: |
+          sleep 10
           docker ps -a
           echo "--- App Logs ---"
           docker compose -f docker-compose.raspi.yml logs --tail 100
