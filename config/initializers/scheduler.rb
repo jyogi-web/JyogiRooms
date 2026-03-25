@@ -13,3 +13,13 @@ scheduler.cron("0 20 * * * Asia/Tokyo") do
 rescue => e
   Rails.logger.error("[Scheduler] 施錠アナウンス失敗: #{e.message}")
 end
+
+# テスト用: テストアナウンスを送信
+scheduler.cron("30 13 * * * Asia/Tokyo") do
+  Rails.logger.info("[Scheduler] 13:30の定刻テスト実行")
+  DiscordNotifier.send(:post_message, {
+    content: "🧪 **定刻テスト実行(13:30)**\n\n自宅で稼働中のラズパイから新鮮なJyogiRoomsをお届け中！"
+  })
+rescue => e
+  Rails.logger.error("[Scheduler] テスト失敗: #{e.message}")
+end
