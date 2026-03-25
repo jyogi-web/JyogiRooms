@@ -69,8 +69,9 @@ class RoomEntryService
     auto_closed = false
 
     visit = ActiveRecord::Base.transaction do
-      # ユーザー行ロックで同一ユーザーの同時リクエストをシリアライズ
+      # 行ロックで同一ユーザー・同一部室の同時リクエストをシリアライズ
       user.lock!
+      room.lock!
 
       visit = RoomVisit.active.for_room(room).for_user(user).first
       raise EntryError, "この部室に入室していません" unless visit
