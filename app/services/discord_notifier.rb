@@ -96,10 +96,13 @@ class DiscordNotifier
     discord_id.present? ? "<@#{discord_id}>" : (display_name || "不明なユーザー")
   end
 
+  WDAYS = %w[日 月 火 水 木 金 土].freeze
+
   def self.format_date_time(start_at, end_at)
     start_time = Time.parse(start_at).in_time_zone("Asia/Tokyo")
     end_time = Time.parse(end_at).in_time_zone("Asia/Tokyo")
-    date_str = start_time.strftime("%-m/%-d(%a)")
+    wday = WDAYS[start_time.wday]
+    date_str = start_time.strftime("%-m/%-d(#{wday})")
     "#{date_str} #{start_time.strftime("%H:%M")} ~ #{end_time.strftime("%H:%M")}"
   end
 
