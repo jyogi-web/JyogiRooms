@@ -18,6 +18,13 @@ class DiscordNotifier
     "key_unassigned" => { title: "🔑 鍵の割り当てが解除されました", color: 0xff9900 }
   }.freeze
 
+  ROOM_LABELS = {
+    "room_entered" => { title: "📱 入室しました", color: 0x00cc66 },
+    "room_exited" => { title: "📱 退室しました", color: 0xff9900 },
+    "room_opened" => { title: "🔓 部室が開きました", color: 0x0099ff },
+    "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
+  }.freeze
+
   def self.notify(type:, data:)
     return unless enabled?
 
@@ -25,6 +32,8 @@ class DiscordNotifier
       send_reservation_notification(type, data)
     elsif type.start_with?("key_")
       send_key_notification(type, data)
+    elsif type.start_with?("room_")
+      send_room_notification(type, data)
     else
       Rails.logger.error("Discord notification: unknown type #{type}")
     end
@@ -172,7 +181,22 @@ class DiscordNotifier
     })
   end
 
+  def self.send_room_notification(type, data)
+    label = ROOM_LABELS[type] || { title: "🚪 部室通知", color: 0x0099ff }
+    room_name = "#{data[:room_name]}（#{data[:room_number]}）"
+    user = format_user_mention(data[:user_discord_id], data[:user_display_name])
+
+    post_message({
+      embeds: [ {
+        title: label[:title],
+        description: "🚪 #{room_name}\n#{user}",
+        color: label[:color],
+        timestamp: Time.current.iso8601
+      } ]
+    })
+  end
+
   private_class_method :post_message, :format_user_mention, :format_date_time,
                        :send_reservation_notification, :send_key_notification,
-                       :bot_token, :channel_id
+                       :send_room_notification, :bot_token, :channel_id
 end
