@@ -73,10 +73,10 @@ class RoomEntryService
       user.lock!
       room.lock!
 
-      visit = RoomVisit.active.for_room(room).for_user(user).first
-      raise EntryError, "この部室に入室していません" unless visit
+      current_visit = RoomVisit.active.for_room(room).for_user(user).first
+      raise EntryError, "この部室に入室していません" unless current_visit
 
-      visit.update!(exited_at: Time.current)
+      current_visit.update!(exited_at: Time.current)
 
       # 入室者が0人になったら閉室
       if RoomVisit.active.for_room(room).none?
@@ -87,7 +87,7 @@ class RoomEntryService
         end
       end
 
-      visit
+      current_visit
     end
 
     # トランザクション成功後に通知
