@@ -1,0 +1,228 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-800">NFCカード管理</h1>
+
+  <!-- Flash Messages -->
+  <% if flash[:notice] %>
+    <div class="bg-green-50 text-green-700 p-4 rounded-lg text-sm">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <!-- 登録済みカード -->
+  <div class="card p-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">登録済みカード</h2>
+
+    <% if @nfc_card %>
+      <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div>
+          <p class="text-sm font-medium text-gray-800">カードUID: <%= @nfc_card.card_uid %></p>
+          <p class="text-xs text-gray-500">登録日: <%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
+        </div>
+        <%= button_to "削除", nfc_card_path(@nfc_card), method: :delete,
+            class: "px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 transition-colors",
+            form: { onsubmit: "return confirm('このカードを削除しますか？')" } %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-500">登録済みのカードはありません</p>
+    <% end %>
+  </div>
+
+  <!-- NFC登録セクション -->
+  <% unless @nfc_card %>
+  <div class="card p-6" id="nfc-registration">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">学生証を登録</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      登録を開始すると1分間カードの読み取り待ち状態になります。<br>
+      部室のNFCリーダーに学生証をかざしてください。
+    </p>
+
+    <!-- 登録前 -->
+    <div id="registration-idle">
+      <button type="button" id="start-registration-btn"
+              class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+        カード登録を開始
+      </button>
+    </div>
+
+    <!-- 登録待ち -->
+    <div id="registration-pending" class="hidden">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+        <p class="text-sm font-medium text-gray-700">カードを読み取り中...</p>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">残り時間: <span id="countdown" class="font-mono">60</span>秒</p>
+      <button type="button" id="cancel-registration-btn"
+              class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+        キャンセル
+      </button>
+    </div>
+
+    <!-- カード確認 -->
+    <div id="registration-confirm" class="hidden">
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+        <p class="text-sm font-medium text-green-700">カードを読み取りました</p>
+        <p class="text-sm text-green-600 mt-1">カードUID: <span id="detected-card-uid" class="font-mono"></span></p>
+      </div>
+      <div class="flex gap-3">
+        <button type="button" id="confirm-registration-btn"
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+          このカードを登録する
+        </button>
+        <button type="button" id="reject-registration-btn"
+                class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+          キャンセル
+        </button>
+      </div>
+    </div>
+
+    <!-- エラー表示 -->
+    <div id="registration-error" class="hidden">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <p class="text-sm text-red-700" id="error-message"></p>
+      </div>
+      <button type="button" id="retry-registration-btn"
+              class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+        再試行
+      </button>
+    </div>
+  </div>
+  <% end %>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!document.getElementById("nfc-registration")) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const headers = { "Content-Type": "application/json", "X-CSRF-Token": csrfToken };
+
+    const idleEl = document.getElementById("registration-idle");
+    const pendingEl = document.getElementById("registration-pending");
+    const confirmEl = document.getElementById("registration-confirm");
+    const errorEl = document.getElementById("registration-error");
+    const countdownEl = document.getElementById("countdown");
+    const cardUidEl = document.getElementById("detected-card-uid");
+    const errorMessageEl = document.getElementById("error-message");
+
+    let registrationId = null;
+    let pollTimer = null;
+    let countdownTimer = null;
+    let remainingSeconds = 60;
+
+    function showState(state) {
+      [idleEl, pendingEl, confirmEl, errorEl].forEach(el => el.classList.add("hidden"));
+      state.classList.remove("hidden");
+    }
+
+    function stopTimers() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    }
+
+    function showError(message) {
+      errorMessageEl.textContent = message;
+      showState(errorEl);
+      stopTimers();
+    }
+
+    // 登録開始
+    document.getElementById("start-registration-btn").addEventListener("click", async () => {
+      try {
+        const res = await fetch("/api/nfc_registrations", { method: "POST", headers });
+        const data = await res.json();
+        if (!res.ok) {
+          showError(data.errors?.join(", ") || data.error || "登録の開始に失敗しました");
+          return;
+        }
+
+        registrationId = data.id;
+        remainingSeconds = 60;
+        countdownEl.textContent = remainingSeconds;
+        showState(pendingEl);
+
+        // カウントダウン
+        countdownTimer = setInterval(() => {
+          remainingSeconds--;
+          countdownEl.textContent = remainingSeconds;
+          if (remainingSeconds <= 0) {
+            showError("タイムアウトしました。再度お試しください。");
+            deleteRegistration();
+          }
+        }, 1000);
+
+        // ポーリング（2秒間隔）
+        pollTimer = setInterval(async () => {
+          try {
+            const pollRes = await fetch(`/api/nfc_registrations/${registrationId}`, { headers: { "Content-Type": "application/json" } });
+            if (!pollRes.ok) return;
+            const pollData = await pollRes.json();
+
+            if (pollData.completed) {
+              stopTimers();
+              cardUidEl.textContent = pollData.card_uid;
+              showState(confirmEl);
+            } else if (pollData.expired) {
+              showError("タイムアウトしました。再度お試しください。");
+            }
+          } catch (e) {
+            // ポーリングエラーは無視（次回リトライ）
+          }
+        }, 2000);
+      } catch (e) {
+        showError("通信エラーが発生しました");
+      }
+    });
+
+    // キャンセル
+    document.getElementById("cancel-registration-btn").addEventListener("click", () => {
+      stopTimers();
+      deleteRegistration();
+      showState(idleEl);
+    });
+
+    // 確定
+    document.getElementById("confirm-registration-btn").addEventListener("click", async () => {
+      try {
+        const res = await fetch(`/api/nfc_registrations/${registrationId}/confirm`, {
+          method: "PATCH", headers
+        });
+        const data = await res.json();
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          showError(data.error || "登録に失敗しました");
+        }
+      } catch (e) {
+        showError("通信エラーが発生しました");
+      }
+    });
+
+    // 確認画面でキャンセル
+    document.getElementById("reject-registration-btn").addEventListener("click", () => {
+      deleteRegistration();
+      showState(idleEl);
+    });
+
+    // 再試行
+    document.getElementById("retry-registration-btn").addEventListener("click", () => {
+      showState(idleEl);
+    });
+
+    async function deleteRegistration() {
+      if (!registrationId) return;
+      try {
+        await fetch(`/api/nfc_registrations/${registrationId}`, {
+          method: "DELETE", headers
+        });
+      } catch (e) {
+        // 削除失敗は無視
+      }
+      registrationId = null;
+    }
+  });
+</script>
