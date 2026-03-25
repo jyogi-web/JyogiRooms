@@ -66,6 +66,6 @@ group :test do
   gem "minitest", "< 7.0"
 end
 
-gem "view_component", "~> 4.2"
+gem "view_component", "~> 4.5"
 
 gem "rufus-scheduler", "~> 3.9"
