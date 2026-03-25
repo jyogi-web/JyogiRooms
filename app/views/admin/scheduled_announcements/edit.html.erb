@@ -12,7 +12,7 @@
 <% end %>
 
 <div class="card p-6 max-w-2xl">
-  <%= form_with(model: [:admin, @announcement], url: admin_scheduled_announcement_path(@announcement), method: :patch) do |f| %>
+  <%= form_with(model: [:admin, @announcement], url: admin_scheduled_announcement_path, method: :patch) do |f| %>
     <% if @announcement.errors.any? %>
       <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
         <ul class="text-sm text-red-700">
