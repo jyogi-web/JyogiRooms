@@ -8,6 +8,9 @@ Rails.application.routes.draw do
     resource :key, only: [] do
       get :transfer_form
       post :transfer
+      get :assign_form
+      post :assign
+      post :unassign
     end
   end
 
@@ -30,6 +33,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :reservations, only: %i[index create destroy]
+    resources :keys, only: %i[index]
 
     # ユーザー情報
     get "users/me", to: "users#me"
@@ -42,6 +46,7 @@ Rails.application.routes.draw do
     resources :roles, only: %i[index show update]
     resources :users, only: %i[show update]
     resources :key_transfer_logs, only: %i[index show]
+    resource :scheduled_announcement, only: %i[edit update]
   end
 
   if Rails.env.test?

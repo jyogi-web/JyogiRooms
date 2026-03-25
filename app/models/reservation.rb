@@ -74,13 +74,16 @@ class Reservation < ApplicationRecord
 
     # Check for overlapping reservations:
     # (StartA < EndB) AND (EndA > StartB)
-    existing_reservation = Reservation
-                           .where.not(id: id)
-                           .where("start_at < ? AND end_at > ?", end_at, start_at)
-                           .exists?
+    overlapping = Reservation
+                    .where.not(id: id)
+                    .where("start_at < ? AND end_at > ?", end_at, start_at)
+                    .includes(:user)
+                    .first
 
-    if existing_reservation
-      errors.add(:base, "指定された時間は既に予約が入っています")
+    if overlapping
+      time_fmt = ->(t) { t.strftime("%H:%M") }
+      holder = overlapping.user&.display_name || "不明"
+      errors.add(:base, "指定された時間は既に予約が入っています（#{time_fmt.call(overlapping.start_at)}〜#{time_fmt.call(overlapping.end_at)} #{holder}）")
     end
   end
 

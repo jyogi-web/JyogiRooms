@@ -1,13 +1,15 @@
-name: Deploy to Cloud Run
+name: Deploy Discord Bot to Cloud Run
 
 on:
   push:
     branches: [develop]
+    paths:
+      - 'discord-bot/**'
 
 env:
   PROJECT_ID: jyogirooms
   REGION: asia-northeast1
-  IMAGE: asia-northeast1-docker.pkg.dev/jyogirooms/jyogi-rooms/app
+  IMAGE: asia-northeast1-docker.pkg.dev/jyogirooms/jyogi-rooms/discord-bot
 
 jobs:
   deploy:
@@ -38,7 +40,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./discord-bot
           platforms: linux/amd64
           push: true
           tags: |
@@ -50,7 +52,8 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: jyogirooms
+          service: jyogi-discord-bot
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}:${{ github.sha }}
           project_id: ${{ env.PROJECT_ID }}
+          flags: '--port=3000'

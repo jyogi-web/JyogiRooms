@@ -2,6 +2,18 @@ import 'dotenv/config';
 
 // Rails API Base URL
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
+const API_TIMEOUT_MS = 45000; // Cloud Runのコールドスタート(約30秒)を考慮
+
+export class ApiError extends Error {
+    constructor(
+        message: string,
+        public readonly status: number,
+        public readonly validationErrors: string[]
+    ) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
 
 export interface Reservation {
     id: number;
@@ -17,6 +29,25 @@ export interface Reservation {
         discord_id?: string;
         avatar_url?: string;
     };
+}
+
+export interface KeyHolder {
+    id: number;
+    username: string;
+    display_name: string;
+    discord_id?: string;
+}
+
+export interface KeyInfo {
+    id: number;
+    holder: KeyHolder | null;
+}
+
+export interface RoomKeys {
+    room_id: number;
+    room_name: string;
+    room_number: string;
+    keys: KeyInfo[];
 }
 
 export const api = {
@@ -36,7 +67,7 @@ export const api = {
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
         try {
             const headers = {
@@ -55,9 +86,35 @@ export const api = {
     },
 
     /**
+     * 各部室の鍵持ち情報を取得する
+     * @returns 部室ごとの鍵情報の配列
+     */
+    async fetchKeys(): Promise<RoomKeys[]> {
+        const url = new URL(`${API_BASE_URL}/keys`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+        try {
+            const headers = {
+                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
+            };
+            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json() as RoomKeys[];
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    },
+
+    /**
      * 予約を作成する
      * @param reservation 予約情報
      * @param discordUserId DiscordユーザーID (ユーザー特定用)
+     * @returns 作成された予約
      */
     async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }, discordUserId?: string): Promise<Reservation> {
         const url = new URL(`${API_BASE_URL}/reservations`);
@@ -71,7 +128,7 @@ export const api = {
         });
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
         try {
             const response = await fetch(url.toString(), {
@@ -82,19 +139,19 @@ export const api = {
             });
 
             if (!response.ok) {
-                // Try to read error message from body if possible, otherwise use status text
-                let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+                let errorBody: any = null;
                 try {
-                    const errorBody = await response.json();
-                    if (errorBody && errorBody.error) {
-                        errorMessage += ` - ${errorBody.error}`;
-                    } else if (errorBody && errorBody.errors) {
-                        errorMessage += ` - ${JSON.stringify(errorBody.errors)}`;
-                    }
-                } catch (e) {
+                    errorBody = await response.json();
+                } catch {
                     // ignore json parse error
                 }
-                throw new Error(errorMessage);
+
+                const err = new ApiError(
+                    `API Error: ${response.status} ${response.statusText}`,
+                    response.status,
+                    errorBody?.errors || (errorBody?.error ? [errorBody.error] : [])
+                );
+                throw err;
             }
 
             return await response.json() as Reservation;

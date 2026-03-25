@@ -9,7 +9,7 @@
   <!-- Existing Reservations Section -->
   <%= render partial: "existing_reservations", locals: { reservations: @existing_reservations, show_empty_message: params[:date].present? } %>
 
-  <div class="card p-6">
+  <div class="card p-4 sm:p-6 overflow-hidden">
     <%= render partial: "form", locals: { reservation: @reservation, submit_text: "予約を作成する" } %>
   </div>
 </div>

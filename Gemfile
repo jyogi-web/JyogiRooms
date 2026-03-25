@@ -67,3 +67,5 @@ group :test do
 end
 
 gem "view_component", "~> 4.2"
+
+gem "rufus-scheduler", "~> 3.9"

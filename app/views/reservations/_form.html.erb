@@ -28,27 +28,29 @@
   </div>
 
   <!-- Time Selection Grid -->
-  <div class="grid grid-cols-2 gap-4">
-      <div>
+  <div class="grid grid-cols-2 gap-2 sm:gap-4 overflow-hidden">
+      <div class="min-w-0 overflow-hidden">
        <%= f.label :start_time, "開始時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
        <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
           </div>
-          <%= f.time_field :start_time, 
-              class: time_field_class(reservation, :start_time), 
-              required: true %>
+          <%= f.time_field :start_time,
+              class: time_field_class(reservation, :start_time),
+              required: true,
+              data: { target: "start-time" } %>
        </div>
     </div>
-    <div>
+    <div class="min-w-0 overflow-hidden">
       <%= f.label :end_time, "終了時間", class: "block text-sm font-bold text-gray-700 mb-2" %>
        <div class="relative">
          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
            <%= render Icons::ClockComponent.new(classes: "h-5 w-5 text-gray-400") %>
          </div>
-        <%= f.time_field :end_time, 
-            class: time_field_class(reservation, :end_time), 
-            required: true %>
+        <%= f.time_field :end_time,
+            class: time_field_class(reservation, :end_time),
+            required: true,
+            data: { target: "end-time" } %>
       </div>
     </div>
   </div>
@@ -63,3 +65,17 @@
     <%= f.submit submit_text, class: "btn btn-primary w-full justify-center py-3 text-base shadow-lg shadow-primary/30" %>
   </div>
 <% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const startTime = document.querySelector('[data-target="start-time"]');
+    const endTime = document.querySelector('[data-target="end-time"]');
+    if (startTime && endTime) {
+      startTime.addEventListener("change", function() {
+        if (!endTime.value || endTime.value <= startTime.value) {
+          endTime.value = startTime.value;
+        }
+      });
+    }
+  });
+</script>
