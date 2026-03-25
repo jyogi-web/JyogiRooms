@@ -3,6 +3,9 @@ class User < ApplicationRecord
   has_many :reservations
   has_many :access_tokens, dependent: :destroy
   has_many :keys, dependent: :destroy
+  has_many :nfc_cards, dependent: :destroy
+  has_many :room_visits, dependent: :restrict_with_error
+  has_many :nfc_registration_requests, dependent: :destroy
 
   # Callbacks
   after_create :assign_default_role
