@@ -1,26 +1,32 @@
 # frozen_string_literal: true
 
-# Discord Botに通知を送信するサービス
+# Discord REST APIに直接通知を送信するサービス
 # 通知失敗はログに記録するのみで、メインの処理をブロックしない
 class DiscordNotifier
+  DISCORD_API_BASE = "https://discord.com/api/v10"
   TIMEOUT_SECONDS = 5
+
+  RESERVATION_LABELS = {
+    "reservation_created" => { title: "📅 予約が作成されました", color: 0x00cc66 },
+    "reservation_updated" => { title: "📝 予約が更新されました", color: 0xff9900 },
+    "reservation_destroyed" => { title: "🗑️ 予約が削除されました", color: 0xff3333 }
+  }.freeze
+
+  KEY_LABELS = {
+    "key_transferred" => { title: "🔑 鍵が譲渡されました", color: 0x0099ff },
+    "key_assigned" => { title: "🔑 鍵が割り当てられました", color: 0x00cc66 },
+    "key_unassigned" => { title: "🔑 鍵の割り当てが解除されました", color: 0xff9900 }
+  }.freeze
 
   def self.notify(type:, data:)
     return unless enabled?
 
-    uri = URI("#{bot_base_url.chomp('/')}/notify")
-    request = Net::HTTP::Post.new(uri.request_uri)
-    request["Content-Type"] = "application/json"
-    request["X-Api-Key"] = notify_api_key
-    request.body = { type: type, data: data }.to_json
-
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = uri.scheme == "https"
-    http.open_timeout = TIMEOUT_SECONDS
-    http.read_timeout = TIMEOUT_SECONDS
-    response = http.request(request)
-    unless response.code.to_i.between?(200, 299)
-      Rails.logger.error("Discord notification HTTP error (#{type}): #{response.code} #{response.body}")
+    if type.start_with?("reservation_")
+      send_reservation_notification(type, data)
+    elsif type.start_with?("key_")
+      send_key_notification(type, data)
+    else
+      Rails.logger.error("Discord notification: unknown type #{type}")
     end
   rescue => e
     Rails.logger.error("Discord notification failed (#{type}): #{e.message}")
@@ -57,14 +63,104 @@ class DiscordNotifier
   end
 
   def self.enabled?
-    bot_base_url.present? && notify_api_key.present?
+    bot_token.present? && channel_id.present?
   end
 
-  def self.bot_base_url
-    ENV["DISCORD_BOT_URL"]
+  def self.bot_token
+    ENV["DISCORD_BOT_TOKEN"]
   end
 
-  def self.notify_api_key
-    ENV["DISCORD_NOTIFY_API_KEY"]
+  def self.channel_id
+    ENV["ANNOUNCE_CHANNEL_ID"]
   end
+
+  # Discord APIにメッセージを送信する
+  def self.post_message(body)
+    uri = URI("#{DISCORD_API_BASE}/channels/#{channel_id}/messages")
+    request = Net::HTTP::Post.new(uri.request_uri)
+    request["Content-Type"] = "application/json"
+    request["Authorization"] = "Bot #{bot_token}"
+    request.body = body.to_json
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.open_timeout = TIMEOUT_SECONDS
+    http.read_timeout = TIMEOUT_SECONDS
+    response = http.request(request)
+    unless response.code.to_i.between?(200, 299)
+      Rails.logger.error("Discord API error: #{response.code} #{response.body}")
+    end
+  end
+
+  def self.format_user_mention(discord_id, display_name)
+    discord_id.present? ? "<@#{discord_id}>" : (display_name || "不明なユーザー")
+  end
+
+  def self.format_date_time(start_at, end_at)
+    start_time = Time.parse(start_at).in_time_zone("Asia/Tokyo")
+    end_time = Time.parse(end_at).in_time_zone("Asia/Tokyo")
+    date_str = start_time.strftime("%-m/%-d(%a)")
+    "#{date_str} #{start_time.strftime("%H:%M")} ~ #{end_time.strftime("%H:%M")}"
+  end
+
+  def self.send_reservation_notification(type, data)
+    label = RESERVATION_LABELS[type] || { title: "📅 予約通知", color: 0x0099ff }
+    user = format_user_mention(data[:user_discord_id], data[:user_display_name])
+    date_time = format_date_time(data[:start_at], data[:end_at])
+    purpose = data[:purpose].presence || "なし"
+
+    description = "#{user} の予約\n📅 #{date_time}\n📝 #{purpose}"
+
+    post_message({
+      embeds: [ {
+        title: label[:title],
+        description: description,
+        color: label[:color],
+        timestamp: Time.current.iso8601
+      } ]
+    })
+
+    # 予約作成時のみ鍵持ちにメンション
+    if type == "reservation_created"
+      holders = (data[:key_holders] || []).select { |h| h[:discord_id].present? }
+      if holders.any?
+        mentions = holders.map { |h| "<@#{h[:discord_id]}>" }.join(" ")
+        post_message({
+          content: "🔑 #{mentions}\n上記の日時に部室を開けられる方はリアクションをお願いします！"
+        })
+      end
+    end
+  end
+
+  def self.send_key_notification(type, data)
+    label = KEY_LABELS[type] || { title: "🔑 鍵通知", color: 0x0099ff }
+    room_name = "#{data[:room_name]}（#{data[:room_number]}）"
+
+    description = "🚪 #{room_name}\n"
+    case type
+    when "key_transferred"
+      from = format_user_mention(data[:from_user_discord_id], data[:from_user_display_name])
+      to = format_user_mention(data[:to_user_discord_id], data[:to_user_display_name])
+      description += "#{from} → #{to}"
+    when "key_assigned"
+      to = format_user_mention(data[:to_user_discord_id], data[:to_user_display_name])
+      description += "#{to} に割り当て"
+    when "key_unassigned"
+      from = format_user_mention(data[:from_user_discord_id], data[:from_user_display_name])
+      description += "#{from} の割り当てを解除"
+    end
+
+    post_message({
+      embeds: [ {
+        title: label[:title],
+        description: description,
+        color: label[:color],
+        timestamp: Time.current.iso8601
+      } ]
+    })
+  end
+
+  private_class_method :post_message, :format_user_mention, :format_date_time,
+                       :send_reservation_notification, :send_key_notification,
+                       :bot_token, :channel_id
 end
