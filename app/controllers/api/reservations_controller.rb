@@ -49,6 +49,7 @@ module Api
       reservation = user.reservations.build(reservation_params)
 
       if reservation.save
+        DiscordNotifier.notify(type: "reservation_created", data: DiscordNotifier.reservation_data(reservation))
         render json: reservation, status: :created
       else
         render json: { errors: reservation.errors.full_messages }, status: :unprocessable_entity
