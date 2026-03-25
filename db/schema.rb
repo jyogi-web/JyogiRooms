@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -98,6 +98,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000004) do
     t.index ["opened_by_id"], name: "index_room_sessions_on_opened_by_id"
     t.index ["room_id", "closed_at"], name: "index_room_sessions_on_room_id_and_closed_at"
     t.index ["room_id"], name: "index_room_sessions_on_room_id"
+    t.index ["room_id"], name: "index_room_sessions_on_room_id_active_unique", unique: true, where: "(closed_at IS NULL)"
   end
 
   create_table "room_visits", force: :cascade do |t|
