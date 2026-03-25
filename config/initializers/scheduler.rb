@@ -2,6 +2,9 @@
 
 return unless defined?(Rails::Server) || ENV["SOLID_QUEUE_IN_PUMA"]
 
+# 複数ワーカー(WEB_CONCURRENCY > 1)時に重複起動を防ぐ
+return if ENV.fetch("WEB_CONCURRENCY", "1").to_i > 1 && !ENV["SCHEDULER_ENABLED"]
+
 require "rufus-scheduler"
 
 scheduler = Rufus::Scheduler.singleton
