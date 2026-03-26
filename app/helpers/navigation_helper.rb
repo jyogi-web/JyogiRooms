@@ -2,9 +2,9 @@ module NavigationHelper
   def nav_items
     items = [
       { path: root_path, icon: :home, label: "ホーム", active: current_page?(root_path) },
+      { path: room_statuses_path, icon: :door, label: "部室状況", active: current_page?(room_statuses_path) },
       { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) },
-      { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) },
-      { path: room_statuses_path, icon: :door, label: "部室状況", active: current_page?(room_statuses_path) }
+      { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) }
     ]
 
     # 管理者のみ管理画面へのリンクを表示
