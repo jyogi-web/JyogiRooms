@@ -27,7 +27,7 @@
         <h3 class="text-lg font-bold text-gray-800 mb-4"><%= room.name %></h3>
         
         <% if room.keys.any? %>
-          <div class="flex flex-wrap gap-x-2 gap-y-2 pb-1 md:hidden">
+          <div class="flex flex-wrap gap-x-1 min-[390px]:gap-x-2 gap-y-2 pb-1 md:hidden">
             <% room.keys.each do |key| %>
               <div class="w-14 flex flex-col items-center gap-1">
                 <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
