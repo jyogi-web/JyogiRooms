@@ -182,12 +182,17 @@
     }
 
     // 登録開始
-    document.getElementById("start-registration-btn").addEventListener("click", async () => {
+    const startBtn = document.getElementById("start-registration-btn");
+    startBtn.addEventListener("click", async () => {
+      if (startBtn.disabled) return;
+      startBtn.disabled = true;
+
       try {
         const res = await fetch("/api/nfc_registrations", { method: "POST", headers });
         const data = await res.json();
         if (!res.ok) {
           showError(data.errors?.join(", ") || data.error || "登録の開始に失敗しました");
+          startBtn.disabled = false;
           return;
         }
 
@@ -216,8 +221,9 @@
             if (pollData.completed) {
               stopTimers();
               cardUidEl.textContent = pollData.card_uid;
+              cardInfoEl.replaceChildren();
+              cardInfoEl.classList.add("hidden");
               if (pollData.student_name || pollData.student_id) {
-                cardInfoEl.replaceChildren();
                 if (pollData.student_name) {
                   const nameEl = document.createElement("p");
                   nameEl.className = "text-base font-bold text-gray-800";
@@ -242,6 +248,8 @@
         }, 2000);
       } catch (e) {
         showError("通信エラーが発生しました");
+      } finally {
+        startBtn.disabled = false;
       }
     });
 

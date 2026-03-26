@@ -44,13 +44,24 @@ Raspi側の役割は **NFCカードのUIDを読み取り、Rails APIにPOSTす�
 
 ### レスポンス
 
-**成功時（200 OK）:**
+**入室/退室時（200 OK）:**
 
 ```json
 {
   "action": "enter",
   "user": { "id": 1, "display_name": "田中太郎" },
   "room": { "id": 3, "name": "第3部室" },
+  "timestamp": "2026-03-25T15:00:00+09:00"
+}
+```
+
+**カード登録時（200 OK）:**
+
+```json
+{
+  "action": "registration",
+  "user": { "id": 1, "display_name": "田中太郎" },
+  "card_uid": "04A1B2C3D4E5F6",
   "timestamp": "2026-03-25T15:00:00+09:00"
 }
 ```

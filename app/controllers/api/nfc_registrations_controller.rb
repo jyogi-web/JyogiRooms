@@ -53,8 +53,10 @@ module Api
           student_id: @registration.student_id,
           student_name: @registration.student_name
         )
-      rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+      rescue ActiveRecord::RecordNotUnique
         return render json: { error: "このカードは既に登録されています" }, status: :unprocessable_entity
+      rescue ActiveRecord::RecordInvalid => e
+        return render json: { error: e.record.errors.full_messages.join(", ") }, status: :unprocessable_entity
       end
 
       @registration.destroy!
