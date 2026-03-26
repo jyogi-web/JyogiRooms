@@ -52,11 +52,12 @@ module Api
       end
 
       def entry_json(action, visit, user)
+        timestamp = action == "exit" ? visit.exited_at : visit.entered_at
         {
           action: action,
           user: { id: user.id, display_name: user.display_name },
           room: { id: @room.id, name: @room.name },
-          timestamp: visit.entered_at.iso8601
+          timestamp: timestamp.iso8601
         }
       end
     end

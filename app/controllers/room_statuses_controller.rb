@@ -6,9 +6,14 @@ class RoomStatusesController < ApplicationController
   # GET /room_statuses
   def index
     @rooms = Room.includes(keys: :user).order(room_number: :desc)
+
+    room_ids = @rooms.map(&:id)
+    sessions_by_room = RoomSession.active.where(room_id: room_ids).includes(:opened_by).index_by(&:room_id)
+    visits_by_room = RoomVisit.active.where(room_id: room_ids).includes(:user).group_by(&:room_id)
+
     @room_data = @rooms.map do |room|
-      session = RoomSession.active.for_room(room).first
-      occupants = RoomVisit.active.for_room(room).includes(:user).map do |visit|
+      session = sessions_by_room[room.id]
+      occupants = (visits_by_room[room.id] || []).map do |visit|
         { user: visit.user, entered_at: visit.entered_at }
       end
 
