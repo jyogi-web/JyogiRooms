@@ -1,0 +1,303 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-800">NFCカード管理</h1>
+
+  <!-- Flash Messages -->
+  <% if flash[:notice] %>
+    <div class="bg-green-50 text-green-700 p-4 rounded-lg text-sm">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <!-- 登録済みカード -->
+  <% if @nfc_card %>
+  <div class="card p-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">登録済みカード</h2>
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"></path>
+          </svg>
+          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+        </div>
+        <span class="text-xs text-gray-500"><%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d") %> 登録</span>
+      </div>
+      <% if @nfc_card.student_name.present? || @nfc_card.student_id.present? %>
+        <div class="mb-3">
+          <% if @nfc_card.student_name.present? %>
+            <p class="text-base font-bold text-gray-800"><%= @nfc_card.student_name %></p>
+          <% end %>
+          <% if @nfc_card.student_id.present? %>
+            <p class="text-sm text-gray-600"><%= @nfc_card.student_id %></p>
+          <% end %>
+        </div>
+      <% end %>
+      <p class="text-xs font-mono text-gray-500 tracking-wider"><%= @nfc_card.card_uid %></p>
+    </div>
+    <div class="mt-3 flex justify-end">
+      <%= button_to "カードを削除", nfc_card_path(@nfc_card), method: :delete,
+          class: "px-3 py-1.5 text-red-500 text-xs font-medium hover:text-red-700 transition-colors",
+          form: { onsubmit: "return confirm('このカードを削除しますか？')" } %>
+    </div>
+  </div>
+  <% end %>
+
+  <!-- NFC登録セクション -->
+  <% unless @nfc_card %>
+  <div class="card p-6" id="nfc-registration">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">学生証を登録</h2>
+    <p class="text-sm text-gray-600 mb-4">
+      登録を開始すると1分間カードの読み取り待ち状態になります。<br>
+      部室のNFCリーダーに学生証をかざしてください。
+    </p>
+
+    <!-- 登録前 -->
+    <div id="registration-idle">
+      <button type="button" id="start-registration-btn"
+              class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+        カード登録を開始
+      </button>
+    </div>
+
+    <!-- 登録待ち -->
+    <div id="registration-pending" class="hidden">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+        <p class="text-sm font-medium text-gray-700">カードを読み取り中...</p>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">残り時間: <span id="countdown" class="font-mono">60</span>秒</p>
+      <button type="button" id="cancel-registration-btn"
+              class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+        キャンセル
+      </button>
+    </div>
+
+    <!-- カード確認 -->
+    <div id="registration-confirm" class="hidden">
+      <p class="text-sm font-medium text-green-600 mb-3">カードを読み取りました</p>
+      <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"></path>
+          </svg>
+          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+        </div>
+        <div id="detected-card-info" class="mb-3 hidden"></div>
+        <p class="text-xs font-mono text-gray-500 tracking-wider"><span id="detected-card-uid"></span></p>
+      </div>
+      <div class="flex gap-3">
+        <button type="button" id="confirm-registration-btn"
+                class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+          このカードを登録する
+        </button>
+        <button type="button" id="reject-registration-btn"
+                class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition-colors">
+          キャンセル
+        </button>
+      </div>
+    </div>
+
+    <!-- エラー表示 -->
+    <div id="registration-error" class="hidden">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <p class="text-sm text-red-700" id="error-message"></p>
+      </div>
+      <button type="button" id="retry-registration-btn"
+              class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors">
+        再試行
+      </button>
+    </div>
+  </div>
+  <% end %>
+
+  <!-- 使い方ガイド -->
+  <div class="card p-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">使い方</h2>
+    <div class="space-y-4">
+      <div>
+        <h3 class="text-sm font-bold text-gray-700 mb-2">学生証の登録方法</h3>
+        <ol class="text-sm text-gray-600 list-decimal list-inside space-y-1">
+          <li>「カード登録を開始」ボタンを押す</li>
+          <li>1分以内に部室のNFCリーダーに学生証をかざす</li>
+          <li>画面に表示されたカード情報を確認して「登録する」を押す</li>
+        </ol>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-gray-700 mb-2">入退室の仕方</h3>
+        <p class="text-sm text-gray-600">
+          登録済みの学生証を部室のNFCリーダーにかざすだけで入退室できます。<br>
+          かざすたびに入室と退室が自動で切り替わります。
+        </p>
+      </div>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <p class="text-xs text-blue-700">
+          部室が閉まっている状態でかざすと自動で開室されます。<br>
+          最後の1人が退室すると自動で閉室されます。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!document.getElementById("nfc-registration")) return;
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const headers = { "Content-Type": "application/json", "X-CSRF-Token": csrfToken };
+
+    const idleEl = document.getElementById("registration-idle");
+    const pendingEl = document.getElementById("registration-pending");
+    const confirmEl = document.getElementById("registration-confirm");
+    const errorEl = document.getElementById("registration-error");
+    const countdownEl = document.getElementById("countdown");
+    const cardUidEl = document.getElementById("detected-card-uid");
+    const cardInfoEl = document.getElementById("detected-card-info");
+    const errorMessageEl = document.getElementById("error-message");
+
+    let registrationId = null;
+    let pollTimer = null;
+    let countdownTimer = null;
+    let remainingSeconds = 60;
+
+    function showState(state) {
+      [idleEl, pendingEl, confirmEl, errorEl].forEach(el => el.classList.add("hidden"));
+      state.classList.remove("hidden");
+    }
+
+    function stopTimers() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    }
+
+    function showError(message) {
+      errorMessageEl.textContent = message;
+      showState(errorEl);
+      stopTimers();
+    }
+
+    // 登録開始
+    const startBtn = document.getElementById("start-registration-btn");
+    startBtn.addEventListener("click", async () => {
+      if (startBtn.disabled) return;
+      startBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/nfc_registrations", { method: "POST", headers });
+        const data = await res.json();
+        if (!res.ok) {
+          showError(data.errors?.join(", ") || data.error || "登録の開始に失敗しました");
+          startBtn.disabled = false;
+          return;
+        }
+
+        registrationId = data.id;
+        remainingSeconds = 60;
+        countdownEl.textContent = remainingSeconds;
+        showState(pendingEl);
+
+        // カウントダウン
+        countdownTimer = setInterval(() => {
+          remainingSeconds--;
+          countdownEl.textContent = remainingSeconds;
+          if (remainingSeconds <= 0) {
+            showError("タイムアウトしました。再度お試しください。");
+            deleteRegistration();
+          }
+        }, 1000);
+
+        // ポーリング（2秒間隔）
+        pollTimer = setInterval(async () => {
+          try {
+            const pollRes = await fetch(`/api/nfc_registrations/${registrationId}`, { headers: { "Content-Type": "application/json" } });
+            if (!pollRes.ok) return;
+            const pollData = await pollRes.json();
+
+            if (pollData.completed) {
+              stopTimers();
+              cardUidEl.textContent = pollData.card_uid;
+              cardInfoEl.replaceChildren();
+              cardInfoEl.classList.add("hidden");
+              if (pollData.student_name || pollData.student_id) {
+                if (pollData.student_name) {
+                  const nameEl = document.createElement("p");
+                  nameEl.className = "text-base font-bold text-gray-800";
+                  nameEl.textContent = pollData.student_name;
+                  cardInfoEl.appendChild(nameEl);
+                }
+                if (pollData.student_id) {
+                  const idEl = document.createElement("p");
+                  idEl.className = "text-sm text-gray-600";
+                  idEl.textContent = pollData.student_id;
+                  cardInfoEl.appendChild(idEl);
+                }
+                cardInfoEl.classList.remove("hidden");
+              }
+              showState(confirmEl);
+            } else if (pollData.expired) {
+              showError("タイムアウトしました。再度お試しください。");
+            }
+          } catch (e) {
+            // ポーリングエラーは無視（次回リトライ）
+          }
+        }, 2000);
+      } catch (e) {
+        showError("通信エラーが発生しました");
+      } finally {
+        startBtn.disabled = false;
+      }
+    });
+
+    // キャンセル
+    document.getElementById("cancel-registration-btn").addEventListener("click", () => {
+      stopTimers();
+      deleteRegistration();
+      showState(idleEl);
+    });
+
+    // 確定
+    document.getElementById("confirm-registration-btn").addEventListener("click", async () => {
+      try {
+        const res = await fetch(`/api/nfc_registrations/${registrationId}/confirm`, {
+          method: "PATCH", headers
+        });
+        const data = await res.json();
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          showError(data.error || "登録に失敗しました");
+        }
+      } catch (e) {
+        showError("通信エラーが発生しました");
+      }
+    });
+
+    // 確認画面でキャンセル
+    document.getElementById("reject-registration-btn").addEventListener("click", () => {
+      deleteRegistration();
+      showState(idleEl);
+    });
+
+    // 再試行
+    document.getElementById("retry-registration-btn").addEventListener("click", () => {
+      showState(idleEl);
+    });
+
+    async function deleteRegistration() {
+      if (!registrationId) return;
+      try {
+        await fetch(`/api/nfc_registrations/${registrationId}`, {
+          method: "DELETE", headers
+        });
+      } catch (e) {
+        // 削除失敗は無視
+      }
+      registrationId = null;
+    }
+  });
+</script>
