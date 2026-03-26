@@ -10,6 +10,13 @@ function roomActionUrls(path: string): URL[] {
     try {
         const parsed = new URL(API_BASE_URL);
         const pathname = parsed.pathname.replace(/\/+$/, '');
+
+        if (pathname) {
+            urls.push(new URL(`${parsed.origin}${path}`));
+        }
+
+        urls.push(new URL(`${parsed.origin}/api${path}`));
+
         if (!pathname.endsWith('/api')) {
             urls.push(new URL(`${API_BASE_URL}/api${path}`));
         }
