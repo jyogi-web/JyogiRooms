@@ -4,6 +4,12 @@ Rails.application.routes.draw do
   resources :reservations, except: [ :show ]
   resources :keys, only: [ :index ]
   resources :nfc_cards, only: %i[index destroy]
+  resources :room_statuses, only: %i[index] do
+    member do
+      post :exit_room
+      post :close_room
+    end
+  end
 
   resources :rooms, only: [] do
     resource :key, only: [] do
@@ -40,9 +46,14 @@ Rails.application.routes.draw do
     get "users/me", to: "users#me"
     resources :users, only: %i[index show create update destroy]
 
-    # NFC入退室
+    # 部室API
     resources :rooms, only: [] do
       post :touch, to: "rooms/touches#create"
+      post :enter, to: "rooms/entries#enter"
+      post :exit, to: "rooms/entries#exit"
+      post :open, to: "rooms/states#open"
+      post :close, to: "rooms/states#close"
+      get :status, to: "rooms/statuses#show"
     end
 
     # NFC登録
