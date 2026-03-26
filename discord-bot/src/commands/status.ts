@@ -36,9 +36,16 @@ export const statusCommand = {
             const MAX_LENGTH = 4096;
             let description = '';
 
-            for (const r of targetRooms) {
-                const status = await api.fetchRoomStatus(r.room_id);
-                const section = buildStatusSection(status);
+            const statusResults = await Promise.allSettled(
+                targetRooms.map((r) => api.fetchRoomStatus(r.room_id))
+            );
+
+            for (const [index, result] of statusResults.entries()) {
+                const roomInfo = targetRooms[index];
+                const section = result.status === 'fulfilled'
+                    ? buildStatusSection(result.value)
+                    : buildFailedSection(roomInfo.room_name);
+
                 if (description.length + section.length + 50 > MAX_LENGTH) {
                     description += '...省略: 表示しきれない部室があります';
                     break;
@@ -66,9 +73,7 @@ function buildStatusSection(status: {
     let section = `### 🚪 ${status.room.name}\n${stateEmoji}`;
 
     if (status.is_open && status.opened_by && status.opened_at) {
-        const time = new Date(status.opened_at).toLocaleTimeString('ja-JP', {
-            hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo'
-        });
+        const time = formatTime(status.opened_at);
         section += ` （${status.opened_by.display_name}が${time}に開室）`;
     }
     section += '\n';
@@ -78,12 +83,25 @@ function buildStatusSection(status: {
     } else {
         section += `**入室中: ${status.occupant_count}人**\n`;
         for (const occupant of status.occupants) {
-            const time = new Date(occupant.entered_at).toLocaleTimeString('ja-JP', {
-                hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo'
-            });
+            const time = formatTime(occupant.entered_at);
             section += `・${occupant.display_name}（${time}〜）\n`;
         }
     }
 
     return section;
+}
+
+function buildFailedSection(roomName: string): string {
+    return `### 🚪 ${roomName}\n⚠️ 状況取得に失敗しました\n`;
+}
+
+function formatTime(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '--:--';
+    }
+
+    return date.toLocaleTimeString('ja-JP', {
+        hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo'
+    });
 }
