@@ -23,26 +23,27 @@
   <%# Key Holders %>
   <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
     <% @rooms.each do |room| %>
+      <% assigned_keys = room.keys.select { |key| key.user.present? } %>
       <div class="card p-5">
         <h3 class="text-lg font-bold text-gray-800 mb-4"><%= room.name %></h3>
         
-        <% if room.keys.any? %>
+        <% if assigned_keys.any? %>
           <div class="flex flex-wrap gap-x-1 min-[390px]:gap-x-2 gap-y-2 pb-1 md:hidden">
-            <% room.keys.each do |key| %>
+            <% assigned_keys.each do |key| %>
               <div class="w-14 flex flex-col items-center gap-1">
                 <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
-                <p class="w-full text-xs text-gray-600 leading-none text-center truncate"><%= key.user&.display_name || "Unknown" %></p>
+                <p class="w-full text-xs text-gray-600 leading-none text-center truncate"><%= key.user.display_name %></p>
               </div>
             <% end %>
           </div>
 
           <div class="hidden md:flex md:flex-wrap md:gap-2">
-            <% room.keys.each do |key| %>
+            <% assigned_keys.each do |key| %>
               <div class="relative group cursor-pointer">
                 <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
 
                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                  <%= key.user&.display_name || "Unknown" %>
+                  <%= key.user.display_name %>
                 </div>
               </div>
             <% end %>
