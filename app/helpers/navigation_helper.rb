@@ -4,7 +4,7 @@ module NavigationHelper
       { path: root_path, icon: :home, label: "ホーム", active: current_page?(root_path) },
       { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) },
       { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) },
-      { path: room_statuses_path, icon: :building, label: "部室状況", active: current_page?(room_statuses_path) }
+      { path: room_statuses_path, icon: :door, label: "部室状況", active: current_page?(room_statuses_path) }
     ]
 
     # 管理者のみ管理画面へのリンクを表示
@@ -25,8 +25,8 @@ module NavigationHelper
                "M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
     when :shield
                "M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
-    when :building
-               "M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
+    when :door
+               "M6 21V3h12v18M6 3h12M6 21h12M15 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
 
     end
 
