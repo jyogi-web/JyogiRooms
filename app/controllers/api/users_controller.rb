@@ -3,6 +3,9 @@
 module Api
   # ユーザー情報APIコントローラー
   class UsersController < BaseController
+    skip_before_action :authenticate_user!, only: %i[index show]
+    before_action :authenticate_api_key!, only: %i[index show]
+
     # GET /api/users/me
     # 現在ログイン中のユーザー情報を取得
     # @return User [JSON] | エラーメッセージ
