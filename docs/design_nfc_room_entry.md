@@ -111,15 +111,15 @@ NFC Raspiからのリクエストは既存の`X-Api-Key`ヘッダー認証を使
 | メソッド | パス | 用途 | クライアント |
 |----------|------|------|------------|
 | POST | `/api/rooms/:room_id/touch` | NFC自動判定（入室/退室/カード登録） | NFC Raspi |
-| POST | `/api/rooms/:room_id/enter` | 入室 | Webアプリ, Discord Bot |
+| POST | `/api/rooms/:room_id/enter` | 入室 | Discord Bot |
 | POST | `/api/rooms/:room_id/exit` | 退室 | Webアプリ, Discord Bot |
 
 #### 開閉室
 
 | メソッド | パス | 用途 | クライアント |
 |----------|------|------|------------|
-| POST | `/api/rooms/:room_id/open` | 開室 | Discord Bot, Webアプリ |
-| POST | `/api/rooms/:room_id/close` | 閉室 | Discord Bot, Webアプリ |
+| POST | `/api/rooms/:room_id/open` | 開室 | Discord Bot |
+| POST | `/api/rooms/:room_id/close` | 閉室 | Webアプリ（鍵持ち/管理者）, Discord Bot |
 
 #### NFC登録
 
@@ -181,7 +181,17 @@ NFC Raspi専用。カードUIDから自動で入室/退室/カード登録を判
 
 ### POST /api/rooms/:room_id/enter
 
-明示的な入室処理。
+明示的な入室処理。**Discord Botからのみ利用可能**（Webアプリからは不可）。
+
+**リクエスト:**
+```json
+{ "discord_user_id": "123456789" }
+```
+
+### POST /api/rooms/:room_id/exit
+
+明示的な退室処理。Webアプリ・Discord Botから利用可能。
+Webアプリでは現在入室中の部室からのみ退室可能。
 
 **リクエスト:**
 ```json
@@ -192,27 +202,28 @@ NFC Raspi専用。カードUIDから自動で入室/退室/カード登録を判
 { "discord_user_id": "123456789" }
 ```
 
-### POST /api/rooms/:room_id/exit
-
-明示的な退室処理。リクエスト形式は`enter`と同じ。
-
 ### POST /api/rooms/:room_id/open
 
-開室処理。鍵持ちのみ実行可能。
+開室処理。**Discord Botからのみ利用可能**（Webアプリからは不可）。
+鍵持ちのみ実行可能。
 
 **リクエスト:**
 ```json
-{ "user_id": 1 }
+{ "discord_user_id": "123456789" }
 ```
 
-**処理:** `rooms.is_open`を`true`に更新 + Discord通知
+**処理:** 開室 + Discord通知
 
 ### POST /api/rooms/:room_id/close
 
-閉室処理。鍵持ちまたは管理者のみ実行可能。
+閉室処理。Webアプリ・Discord Botから利用可能。
+
+**権限:**
+- **鍵持ち**: 自身が鍵を持っている部室のみ閉室可能
+- **管理者**: 全ての部室を閉室可能
 
 **処理:**
-1. `rooms.is_open`を`false`に更新
+1. 閉室
 2. 入室中の全ユーザーを退室処理
 3. Discord通知
 
@@ -325,7 +336,9 @@ end
 
 - 各部室の開閉状態
 - 現在入室中のユーザー一覧
-- 入室/退室ボタン（ログインユーザー用）
+- 退室ボタン（自分が入室中の部室のみ表示）
+- 閉室ボタン（鍵持ち: 自分の鍵の部室のみ / 管理者: 全部室）
+- ※入室・開室はNFCまたはDiscordからのみ行う
 
 ### NFC登録ページ（新規）
 
