@@ -39,9 +39,9 @@ module Api
       def find_user!
         user = if params[:user_id].present?
                  User.find_by(id: params[:user_id])
-               elsif params[:discord_user_id].present?
+        elsif params[:discord_user_id].present?
                  User.find_by(discord_id: params[:discord_user_id])
-               end
+        end
 
         render(json: { error: "ユーザーが見つかりません" }, status: :not_found) && return unless user
         user
