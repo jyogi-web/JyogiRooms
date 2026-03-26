@@ -139,7 +139,7 @@ def on_card_touch(tag):
     except requests.RequestException as e:
         print(f"通信エラー: {e}")
 
-    # カードが離れるまで待つ（連続読み取り防止）
+    # Trueを返すとカードが離れるまで次の読み取りをしない（連続読み取り防止）
     return True
 
 def main():

@@ -46,14 +46,18 @@ module Api
         return render json: { error: "このカードは既に登録されています" }, status: :unprocessable_entity
       end
 
-      NfcCard.create!(
-        user: current_user,
-        card_uid: @registration.card_uid,
-        student_id: @registration.student_id,
-        student_name: @registration.student_name
-      )
-      @registration.destroy!
+      begin
+        NfcCard.create!(
+          user: current_user,
+          card_uid: @registration.card_uid,
+          student_id: @registration.student_id,
+          student_name: @registration.student_name
+        )
+      rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+        return render json: { error: "このカードは既に登録されています" }, status: :unprocessable_entity
+      end
 
+      @registration.destroy!
       render json: { message: "NFCカードを登録しました" }, status: :ok
     end
 

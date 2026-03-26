@@ -217,10 +217,19 @@
               stopTimers();
               cardUidEl.textContent = pollData.card_uid;
               if (pollData.student_name || pollData.student_id) {
-                let html = "";
-                if (pollData.student_name) html += `<p class="text-base font-bold text-gray-800">${pollData.student_name}</p>`;
-                if (pollData.student_id) html += `<p class="text-sm text-gray-600">${pollData.student_id}</p>`;
-                cardInfoEl.innerHTML = html;
+                cardInfoEl.replaceChildren();
+                if (pollData.student_name) {
+                  const nameEl = document.createElement("p");
+                  nameEl.className = "text-base font-bold text-gray-800";
+                  nameEl.textContent = pollData.student_name;
+                  cardInfoEl.appendChild(nameEl);
+                }
+                if (pollData.student_id) {
+                  const idEl = document.createElement("p");
+                  idEl.className = "text-sm text-gray-600";
+                  idEl.textContent = pollData.student_id;
+                  cardInfoEl.appendChild(idEl);
+                }
                 cardInfoEl.classList.remove("hidden");
               }
               showState(confirmEl);
