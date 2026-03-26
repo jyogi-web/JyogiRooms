@@ -17,21 +17,31 @@
   <% if @nfc_card %>
   <div class="card p-6">
     <h2 class="text-lg font-bold text-gray-800 mb-4">登録済みカード</h2>
-    <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
-      <div>
-        <% if @nfc_card.student_name.present? || @nfc_card.student_id.present? %>
-          <p class="text-sm font-medium text-gray-800">
-            <%= @nfc_card.student_name %>
-            <% if @nfc_card.student_id.present? %>
-              <span class="text-gray-500">(<%= @nfc_card.student_id %>)</span>
-            <% end %>
-          </p>
-        <% end %>
-        <p class="text-xs text-gray-500">カードUID: <%= @nfc_card.card_uid %></p>
-        <p class="text-xs text-gray-500">登録日: <%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-5">
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"></path>
+          </svg>
+          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+        </div>
+        <span class="text-xs text-gray-500"><%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d") %> 登録</span>
       </div>
-      <%= button_to "削除", nfc_card_path(@nfc_card), method: :delete,
-          class: "px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-md hover:bg-red-600 transition-colors",
+      <% if @nfc_card.student_name.present? || @nfc_card.student_id.present? %>
+        <div class="mb-3">
+          <% if @nfc_card.student_name.present? %>
+            <p class="text-base font-bold text-gray-800"><%= @nfc_card.student_name %></p>
+          <% end %>
+          <% if @nfc_card.student_id.present? %>
+            <p class="text-sm text-gray-600"><%= @nfc_card.student_id %></p>
+          <% end %>
+        </div>
+      <% end %>
+      <p class="text-xs font-mono text-gray-500 tracking-wider"><%= @nfc_card.card_uid %></p>
+    </div>
+    <div class="mt-3 flex justify-end">
+      <%= button_to "カードを削除", nfc_card_path(@nfc_card), method: :delete,
+          class: "px-3 py-1.5 text-red-500 text-xs font-medium hover:text-red-700 transition-colors",
           form: { onsubmit: "return confirm('このカードを削除しますか？')" } %>
     </div>
   </div>
@@ -69,10 +79,16 @@
 
     <!-- カード確認 -->
     <div id="registration-confirm" class="hidden">
-      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-        <p class="text-sm font-medium text-green-700">カードを読み取りました</p>
-        <p id="detected-card-info" class="text-sm text-green-600 mt-1 hidden"></p>
-        <p class="text-xs text-green-600 mt-1">カードUID: <span id="detected-card-uid" class="font-mono"></span></p>
+      <p class="text-sm font-medium text-green-600 mb-3">カードを読み取りました</p>
+      <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"></path>
+          </svg>
+          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+        </div>
+        <div id="detected-card-info" class="mb-3 hidden"></div>
+        <p class="text-xs font-mono text-gray-500 tracking-wider"><span id="detected-card-uid"></span></p>
       </div>
       <div class="flex gap-3">
         <button type="button" id="confirm-registration-btn"
@@ -200,9 +216,11 @@
             if (pollData.completed) {
               stopTimers();
               cardUidEl.textContent = pollData.card_uid;
-              const infoParts = [pollData.student_name, pollData.student_id].filter(Boolean);
-              if (infoParts.length > 0) {
-                cardInfoEl.textContent = infoParts.join(" / ");
+              if (pollData.student_name || pollData.student_id) {
+                let html = "";
+                if (pollData.student_name) html += `<p class="text-base font-bold text-gray-800">${pollData.student_name}</p>`;
+                if (pollData.student_id) html += `<p class="text-sm text-gray-600">${pollData.student_id}</p>`;
+                cardInfoEl.innerHTML = html;
                 cardInfoEl.classList.remove("hidden");
               }
               showState(confirmEl);
