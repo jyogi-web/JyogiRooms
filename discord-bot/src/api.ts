@@ -1,8 +1,30 @@
 import 'dotenv/config';
 
 // Rails API Base URL
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (process.env.API_BASE_URL || 'http://localhost:3000/api').replace(/\/+$/, '');
 const API_TIMEOUT_MS = 45000; // Cloud Runのコールドスタート(約30秒)を考慮
+
+function roomActionUrls(path: string): URL[] {
+    const urls = [new URL(`${API_BASE_URL}${path}`)];
+
+    try {
+        const parsed = new URL(API_BASE_URL);
+        const pathname = parsed.pathname.replace(/\/+$/, '');
+        if (!pathname.endsWith('/api')) {
+            urls.push(new URL(`${API_BASE_URL}/api${path}`));
+        }
+    } catch {
+        // ignore invalid base url parse here and rely on primary URL
+    }
+
+    const seen = new Set<string>();
+    return urls.filter((url) => {
+        const key = url.toString();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
 
 export class ApiError extends Error {
     constructor(
@@ -277,7 +299,7 @@ export const api = {
      * 部室操作の共通POSTメソッド
      */
     async postRoomAction(path: string, discordUserId: string): Promise<RoomActionResponse> {
-        const url = new URL(`${API_BASE_URL}${path}`);
+        const urls = roomActionUrls(path);
         const headers = {
             'X-Api-Key': process.env.API_ACCESS_TOKEN || '',
             'Content-Type': 'application/json'
@@ -288,14 +310,20 @@ export const api = {
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
         try {
-            const response = await fetch(url.toString(), {
-                method: 'POST',
-                headers,
-                body,
-                signal: controller.signal
-            });
+            let lastError: ApiError | null = null;
 
-            if (!response.ok) {
+            for (const [index, url] of urls.entries()) {
+                const response = await fetch(url.toString(), {
+                    method: 'POST',
+                    headers,
+                    body,
+                    signal: controller.signal
+                });
+
+                if (response.ok) {
+                    return await response.json() as RoomActionResponse;
+                }
+
                 let errorBody: any = null;
                 try {
                     errorBody = await response.json();
@@ -303,15 +331,19 @@ export const api = {
                     // ignore json parse error
                 }
 
-                const err = new ApiError(
+                lastError = new ApiError(
                     `API Error: ${response.status} ${response.statusText}`,
                     response.status,
                     errorBody?.errors || (errorBody?.error ? [errorBody.error] : [])
                 );
-                throw err;
+
+                const isLastCandidate = index === urls.length - 1;
+                if (response.status !== 404 || isLastCandidate) {
+                    throw lastError;
+                }
             }
 
-            return await response.json() as RoomActionResponse;
+            throw lastError ?? new ApiError('API Error: request failed', 500, []);
         } finally {
             clearTimeout(timeoutId);
         }
