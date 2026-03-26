@@ -1,38 +1,42 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api } from '../api.js';
 import type { Interaction } from './types.js';
-import { getIntegerOption, reply, replyEmbed } from './utils.js';
+import { getStringOption, reply, replyEmbed } from './utils.js';
 
 export const keyCommand = {
     data: new SlashCommandBuilder()
         .setName('key')
         .setDescription('各部室の鍵持ち一覧を表示します')
-        .addIntegerOption(option =>
-            option.setName('room_id').setDescription('部室ID（省略時は全部室を表示）').setRequired(false)
+        .addStringOption(option =>
+            option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
         ),
 
     async execute(interaction: Interaction): Promise<object> {
         try {
-            const roomId = getIntegerOption(interaction, 'room_id');
+            const room = getStringOption(interaction, 'room');
             const rooms = await api.fetchKeys();
 
             if (rooms.length === 0) {
                 return reply('部室情報が登録されていません。');
             }
 
-            if (roomId !== null) {
-                const room = rooms.find(r => r.room_id === roomId);
-                if (!room) {
-                    return reply(`ID ${roomId} の部室が見つかりません。`);
+            if (room) {
+                const roomId = parseInt(room, 10);
+                if (isNaN(roomId)) {
+                    return reply('部室番号は数字で指定してください（例: 1, 2, 3）。');
                 }
-                return replyEmbed(`🔑 鍵持ち`, buildRoomSection(room));
+                const target = rooms.find(r => r.room_id === roomId);
+                if (!target) {
+                    return reply(`第${room}部室が見つかりません。`);
+                }
+                return replyEmbed(`🔑 鍵持ち`, buildRoomSection(target));
             }
 
             const MAX_LENGTH = 4096;
             let description = '';
 
-            for (const room of rooms) {
-                const section = buildRoomSection(room);
+            for (const r of rooms) {
+                const section = buildRoomSection(r);
                 if (description.length + section.length + 50 > MAX_LENGTH) {
                     description += '...省略: 表示しきれない部室があります';
                     break;

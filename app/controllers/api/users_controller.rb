@@ -34,7 +34,7 @@ module Api
     # @return [Hash] { users: Array<User> } ユーザー情報の配列を含むハッシュ
     def index
       # TODO: ページネーション対応
-      users = User.all
+      users = User.includes(:role)
       render json: { users: users.map { |user| format_user_data(user) } }, status: :ok
     end
 
@@ -68,7 +68,9 @@ module Api
         avatar_url: user.avatar_url,
         guild_roles: user.guild_roles,
         guild_nickname: user.guild_nickname,
-        last_synced_at: user.last_synced_at
+        last_synced_at: user.last_synced_at,
+        role: user.role&.name,
+        is_admin: user.admin?
       }
     end
   end

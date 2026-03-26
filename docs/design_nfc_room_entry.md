@@ -116,10 +116,10 @@ NFC Raspiからのリクエストは既存の`X-Api-Key`ヘッダー認証を使
 
 #### 開閉室
 
-| メソッド | パス | 用途 | クライアント |
-|----------|------|------|------------|
-| POST | `/api/rooms/:room_id/open` | 開室 | Discord Bot |
-| POST | `/api/rooms/:room_id/close` | 閉室 | Webアプリ（鍵持ち/管理者）, Discord Bot |
+| メソッド | パス | 用途 | 権限 | クライアント |
+|----------|------|------|------|------------|
+| POST | `/api/rooms/:room_id/open` | 開室 | 鍵持ち/管理者 | Discord Bot |
+| POST | `/api/rooms/:room_id/close` | 閉室 | 鍵持ち/管理者 | Webアプリ, Discord Bot |
 
 #### NFC登録
 
@@ -205,7 +205,10 @@ Webアプリでは現在入室中の部室からのみ退室可能。
 ### POST /api/rooms/:room_id/open
 
 開室処理。**Discord Botからのみ利用可能**（Webアプリからは不可）。
-鍵持ちのみ実行可能。
+
+**権限:**
+- **鍵持ち**: 自身が鍵を持っている部室のみ開室可能
+- **管理者**: 全ての部室を開室可能
 
 **リクエスト:**
 ```json
@@ -302,18 +305,21 @@ end
 ```ruby
 class RoomStateService
   def self.open(room, user)
-    # 鍵持ちか確認
-    # is_open = true, opened_by = user
+    # 既に開室中ならエラー
+    # room_sessionsにレコード作成（opened_by, opened_at）
     # Discord通知
   end
 
   def self.close(room, user)
-    # is_open = false
-    # 入室中の全ユーザーを退室処理
+    # 開室中でなければエラー
+    # 入室中の全ユーザーを退室処理（room_visits.exited_at更新）
+    # room_sessionsのclosed_at, closed_by更新
     # Discord通知
   end
 end
 ```
+
+※ 権限チェック（鍵持ち/管理者）はAPIコントローラー層（`authorize_key_holder!`）で実施
 
 ---
 
@@ -353,15 +359,18 @@ end
 
 ---
 
-## Discord Botコマンド（将来）
+## Discord Botコマンド
 
-| コマンド | 説明 |
-|---------|------|
-| `/open <部室ID>` | 部室を開室（鍵持ち限定） |
-| `/close <部室ID\|all>` | 部室を閉室（`all`で全部室を閉室） |
-| `/enter <部室ID>` | 入室登録 |
-| `/exit` | 退室登録（現在入室中の部室から退室） |
-| `/status [部室ID]` | 部室状況確認（部室省略時は全部室の状況を表示） |
+| コマンド | 説明 | 権限 |
+|---------|------|------|
+| `/open <部室番号>` | 部室を開室 | 鍵持ち/管理者 |
+| `/close <部室番号\|all>` | 部室を閉室（`all`で全部室を閉室） | 鍵持ち/管理者（`all`は管理者のみ） |
+| `/enter <部室番号>` | 入室登録 | 全ユーザー |
+| `/exit <部室番号>` | 退室登録 | 全ユーザー |
+| `/status [部室番号\|all]` | 部室状況確認（省略時は全部室） | 全ユーザー |
+
+- `room` パラメータは部室番号を数字で指定（例: `1`, `2`, `3`）
+- `/close` と `/status` は `all` を指定すると全部室が対象
 
 ---
 
@@ -387,4 +396,6 @@ end
 
 ### Phase 4: Discord Bot連携
 
-10. Discord Botにコマンド追加（/open, /enter, /exit, /status）
+10. Discord Botにコマンド追加（/open, /close, /enter, /exit, /status）
+11. 開閉室APIに鍵持ち/管理者の権限チェック追加
+12. 既存コマンド（/key, /call）のパラメータを部室番号形式に統一

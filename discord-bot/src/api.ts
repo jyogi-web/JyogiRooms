@@ -50,6 +50,35 @@ export interface RoomKeys {
     keys: KeyInfo[];
 }
 
+export interface UserInfo {
+    id: number;
+    discord_id?: string;
+    display_name: string;
+    is_admin: boolean;
+}
+
+export interface RoomActionResponse {
+    action: string;
+    user: { id: number; display_name: string };
+    room: { id: number; name: string };
+    timestamp: string;
+}
+
+export interface RoomOccupant {
+    id: number;
+    display_name: string;
+    entered_at: string;
+}
+
+export interface RoomStatus {
+    room: { id: number; name: string };
+    is_open: boolean;
+    opened_at: string | null;
+    opened_by: { id: number; display_name: string } | null;
+    occupants: RoomOccupant[];
+    occupant_count: number;
+}
+
 export const api = {
     /**
      * 予約一覧を取得する
@@ -155,6 +184,127 @@ export const api = {
             }
 
             return await response.json() as Reservation;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    },
+
+    /**
+     * 部室を開室する
+     */
+    async openRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+        return this.postRoomAction(`/rooms/${roomId}/open`, discordUserId);
+    },
+
+    /**
+     * 部室を閉室する
+     */
+    async closeRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+        return this.postRoomAction(`/rooms/${roomId}/close`, discordUserId);
+    },
+
+    /**
+     * 入室する
+     */
+    async enterRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+        return this.postRoomAction(`/rooms/${roomId}/enter`, discordUserId);
+    },
+
+    /**
+     * 退室する
+     */
+    async exitRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+        return this.postRoomAction(`/rooms/${roomId}/exit`, discordUserId);
+    },
+
+    /**
+     * 部室状況を取得する
+     */
+    async fetchRoomStatus(roomId: number): Promise<RoomStatus> {
+        const url = new URL(`${API_BASE_URL}/rooms/${roomId}/status`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+        try {
+            const headers = {
+                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
+            };
+            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json() as RoomStatus;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    },
+
+    /**
+     * Discord IDでユーザー情報を取得する
+     */
+    async fetchUserByDiscordId(discordUserId: string): Promise<UserInfo | null> {
+        const url = new URL(`${API_BASE_URL}/users`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+        try {
+            const headers = {
+                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
+            };
+            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json() as { users: UserInfo[] };
+            return data.users.find(u => u.discord_id === discordUserId) ?? null;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    },
+
+    /**
+     * 部室操作の共通POSTメソッド
+     */
+    async postRoomAction(path: string, discordUserId: string): Promise<RoomActionResponse> {
+        const url = new URL(`${API_BASE_URL}${path}`);
+        const headers = {
+            'X-Api-Key': process.env.API_ACCESS_TOKEN || '',
+            'Content-Type': 'application/json'
+        };
+        const body = JSON.stringify({ discord_user_id: discordUserId });
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers,
+                body,
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                let errorBody: any = null;
+                try {
+                    errorBody = await response.json();
+                } catch {
+                    // ignore json parse error
+                }
+
+                const err = new ApiError(
+                    `API Error: ${response.status} ${response.statusText}`,
+                    response.status,
+                    errorBody?.errors || (errorBody?.error ? [errorBody.error] : [])
+                );
+                throw err;
+            }
+
+            return await response.json() as RoomActionResponse;
         } finally {
             clearTimeout(timeoutId);
         }
