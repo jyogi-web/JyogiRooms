@@ -308,8 +308,11 @@ export const api = {
                 const response = await fetch(url.toString(), { signal: controller.signal, headers });
 
                 if (response.ok) {
-                    const data = await response.json() as { users: UserInfo[] } | UserInfo[];
+                    const data = await response.json() as { users?: UserInfo[] } | UserInfo[];
                     const users = Array.isArray(data) ? data : data.users;
+                    if (!Array.isArray(users)) {
+                        throw new Error('API Error: users response format is invalid');
+                    }
                     return users.find(u => u.discord_id === discordUserId) ?? null;
                 }
 

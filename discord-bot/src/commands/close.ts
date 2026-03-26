@@ -44,7 +44,8 @@ export const closeCommand = {
                 return reply(`エラー: ${error.validationErrors.join(', ') || error.message}`);
             }
             console.error(error);
-            return reply('閉室処理中にエラーが発生しました。');
+            const message = error instanceof Error ? error.message : '不明なエラー';
+            return reply(`閉室処理中にエラーが発生しました。 (${message})`);
         }
     },
 };
