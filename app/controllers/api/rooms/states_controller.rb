@@ -7,23 +7,22 @@ module Api
       skip_before_action :authenticate_user!
       before_action :authenticate_api_key!
       before_action :set_room
+      before_action :set_user
 
       # POST /api/rooms/:room_id/open (Discord Bot専用)
       def open
-        user = find_user!
-        session = RoomStateService.open(room: @room, user: user)
+        session = RoomStateService.open(room: @room, user: @user)
 
-        render json: state_json("open", session, user), status: :ok
+        render json: state_json("open", session, @user), status: :ok
       rescue RoomStateService::StateError => e
         render json: { error: e.message }, status: :unprocessable_entity
       end
 
       # POST /api/rooms/:room_id/close
       def close
-        user = find_user!
-        session = RoomStateService.close(room: @room, user: user)
+        session = RoomStateService.close(room: @room, user: @user)
 
-        render json: state_json("close", session, user), status: :ok
+        render json: state_json("close", session, @user), status: :ok
       rescue RoomStateService::StateError => e
         render json: { error: e.message }, status: :unprocessable_entity
       end
@@ -36,15 +35,14 @@ module Api
         render json: { error: "部室が見つかりません" }, status: :not_found
       end
 
-      def find_user!
-        user = if params[:user_id].present?
-                 User.find_by(id: params[:user_id])
-        elsif params[:discord_user_id].present?
-                 User.find_by(discord_id: params[:discord_user_id])
-        end
+      def set_user
+        @user = if params[:user_id].present?
+                   User.find_by(id: params[:user_id])
+                 elsif params[:discord_user_id].present?
+                   User.find_by(discord_id: params[:discord_user_id])
+                 end
 
-        render(json: { error: "ユーザーが見つかりません" }, status: :not_found) && return unless user
-        user
+        render(json: { error: "ユーザーが見つかりません" }, status: :not_found) unless @user
       end
 
       def state_json(action, session, user)
