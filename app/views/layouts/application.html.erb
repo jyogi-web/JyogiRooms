@@ -62,7 +62,12 @@
       <div class="p-4 border-t border-gray-200 relative">
         <div class="group">
           <button type="button" class="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:bg-gray-100">
-            <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
+            <div class="relative">
+              <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
+              <% if current_user && !current_user.nfc_card %>
+                <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full"></span>
+              <% end %>
+            </div>
             <div class="flex flex-col text-left flex-1">
               <span class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></span>
               <span class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></span>
@@ -70,7 +75,16 @@
           </button>
           <!-- Dropdown Menu -->
           <div class="absolute bottom-full left-4 right-4 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200">
-            <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
+            <%= link_to nfc_cards_path, class: "w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-t-lg transition-colors" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"></path>
+              </svg>
+              <span class="text-sm font-medium">NFCカード</span>
+              <% if current_user && !current_user.nfc_card %>
+                <span class="ml-auto text-xs text-red-500 font-medium">未登録</span>
+              <% end %>
+            <% end %>
+            <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-b-lg transition-colors border-t border-gray-100", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
               </svg>
@@ -87,8 +101,11 @@
       <!-- Mobile User Menu (checkbox toggle for real mobile support) -->
       <div class="relative">
         <input type="checkbox" id="mobile-menu-toggle" class="peer hidden">
-        <label for="mobile-menu-toggle" class="cursor-pointer">
+        <label for="mobile-menu-toggle" class="cursor-pointer relative">
           <%= render(UserAvatarComponent.new(user: current_user, size: :small)) %>
+          <% if current_user && !current_user.nfc_card %>
+            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+          <% end %>
         </label>
         <!-- Backdrop to close menu -->
         <label for="mobile-menu-toggle" class="fixed inset-0 z-40 hidden peer-checked:block"></label>
@@ -98,7 +115,16 @@
             <p class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></p>
             <p class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></p>
           </div>
-          <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
+          <%= link_to nfc_cards_path, class: "w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors" do %>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"></path>
+            </svg>
+            <span class="text-sm font-medium">NFCカード</span>
+            <% if current_user && !current_user.nfc_card %>
+              <span class="ml-auto text-xs text-red-500 font-medium">未登録</span>
+            <% end %>
+          <% end %>
+          <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
