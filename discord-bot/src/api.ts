@@ -211,10 +211,17 @@ export const api = {
     },
 
     /**
-     * 退室する
+     * 退室する（部室指定）
      */
     async exitRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
         return this.postRoomAction(`/rooms/${roomId}/exit`, discordUserId);
+    },
+
+    /**
+     * 退室する（現在入室中の部室から自動退室）
+     */
+    async exitCurrent(discordUserId: string): Promise<RoomActionResponse> {
+        return this.postRoomAction('/exit', discordUserId);
     },
 
     /**

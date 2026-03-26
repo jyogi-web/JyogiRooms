@@ -47,6 +47,7 @@ Rails.application.routes.draw do
     resources :users, only: %i[index show create update destroy]
 
     # 部室API
+    post "exit", to: "rooms/entries#exit_current"
     resources :rooms, only: [] do
       post :touch, to: "rooms/touches#create"
       post :enter, to: "rooms/entries#enter"

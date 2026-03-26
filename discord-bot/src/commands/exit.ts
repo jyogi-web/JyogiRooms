@@ -1,31 +1,22 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { api, ApiError } from '../api.js';
 import type { Interaction } from './types.js';
-import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
+import { getUserId, reply, replyEmbed } from './utils.js';
 
 export const exitCommand = {
     data: new SlashCommandBuilder()
         .setName('exit')
-        .setDescription('部室から退室します')
-        .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（例: 1, 2, 3）').setRequired(true)
-        ),
+        .setDescription('現在入室中の部室から退室します'),
 
     async execute(interaction: Interaction): Promise<object> {
-        const room = getStringOption(interaction, 'room');
         const discordUserId = getUserId(interaction);
 
-        if (!room || !discordUserId) {
-            return reply('部室番号の指定が必要です。');
-        }
-
-        const roomId = parseInt(room, 10);
-        if (isNaN(roomId)) {
-            return reply('部室番号は数字で指定してください（例: 1, 2, 3）。');
+        if (!discordUserId) {
+            return reply('ユーザー情報を取得できませんでした。');
         }
 
         try {
-            const result = await api.exitRoom(roomId, discordUserId);
+            const result = await api.exitCurrent(discordUserId);
             return replyEmbed(
                 '📱 退室しました',
                 `**${result.room.name}** から退室しました。`,
