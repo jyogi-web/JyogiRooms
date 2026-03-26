@@ -141,7 +141,7 @@ export const api = {
      * @returns 部室ごとの鍵情報の配列
      */
     async fetchKeys(): Promise<RoomKeys[]> {
-        const url = new URL(`${API_BASE_URL}/keys`);
+        const urls = roomActionUrls('/keys');
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
@@ -149,13 +149,23 @@ export const api = {
             const headers = {
                 'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
             };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+            let lastError: Error | null = null;
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            for (const [index, url] of urls.entries()) {
+                const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+                if (response.ok) {
+                    return await response.json() as RoomKeys[];
+                }
+
+                lastError = new Error(`API Error: ${response.status} ${response.statusText}`);
+                const isLastCandidate = index === urls.length - 1;
+                if (response.status !== 404 || isLastCandidate) {
+                    throw lastError;
+                }
             }
 
-            return await response.json() as RoomKeys[];
+            throw lastError ?? new Error('API Error: request failed');
         } finally {
             clearTimeout(timeoutId);
         }
@@ -250,7 +260,7 @@ export const api = {
      * 部室状況を取得する
      */
     async fetchRoomStatus(roomId: number): Promise<RoomStatus> {
-        const url = new URL(`${API_BASE_URL}/rooms/${roomId}/status`);
+        const urls = roomActionUrls(`/rooms/${roomId}/status`);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
@@ -258,13 +268,23 @@ export const api = {
             const headers = {
                 'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
             };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+            let lastError: Error | null = null;
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            for (const [index, url] of urls.entries()) {
+                const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+                if (response.ok) {
+                    return await response.json() as RoomStatus;
+                }
+
+                lastError = new Error(`API Error: ${response.status} ${response.statusText}`);
+                const isLastCandidate = index === urls.length - 1;
+                if (response.status !== 404 || isLastCandidate) {
+                    throw lastError;
+                }
             }
 
-            return await response.json() as RoomStatus;
+            throw lastError ?? new Error('API Error: request failed');
         } finally {
             clearTimeout(timeoutId);
         }
@@ -274,7 +294,7 @@ export const api = {
      * Discord IDでユーザー情報を取得する
      */
     async fetchUserByDiscordId(discordUserId: string): Promise<UserInfo | null> {
-        const url = new URL(`${API_BASE_URL}/users`);
+        const urls = roomActionUrls('/users');
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
@@ -282,14 +302,25 @@ export const api = {
             const headers = {
                 'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
             };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+            let lastError: Error | null = null;
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            for (const [index, url] of urls.entries()) {
+                const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+                if (response.ok) {
+                    const data = await response.json() as { users: UserInfo[] } | UserInfo[];
+                    const users = Array.isArray(data) ? data : data.users;
+                    return users.find(u => u.discord_id === discordUserId) ?? null;
+                }
+
+                lastError = new Error(`API Error: ${response.status} ${response.statusText}`);
+                const isLastCandidate = index === urls.length - 1;
+                if (response.status !== 404 || isLastCandidate) {
+                    throw lastError;
+                }
             }
 
-            const data = await response.json() as { users: UserInfo[] };
-            return data.users.find(u => u.discord_id === discordUserId) ?? null;
+            throw lastError ?? new Error('API Error: request failed');
         } finally {
             clearTimeout(timeoutId);
         }
