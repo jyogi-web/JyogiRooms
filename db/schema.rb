@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_000006) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_000008) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000006) do
   create_table "nfc_cards", force: :cascade do |t|
     t.string "card_uid", null: false
     t.datetime "created_at", null: false
+    t.string "student_id"
+    t.string "student_name"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["card_uid"], name: "index_nfc_cards_on_card_uid", unique: true
@@ -62,6 +64,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000006) do
     t.string "card_uid"
     t.datetime "created_at", null: false
     t.datetime "expires_at", null: false
+    t.string "student_id"
+    t.string "student_name"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["expires_at"], name: "index_nfc_registration_requests_on_expires_at"

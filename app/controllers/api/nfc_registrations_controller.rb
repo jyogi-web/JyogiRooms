@@ -46,7 +46,12 @@ module Api
         return render json: { error: "このカードは既に登録されています" }, status: :unprocessable_entity
       end
 
-      NfcCard.create!(user: current_user, card_uid: @registration.card_uid)
+      NfcCard.create!(
+        user: current_user,
+        card_uid: @registration.card_uid,
+        student_id: @registration.student_id,
+        student_name: @registration.student_name
+      )
       @registration.destroy!
 
       render json: { message: "NFCカードを登録しました" }, status: :ok
@@ -71,6 +76,8 @@ module Api
         id: registration.id,
         user_id: registration.user_id,
         card_uid: registration.card_uid,
+        student_id: registration.student_id,
+        student_name: registration.student_name,
         expires_at: registration.expires_at.iso8601,
         expired: registration.expired?,
         pending: registration.pending?,

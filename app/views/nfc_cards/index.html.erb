@@ -19,7 +19,15 @@
     <h2 class="text-lg font-bold text-gray-800 mb-4">登録済みカード</h2>
     <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 border border-gray-200">
       <div>
-        <p class="text-sm font-medium text-gray-800">カードUID: <%= @nfc_card.card_uid %></p>
+        <% if @nfc_card.student_name.present? || @nfc_card.student_id.present? %>
+          <p class="text-sm font-medium text-gray-800">
+            <%= @nfc_card.student_name %>
+            <% if @nfc_card.student_id.present? %>
+              <span class="text-gray-500">(<%= @nfc_card.student_id %>)</span>
+            <% end %>
+          </p>
+        <% end %>
+        <p class="text-xs text-gray-500">カードUID: <%= @nfc_card.card_uid %></p>
         <p class="text-xs text-gray-500">登録日: <%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
       </div>
       <%= button_to "削除", nfc_card_path(@nfc_card), method: :delete,
@@ -63,7 +71,8 @@
     <div id="registration-confirm" class="hidden">
       <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
         <p class="text-sm font-medium text-green-700">カードを読み取りました</p>
-        <p class="text-sm text-green-600 mt-1">カードUID: <span id="detected-card-uid" class="font-mono"></span></p>
+        <p id="detected-card-info" class="text-sm text-green-600 mt-1 hidden"></p>
+        <p class="text-xs text-green-600 mt-1">カードUID: <span id="detected-card-uid" class="font-mono"></span></p>
       </div>
       <div class="flex gap-3">
         <button type="button" id="confirm-registration-btn"
@@ -132,6 +141,7 @@
     const errorEl = document.getElementById("registration-error");
     const countdownEl = document.getElementById("countdown");
     const cardUidEl = document.getElementById("detected-card-uid");
+    const cardInfoEl = document.getElementById("detected-card-info");
     const errorMessageEl = document.getElementById("error-message");
 
     let registrationId = null;
@@ -190,6 +200,11 @@
             if (pollData.completed) {
               stopTimers();
               cardUidEl.textContent = pollData.card_uid;
+              const infoParts = [pollData.student_name, pollData.student_id].filter(Boolean);
+              if (infoParts.length > 0) {
+                cardInfoEl.textContent = infoParts.join(" / ");
+                cardInfoEl.classList.remove("hidden");
+              }
               showState(confirmEl);
             } else if (pollData.expired) {
               showError("タイムアウトしました。再度お試しください。");

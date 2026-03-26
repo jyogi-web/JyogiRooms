@@ -10,7 +10,8 @@ module Api
       # POST /api/rooms/:room_id/touch
       def create
         room = Room.find(params[:room_id])
-        result = NfcTouchService.process(room: room, card_uid: params[:card_uid])
+        card_data = params.permit(:student_id, :student_name).to_h.symbolize_keys
+        result = NfcTouchService.process(room: room, card_uid: params[:card_uid], card_data: card_data)
 
         render json: result, status: :ok
       rescue ActiveRecord::RecordNotFound
