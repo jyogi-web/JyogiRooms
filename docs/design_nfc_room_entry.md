@@ -39,10 +39,15 @@
 | カラム | 型 | 制約 | 説明 |
 |--------|------|------|------|
 | id | bigint | PK | |
-| user_id | bigint | FK, NOT NULL | 所有ユーザー |
-| card_uid | string | NOT NULL, UNIQUE | 学生証のNFC UID |
+| user_id | bigint | FK, NOT NULL, UNIQUE | 所有ユーザー（1人1枚） |
+| card_uid | string | NOT NULL, UNIQUE | NFCカードのUID |
+| student_id | string | | 学籍番号（任意） |
+| student_name | string | | 氏名（任意） |
 | created_at | datetime | NOT NULL | |
 | updated_at | datetime | NOT NULL | |
+
+- **1ユーザー1枚のみ登録可能**（user_idにユニーク制約）
+- `student_id`・`student_name`は学生証で登録した場合のみ保存される（学生証以外のNFCカードでも登録可能）
 
 ### nfc_registration_requests（NFC登録待ち）
 
@@ -51,6 +56,8 @@
 | id | bigint | PK | |
 | user_id | bigint | FK, NOT NULL | 登録待ちユーザー |
 | card_uid | string | | かざされたカードUID（読み取り後に保存） |
+| student_id | string | | 学籍番号（読み取り後に保存） |
+| student_name | string | | 氏名（読み取り後に保存） |
 | expires_at | datetime | NOT NULL | 有効期限（作成から1分） |
 | created_at | datetime | NOT NULL | |
 | updated_at | datetime | NOT NULL | |
@@ -139,7 +146,11 @@ NFC Raspi専用。カードUIDから自動で入室/退室/カード登録を判
 
 **リクエスト:**
 ```json
-{ "card_uid": "ABC123" }
+{
+  "card_uid": "ABC123",
+  "student_id": "24A001",
+  "student_name": "田中太郎"
+}
 ```
 
 **処理フロー:**

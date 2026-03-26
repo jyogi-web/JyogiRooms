@@ -20,13 +20,27 @@ Raspi側の役割は **NFCカードのUIDを読み取り、Rails APIにPOSTす�
 
 ### リクエスト
 
+**学生証以外のNFCカードの場合:**
 ```json
 {
   "card_uid": "04A1B2C3D4E5F6"
 }
 ```
 
-- `card_uid`: NFCカードから読み取ったUID（16進数文字列）
+**学生証の場合:**
+```json
+{
+  "card_uid": "04A1B2C3D4E5F6",
+  "student_id": "24A001",
+  "student_name": "田中太郎"
+}
+```
+
+| パラメータ | 型 | 必須 | 説明 |
+|-----------|------|------|------|
+| `card_uid` | string | 必須 | NFCカードのUID（16進数文字列） |
+| `student_id` | string | 任意 | 学籍番号（学生証から読み取った場合） |
+| `student_name` | string | 任意 | 氏名（学生証から読み取った場合） |
 
 ### レスポンス
 
@@ -89,14 +103,28 @@ HEADERS = {
     "X-Api-Key": API_KEY,
 }
 
+def read_student_data(tag):
+    """学生証からデータを読み取る（学生証でない場合はNone）"""
+    # TODO: 学生証のデータ構造に合わせて実装
+    # 例: NDEF読み取り、特定ブロック読み取りなど
+    return None
+
 def on_card_touch(tag):
     card_uid = tag.identifier.hex().upper()
     print(f"カード検出: {card_uid}")
 
+    payload = {"card_uid": card_uid}
+
+    # 学生証データが読み取れたら追加（任意）
+    student_data = read_student_data(tag)
+    if student_data:
+        payload["student_id"] = student_data.get("student_id")
+        payload["student_name"] = student_data.get("student_name")
+
     try:
         response = requests.post(
             API_URL,
-            json={"card_uid": card_uid},
+            json=payload,
             headers=HEADERS,
             timeout=10,
         )
