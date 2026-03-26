@@ -6,9 +6,9 @@ import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
 export const closeCommand = {
     data: new SlashCommandBuilder()
         .setName('close')
-        .setDescription('部室を閉室します')
+        .setDescription('部室を閉室します（鍵持ち限定）')
         .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（例: 1, 2, 3）または all（全部室）').setRequired(true)
+            option.setName('room').setDescription('部室番号（例: 1, 2, 3）または all（管理者のみ実行可能）').setRequired(true)
         ),
 
     async execute(interaction: Interaction): Promise<object> {
@@ -21,6 +21,10 @@ export const closeCommand = {
 
         try {
             if (room.toLowerCase() === 'all') {
+                const user = await api.fetchUserByDiscordId(discordUserId);
+                if (!user?.is_admin) {
+                    return reply('全部室の一括閉室は管理者のみ実行できます。');
+                }
                 return await closeAllRooms(discordUserId);
             }
 

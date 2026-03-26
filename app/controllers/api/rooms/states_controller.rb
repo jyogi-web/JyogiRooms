@@ -8,6 +8,7 @@ module Api
       before_action :authenticate_api_key!
       before_action :set_room
       before_action :set_user
+      before_action :authorize_key_holder!
 
       # POST /api/rooms/:room_id/open (Discord Bot専用)
       def open
@@ -38,11 +39,18 @@ module Api
       def set_user
         @user = if params[:user_id].present?
                    User.find_by(id: params[:user_id])
-        elsif params[:discord_user_id].present?
+                 elsif params[:discord_user_id].present?
                    User.find_by(discord_id: params[:discord_user_id])
-        end
+                 end
 
         render(json: { error: "ユーザーが見つかりません" }, status: :not_found) unless @user
+      end
+
+      def authorize_key_holder!
+        return if @user&.admin?
+        return if Key.exists?(room: @room, user: @user)
+
+        render json: { error: "この部室の鍵持ちまたは管理者のみ実行できます" }, status: :forbidden
       end
 
       def state_json(action, session, user)

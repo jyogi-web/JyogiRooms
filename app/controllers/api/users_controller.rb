@@ -68,7 +68,9 @@ module Api
         avatar_url: user.avatar_url,
         guild_roles: user.guild_roles,
         guild_nickname: user.guild_nickname,
-        last_synced_at: user.last_synced_at
+        last_synced_at: user.last_synced_at,
+        role: user.role&.name,
+        is_admin: user.admin?
       }
     end
   end

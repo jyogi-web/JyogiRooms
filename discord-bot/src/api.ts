@@ -50,6 +50,13 @@ export interface RoomKeys {
     keys: KeyInfo[];
 }
 
+export interface UserInfo {
+    id: number;
+    discord_id?: string;
+    display_name: string;
+    is_admin: boolean;
+}
+
 export interface RoomActionResponse {
     action: string;
     user: { id: number; display_name: string };
@@ -229,6 +236,29 @@ export const api = {
             }
 
             return await response.json() as RoomStatus;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    },
+
+    /**
+     * Discord IDでユーザー情報を取得する
+     */
+    async fetchUserByDiscordId(discordUserId: string): Promise<UserInfo | null> {
+        const url = new URL(`${API_BASE_URL}/users`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+        try {
+            const headers = {
+                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
+            };
+            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+
+            if (!response.ok) return null;
+
+            const data = await response.json() as { users: UserInfo[] };
+            return data.users.find(u => u.discord_id === discordUserId) ?? null;
         } finally {
             clearTimeout(timeoutId);
         }
