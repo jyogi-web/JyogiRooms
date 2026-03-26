@@ -1,0 +1,80 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-800">部室状況</h1>
+
+  <% if flash[:notice] %>
+    <div class="bg-green-50 text-green-700 p-4 rounded-lg text-sm">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <% @room_data.each do |data| %>
+      <div class="card p-5">
+        <!-- ヘッダー: 部室名 + 状態バッジ -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold text-gray-800"><%= data[:room].name %></h2>
+          <% if data[:is_open] %>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+              <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              開室中
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">
+              <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+              閉室
+            </span>
+          <% end %>
+        </div>
+
+        <% if data[:is_open] && data[:session] %>
+          <p class="text-xs text-gray-500 mb-3">
+            <%= data[:session].opened_by.display_name %>が<%= data[:session].opened_at.in_time_zone("Asia/Tokyo").strftime("%H:%M") %>に開室
+          </p>
+        <% end %>
+
+        <!-- 入室者一覧 -->
+        <div class="mb-4">
+          <p class="text-sm font-medium text-gray-600 mb-2">入室中 (<%= data[:occupants].size %>人)</p>
+          <% if data[:occupants].any? %>
+            <div class="space-y-2">
+              <% data[:occupants].each do |occupant| %>
+                <div class="flex items-center gap-2">
+                  <%= render(UserAvatarComponent.new(user: occupant[:user], size: :small)) %>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate"><%= occupant[:user].display_name %></p>
+                    <p class="text-xs text-gray-500"><%= occupant[:entered_at].in_time_zone("Asia/Tokyo").strftime("%H:%M") %> 入室</p>
+                  </div>
+                  <% if occupant[:user].id == current_user.id %>
+                    <span class="text-xs text-blue-600 font-medium">あなた</span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-sm text-gray-400">入室者はいません</p>
+          <% end %>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="flex gap-2">
+          <% if data[:is_current_user_inside] %>
+            <%= button_to "退室する", exit_room_room_status_path(data[:room]),
+                  class: "flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors",
+                  form: { onsubmit: "return confirm('#{j(data[:room].name)}から退室しますか？')" } %>
+          <% end %>
+
+          <% if data[:is_open] && data[:can_close] %>
+            <%= button_to "閉室する", close_room_room_status_path(data[:room]),
+                  class: "flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors",
+                  form: { onsubmit: "return confirm('#{j(data[:room].name)}を閉室しますか？\\n入室中のメンバーは全員退室されます。')" } %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,4 +1,42 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
+  <h2 class="text-xl font-bold text-gray-800">部室状況</h2>
+
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <% @room_statuses.each do |data| %>
+      <div class="card p-4 flex items-center justify-between">
+        <h3 class="text-base font-bold text-gray-800"><%= data[:room].name %></h3>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <% if data[:occupants].any? %>
+              <div class="flex -space-x-1.5">
+                <% data[:occupants].each do |user| %>
+                  <%= render(UserAvatarComponent.new(user: user, size: :xs)) %>
+                <% end %>
+                <% if data[:occupant_count] > 5 %>
+                  <span class="w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm">+<%= data[:occupant_count] - 5 %></span>
+                <% end %>
+              </div>
+            <% end %>
+            <span class="text-sm text-gray-600"><%= data[:occupant_count] %>人</span>
+          </div>
+          <% if data[:is_open] %>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+              <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+              開室
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">
+              <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+              閉室
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="h-px bg-gray-200 my-6"></div>
+
     <h2 class="text-xl font-bold text-gray-800">今日の予約</h2>
 
   <%# Today's Reservations %>
