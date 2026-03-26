@@ -33,13 +33,19 @@ export const statusCommand = {
                 }
             }
 
-            const sections: string[] = [];
+            const MAX_LENGTH = 4096;
+            let description = '';
+
             for (const r of targetRooms) {
                 const status = await api.fetchRoomStatus(r.room_id);
-                sections.push(buildStatusSection(status));
+                const section = buildStatusSection(status);
+                if (description.length + section.length + 50 > MAX_LENGTH) {
+                    description += '...省略: 表示しきれない部室があります';
+                    break;
+                }
+                description += section;
             }
 
-            const description = sections.join('\n');
             return replyEmbed('🏠 部室状況', description);
         } catch (error) {
             console.error(error);

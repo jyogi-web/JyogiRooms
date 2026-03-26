@@ -255,7 +255,9 @@ export const api = {
             };
             const response = await fetch(url.toString(), { signal: controller.signal, headers });
 
-            if (!response.ok) return null;
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status} ${response.statusText}`);
+            }
 
             const data = await response.json() as { users: UserInfo[] };
             return data.users.find(u => u.discord_id === discordUserId) ?? null;

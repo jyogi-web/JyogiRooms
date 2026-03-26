@@ -34,7 +34,7 @@ module Api
     # @return [Hash] { users: Array<User> } ユーザー情報の配列を含むハッシュ
     def index
       # TODO: ページネーション対応
-      users = User.all
+      users = User.includes(:role)
       render json: { users: users.map { |user| format_user_data(user) } }, status: :ok
     end
 

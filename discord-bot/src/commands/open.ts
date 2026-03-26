@@ -6,7 +6,7 @@ import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
 export const openCommand = {
     data: new SlashCommandBuilder()
         .setName('open')
-        .setDescription('部室を開室します（鍵持ち限定）')
+        .setDescription('部室を開室します（鍵持ち/管理者）')
         .addStringOption(option =>
             option.setName('room').setDescription('部室番号（例: 1, 2, 3）').setRequired(true)
         ),
