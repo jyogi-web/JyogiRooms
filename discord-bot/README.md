@@ -20,7 +20,7 @@ Discord → POST /interactions → server.ts → commands/* → JSON レスポ�
 |---|---|
 | `/list` | 今後の予約一覧を表示（最大10件） |
 | `/check` | 指定日の予約を確認。`preset`（今日/明日）または `date`（MM/DD 等）で指定 |
-| `/create` | 予約を新規作成。`date`, `start`, `end`, `purpose`（任意）を指定 |
+| `/reserve` | 予約を新規作成。`date`, `start`, `end`, `purpose`（任意）を指定 |
 | `/key` | 各部室の鍵持ち一覧を表示 |
 | `/call` | 指定した部室の鍵持ちをメンションして通知 |
 | `/status` | 部室の状況を確認 |
