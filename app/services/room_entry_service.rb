@@ -18,19 +18,23 @@ class RoomEntryService
     auto_opened = false
 
     visit = ActiveRecord::Base.transaction do
-      # 行ロックで同時リクエストをシリアライズ
+      # userをロックし、遷移元部室を特定してから全部室をIDの昇順でロック（デッドロック防止）
       user.lock!
-      room.lock!
+
+      current_visit = RoomVisit.active.for_user(user).first
+      src_room_id = current_visit&.room_id
+      room_ids = ([ room.id, src_room_id ]).compact.uniq.sort
+      locked_rooms = Room.where(id: room_ids).order(:id).lock.index_by(&:id)
+      room = locked_rooms[room.id]
 
       now = Time.current
 
       # 別の部室に入室中なら先に退室
-      current_visit = RoomVisit.active.for_user(user).first
       if current_visit
         raise EntryError, "既にこの部室に入室中です" if current_visit.room_id == room.id
 
         current_visit.update!(exited_at: now)
-        auto_exited_room = current_visit.room
+        auto_exited_room = locked_rooms[src_room_id]
 
         # その部室が空になったら閉室
         if RoomVisit.active.for_room(auto_exited_room).none?
@@ -38,10 +42,8 @@ class RoomEntryService
           if active_session
             active_session.update!(closed_at: now, closed_by: user)
             auto_closed_previous_room = true
-            auto_exited_room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
-          else
-            remove_occupant_from_status(auto_exited_room, user)
           end
+          auto_exited_room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
         else
           remove_occupant_from_status(auto_exited_room, user)
         end
@@ -101,10 +103,8 @@ class RoomEntryService
         if active_session
           active_session.update!(closed_at: now, closed_by: user)
           auto_closed = true
-          room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
-        else
-          remove_occupant_from_status(room, user)
         end
+        room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
       else
         remove_occupant_from_status(room, user)
       end
@@ -148,18 +148,14 @@ class RoomEntryService
   def self.add_occupant_to_status(room, user, entered_at)
     status = room.room_status
     new_occupant = { "user_id" => user.id, "display_name" => user.display_name, "entered_at" => entered_at.iso8601 }
-    status.update!(
-      occupants: status.occupants + [ new_occupant ],
-      occupant_count: status.occupant_count + 1
-    )
+    new_occupants = status.occupants + [ new_occupant ]
+    status.update!(occupants: new_occupants, occupant_count: new_occupants.size)
   end
 
   def self.remove_occupant_from_status(room, user)
     status = room.room_status
-    status.update!(
-      occupants: status.occupants.reject { |o| o["user_id"] == user.id },
-      occupant_count: [ status.occupant_count - 1, 0 ].max
-    )
+    new_occupants = status.occupants.reject { |o| o["user_id"] == user.id }
+    status.update!(occupants: new_occupants, occupant_count: new_occupants.size)
   end
 
   private_class_method :room_entry_data, :add_occupant_to_status, :remove_occupant_from_status

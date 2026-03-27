@@ -24,6 +24,6 @@ class BackfillRoomStatuses < ActiveRecord::Migration[8.1]
   end
 
   def down
-    RoomStatus.delete_all
+    raise ActiveRecord::IrreversibleMigration, "backfill後に作成されたroom_statusレコードも削除されるためロールバック不可"
   end
 end

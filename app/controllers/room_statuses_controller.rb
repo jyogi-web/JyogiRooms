@@ -14,8 +14,10 @@ class RoomStatusesController < ApplicationController
 
     @room_data = @rooms.map do |room|
       status = room.room_status
-      occupants = status.occupants.map do |o|
-        { user: users_by_id[o["user_id"]], entered_at: Time.zone.parse(o["entered_at"]) }
+      occupants = status.occupants.filter_map do |o|
+        user = users_by_id[o["user_id"]]
+        next unless user
+        { user: user, entered_at: Time.zone.parse(o["entered_at"]) }
       end
 
       {

@@ -8,11 +8,11 @@ class Room < ApplicationRecord
   validates :name, presence: true
   validates :room_number, presence: true, uniqueness: true
 
-  after_create :create_room_status!
+  after_create :setup_room_status!
 
   private
 
-  def create_room_status!
+  def setup_room_status!
     RoomStatus.create!(room: self)
   end
 end
