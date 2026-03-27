@@ -5,25 +5,29 @@ class RoomStatusesController < ApplicationController
 
   # GET /room_statuses
   def index
-    @rooms = Room.includes(keys: :user).order(room_number: :desc)
+    @rooms = Room.includes(:room_status, keys: :user).order(room_number: :desc)
 
-    room_ids = @rooms.map(&:id)
-    sessions_by_room = RoomSession.active.where(room_id: room_ids).includes(:opened_by).index_by(&:room_id)
-    visits_by_room = RoomVisit.active.where(room_id: room_ids).includes(:user).group_by(&:room_id)
+    all_statuses = @rooms.map(&:room_status).compact
+    occupant_user_ids = all_statuses.flat_map { |s| s.occupants.map { |o| o["user_id"] } }.uniq
+    opener_user_ids = all_statuses.filter_map(&:opened_by_id).uniq
+    users_by_id = User.where(id: occupant_user_ids + opener_user_ids).index_by(&:id)
 
     @room_data = @rooms.map do |room|
-      session = sessions_by_room[room.id]
-      occupants = (visits_by_room[room.id] || []).map do |visit|
-        { user: visit.user, entered_at: visit.entered_at }
+      status = room.room_status
+      occupants = status.occupants.filter_map do |o|
+        user = users_by_id[o["user_id"]]
+        next unless user
+        { user: user, entered_at: Time.zone.parse(o["entered_at"]) }
       end
 
       {
         room: room,
-        is_open: session.present?,
-        session: session,
+        is_open: status.is_open,
+        opened_by: status.opened_by_id ? users_by_id[status.opened_by_id] : nil,
+        opened_at: status.opened_at,
         occupants: occupants,
         can_close: can_close?(room),
-        is_current_user_inside: occupants.any? { |o| o[:user].id == current_user.id }
+        is_current_user_inside: occupants.any? { |o| o[:user]&.id == current_user.id }
       }
     end
   end

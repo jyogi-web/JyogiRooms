@@ -18,35 +18,52 @@ class RoomEntryService
     auto_opened = false
 
     visit = ActiveRecord::Base.transaction do
-      # 行ロックで同時リクエストをシリアライズ
+      # userをロックし、遷移元部室を特定してから全部室をIDの昇順でロック（デッドロック防止）
       user.lock!
-      room.lock!
+
+      current_visit = RoomVisit.active.for_user(user).first
+      src_room_id = current_visit&.room_id
+      room_ids = ([ room.id, src_room_id ]).compact.uniq.sort
+      locked_rooms = Room.where(id: room_ids).order(:id).lock.index_by(&:id)
+      room = locked_rooms[room.id]
+
+      now = Time.current
 
       # 別の部室に入室中なら先に退室
-      current_visit = RoomVisit.active.for_user(user).first
       if current_visit
         raise EntryError, "既にこの部室に入室中です" if current_visit.room_id == room.id
 
-        current_visit.update!(exited_at: Time.current)
-        auto_exited_room = current_visit.room
+        current_visit.update!(exited_at: now)
+        auto_exited_room = locked_rooms[src_room_id]
 
         # その部室が空になったら閉室
         if RoomVisit.active.for_room(auto_exited_room).none?
           active_session = RoomSession.active.for_room(auto_exited_room).lock.first
           if active_session
-            active_session.update!(closed_at: Time.current, closed_by: user)
+            active_session.update!(closed_at: now, closed_by: user)
             auto_closed_previous_room = true
           end
+          auto_exited_room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
+        else
+          remove_occupant_from_status(auto_exited_room, user)
         end
       end
 
       # 部室が閉まっていれば自動開室
       unless RoomSession.active.for_room(room).exists?
-        RoomSession.create!(room: room, opened_by: user, opened_at: Time.current)
+        RoomSession.create!(room: room, opened_by: user, opened_at: now)
         auto_opened = true
       end
 
-      RoomVisit.create!(room: room, user: user, entered_at: Time.current, source: source)
+      visit = RoomVisit.create!(room: room, user: user, entered_at: now, source: source)
+      add_occupant_to_status(room, user, now)
+
+      # 自動開室した場合は is_open も更新（入室者追加と同時に反映）
+      if auto_opened
+        room.room_status.update!(is_open: true, opened_at: now, opened_by: user)
+      end
+
+      visit
     end
 
     # トランザクション成功後に通知
@@ -73,18 +90,23 @@ class RoomEntryService
       user.lock!
       room.lock!
 
+      now = Time.current
+
       current_visit = RoomVisit.active.for_room(room).for_user(user).first
       raise EntryError, "この部室に入室していません" unless current_visit
 
-      current_visit.update!(exited_at: Time.current)
+      current_visit.update!(exited_at: now)
 
       # 入室者が0人になったら閉室
       if RoomVisit.active.for_room(room).none?
         active_session = RoomSession.active.for_room(room).lock.first
         if active_session
-          active_session.update!(closed_at: Time.current, closed_by: user)
+          active_session.update!(closed_at: now, closed_by: user)
           auto_closed = true
         end
+        room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
+      else
+        remove_occupant_from_status(room, user)
       end
 
       current_visit
@@ -123,5 +145,18 @@ class RoomEntryService
     }
   end
 
-  private_class_method :room_entry_data
+  def self.add_occupant_to_status(room, user, entered_at)
+    status = room.room_status
+    new_occupant = { "user_id" => user.id, "display_name" => user.display_name, "entered_at" => entered_at.iso8601 }
+    new_occupants = status.occupants + [ new_occupant ]
+    status.update!(occupants: new_occupants, occupant_count: new_occupants.size)
+  end
+
+  def self.remove_occupant_from_status(room, user)
+    status = room.room_status
+    new_occupants = status.occupants.reject { |o| o["user_id"] == user.id }
+    status.update!(occupants: new_occupants, occupant_count: new_occupants.size)
+  end
+
+  private_class_method :room_entry_data, :add_occupant_to_status, :remove_occupant_from_status
 end

@@ -9,25 +9,16 @@ module Api
 
       # GET /api/rooms/:room_id/status
       def show
-        room = Room.find(params[:room_id])
-        session = RoomSession.active.for_room(room).first
-        occupants = RoomVisit.active.for_room(room).includes(:user).filter_map do |visit|
-          next unless visit.user.present? && visit.entered_at.present?
-
-          {
-            id: visit.user.id,
-            display_name: visit.user.display_name,
-            entered_at: visit.entered_at.iso8601
-          }
-        end
+        room = Room.includes(:room_status).find(params[:room_id])
+        status = room.room_status
 
         render json: {
           room: { id: room.id, name: room.name },
-          is_open: session.present?,
-          opened_at: session&.opened_at&.iso8601,
-          opened_by: session ? { id: session.opened_by.id, display_name: session.opened_by.display_name } : nil,
-          occupants: occupants,
-          occupant_count: occupants.size
+          is_open: status.is_open,
+          opened_at: status.opened_at&.iso8601,
+          opened_by: status.opened_by_id ? { id: status.opened_by_id, display_name: status.opened_by.display_name } : nil,
+          occupants: status.occupants.map { |o| { id: o["user_id"], display_name: o["display_name"], entered_at: o["entered_at"] } },
+          occupant_count: status.occupant_count
         }, status: :ok
       rescue ActiveRecord::RecordNotFound
         render json: { error: "部室が見つかりません" }, status: :not_found
