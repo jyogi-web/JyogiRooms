@@ -15,7 +15,7 @@ export const statusCommand = {
         const room = getStringOption(interaction, 'room');
 
         try {
-            const rooms = await withTimeout((signal) => api.fetchKeys(signal), 3000);
+            const rooms = await withTimeout((signal) => api.fetchKeys(signal), 10000);
 
             if (rooms.length === 0) {
                 return reply('部室情報が登録されていません。');
@@ -37,7 +37,7 @@ export const statusCommand = {
             let description = '';
 
             const statusResults = await Promise.allSettled(
-                targetRooms.map((r) => withTimeout((signal) => api.fetchRoomStatus(r.room_id, signal), 3000))
+                targetRooms.map((r) => withTimeout((signal) => api.fetchRoomStatus(r.room_id, signal), 10000))
             );
 
             for (const [index, result] of statusResults.entries()) {
