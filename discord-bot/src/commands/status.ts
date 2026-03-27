@@ -15,7 +15,7 @@ export const statusCommand = {
         const room = getStringOption(interaction, 'room');
 
         try {
-            const rooms = await withTimeout(api.fetchKeys(), 3000);
+            const rooms = await withTimeout((signal) => api.fetchKeys(signal), 3000);
 
             if (rooms.length === 0) {
                 return reply('部室情報が登録されていません。');
@@ -37,7 +37,7 @@ export const statusCommand = {
             let description = '';
 
             const statusResults = await Promise.allSettled(
-                targetRooms.map((r) => withTimeout(api.fetchRoomStatus(r.room_id), 3000))
+                targetRooms.map((r) => withTimeout((signal) => api.fetchRoomStatus(r.room_id, signal), 3000))
             );
 
             for (const [index, result] of statusResults.entries()) {
@@ -106,13 +106,16 @@ function formatTime(value: string): string {
     });
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+function withTimeout<T>(task: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
+    const controller = new AbortController();
+
     return new Promise<T>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
+            controller.abort();
             reject(new Error(`timeout after ${timeoutMs}ms`));
         }, timeoutMs);
 
-        promise
+        task(controller.signal)
             .then((result) => {
                 clearTimeout(timeoutId);
                 resolve(result);
