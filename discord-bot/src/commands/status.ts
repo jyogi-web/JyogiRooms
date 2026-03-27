@@ -15,7 +15,7 @@ export const statusCommand = {
         const room = getStringOption(interaction, 'room');
 
         try {
-            const rooms = await api.fetchKeys();
+            const rooms = await withTimeout(api.fetchKeys(), 3000);
 
             if (rooms.length === 0) {
                 return reply('部室情報が登録されていません。');
@@ -37,7 +37,7 @@ export const statusCommand = {
             let description = '';
 
             const statusResults = await Promise.allSettled(
-                targetRooms.map((r) => api.fetchRoomStatus(r.room_id))
+                targetRooms.map((r) => withTimeout(api.fetchRoomStatus(r.room_id), 3000))
             );
 
             for (const [index, result] of statusResults.entries()) {
@@ -103,5 +103,23 @@ function formatTime(value: string): string {
 
     return date.toLocaleTimeString('ja-JP', {
         hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo'
+    });
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error(`timeout after ${timeoutMs}ms`));
+        }, timeoutMs);
+
+        promise
+            .then((result) => {
+                clearTimeout(timeoutId);
+                resolve(result);
+            })
+            .catch((error) => {
+                clearTimeout(timeoutId);
+                reject(error);
+            });
     });
 }
