@@ -31,9 +31,9 @@
           <% end %>
         </div>
 
-        <% if data[:is_open] && data[:session] %>
+        <% if data[:is_open] && data[:opened_by] %>
           <p class="text-xs text-gray-500 mb-3">
-            <%= data[:session].opened_by.display_name %>が<%= data[:session].opened_at.in_time_zone("Asia/Tokyo").strftime("%H:%M") %>に開室
+            <%= data[:opened_by].display_name %>が<%= data[:opened_at].in_time_zone("Asia/Tokyo").strftime("%H:%M") %>に開室
           </p>
         <% end %>
 
