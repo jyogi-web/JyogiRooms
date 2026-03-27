@@ -25,9 +25,9 @@ export const helpCommand = {
         const isPublic = getBooleanOption(interaction, 'public') === true;
 
         const description = [
-            '部室予約・鍵管理Webアプリ「JyogiRooms」の一部機能をDiscordから利用できるBotです。',
+            'Webアプリ「JyogiRooms」の一部機能をDiscordから利用できるBotです。',
             '',
-            '### 📅 予約関連',
+            '### 📅 部室予約',
             '`/list` — 今後の予約一覧を表示（最大10件）',
             '`/check` — 指定した日の予約を確認',
             '　　`preset`: 今日 / 明日 から選択',
@@ -38,7 +38,7 @@ export const helpCommand = {
             '　　`end`: 終了時刻（例: `12:00`, `12`）',
             '　　`purpose`: 利用目的（任意）',
             '',
-            '### 🚪 部室管理',
+            '### 🚪 部室状況',
             '`/status` — 部室の状況を確認',
             '　　`room`: 部室番号 または `all`（省略時も全部室）',
             '',
