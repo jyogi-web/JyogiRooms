@@ -11,13 +11,18 @@ class RoomStateService
   # @param user [User]
   # @return [RoomSession]
   def self.open(room:, user:)
+    now = Time.current
+
     session = ActiveRecord::Base.transaction do
       # 部室行ロックで同一部室の同時リクエストをシリアライズ
       room.lock!
 
       raise StateError, "この部室は既に開室しています" if RoomSession.active.for_room(room).exists?
 
-      RoomSession.create!(room: room, opened_by: user, opened_at: Time.current)
+      session = RoomSession.create!(room: room, opened_by: user, opened_at: now)
+      room.room_status.update!(is_open: true, opened_at: now, opened_by: user)
+
+      session
     end
 
     DiscordNotifier.notify(type: "room_opened", data: room_state_data(room, user))
@@ -40,6 +45,7 @@ class RoomStateService
 
       RoomVisit.active.for_room(room).update_all(exited_at: Time.current)
       session.update!(closed_at: Time.current, closed_by: user)
+      room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
 
       session
     end
