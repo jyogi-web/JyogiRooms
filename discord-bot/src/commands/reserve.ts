@@ -3,9 +3,9 @@ import { api, ApiError } from '../api.js';
 import type { Interaction } from './types.js';
 import { getStringOption, getUserId, parseDateInput, reply, replyEmbed } from './utils.js';
 
-export const createCommand = {
+export const reserveCommand = {
     data: new SlashCommandBuilder()
-        .setName('create')
+        .setName('reserve')
         .setDescription('予約を新規作成します')
         .addStringOption(option =>
             option.setName('date')
@@ -13,11 +13,11 @@ export const createCommand = {
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('start')
-                .setDescription('開始時刻 (例: 10:00)')
+                .setDescription('開始時刻 (例: 13:00, 13)')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('end')
-                .setDescription('終了時刻 (例: 12:00)')
+                .setDescription('終了時刻 (例: 14:00, 14)')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('purpose')

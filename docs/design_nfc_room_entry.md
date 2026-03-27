@@ -96,6 +96,39 @@
 - `closed_at IS NULL` → 現在開室中
 - 統計用途：曜日別の開室時間、誰がよく開けているか等を集計可能
 
+### room_status（部室状況スナップショット・参照専用）
+
+| カラム | 型 | 制約 | 説明 |
+|--------|------|------|------|
+| id | bigint | PK | |
+| room_id | bigint | FK, NOT NULL, UNIQUE | 部室（1部室1レコード） |
+| is_open | boolean | NOT NULL, default: false | 現在開室中か |
+| opened_at | datetime | | 開室時刻（is_open=falseの時はNULL） |
+| opened_by_id | bigint | FK | 開室したユーザー（is_open=falseの時はNULL） |
+| occupant_count | integer | NOT NULL, default: 0 | 現在の在室人数 |
+| occupants | jsonb | NOT NULL, default: [] | 在室中ユーザーのスナップショット |
+| created_at | datetime | NOT NULL | |
+| updated_at | datetime | NOT NULL | |
+
+`occupants` JSONBの形式:
+```json
+[
+  {
+    "user_id": 1,
+    "display_name": "田中太郎",
+    "entered_at": "2026-03-27T10:05:00+09:00"
+  }
+]
+```
+
+**設計方針:**
+- **1部室1レコードのみ**。`room_id` にUNIQUE制約
+- **読み取り専用の窓口**。状況確認（WebアプリとDiscord Bot）はこのテーブルのみ参照
+- `room_visits` / `room_sessions` への記録は行うが、部室状況確認の処理では使わない
+- 在室者情報はJSONBで非正規化して保持するため、状況確認時にJOINが不要
+- `display_name` はエントリ時点のスナップショット（入退室のたびに更新されるため実用上は常に最新）
+- Roomレコード作成時に `after_create` コールバックで対応する `room_status` を自動生成（`is_open: false`, `occupants: []`）
+
 ---
 
 ## API設計
@@ -135,6 +168,8 @@ NFC Raspiからのリクエストは既存の`X-Api-Key`ヘッダー認証を使
 | メソッド | パス | 用途 | クライアント |
 |----------|------|------|------------|
 | GET | `/api/rooms/:room_id/status` | 部室状況（開閉・入室者一覧） | Webアプリ, Discord Bot |
+
+> **参照テーブル:** `room_status` のみ。`room_visits` / `room_sessions` は参照しない。
 
 ---
 
@@ -284,13 +319,15 @@ Webアプリ                      Rails API                    NFC Raspi
 class RoomEntryService
   def self.enter(room, user, source: "web")
     # 既に入室中ならエラー
-    # room_visitsにレコード作成
+    # room_visitsにレコード作成（記録）
+    # room_status.occupantsにユーザーを追加、occupant_countをインクリメント（参照用更新）
     # Discord通知
   end
 
   def self.exit(room, user)
     # 入室中でなければエラー
-    # exited_atを現在時刻に更新
+    # room_visits.exited_atを現在時刻に更新（記録）
+    # room_status.occupantsからユーザーを除去、occupant_countをデクリメント（参照用更新）
     # Discord通知
   end
 
@@ -306,20 +343,32 @@ end
 class RoomStateService
   def self.open(room, user)
     # 既に開室中ならエラー
-    # room_sessionsにレコード作成（opened_by, opened_at）
+    # room_sessionsにレコード作成（opened_by, opened_at）（記録）
+    # room_status.is_open=true, opened_at, opened_by_idを更新（参照用更新）
     # Discord通知
   end
 
   def self.close(room, user)
     # 開室中でなければエラー
-    # 入室中の全ユーザーを退室処理（room_visits.exited_at更新）
-    # room_sessionsのclosed_at, closed_by更新
+    # 入室中の全ユーザーを退室処理（room_visits.exited_at更新）（記録）
+    # room_sessionsのclosed_at, closed_by更新（記録）
+    # room_status.is_open=false, opened_at/opened_by_id=NULL, occupants=[], occupant_count=0（参照用更新）
     # Discord通知
   end
 end
 ```
 
 ※ 権限チェック（鍵持ち/管理者）はAPIコントローラー層（`authorize_key_holder!`）で実施
+
+### room_statusの更新タイミングまとめ
+
+| イベント | 更新内容 |
+|---------|---------|
+| 開室（open） | `is_open=true`, `opened_at`, `opened_by_id` を設定 |
+| 閉室（close） | `is_open=false`, `opened_at/opened_by_id=NULL`, `occupants=[]`, `occupant_count=0` |
+| 入室（enter） | `occupants` に `{user_id, display_name, entered_at}` を追加、`occupant_count+1` |
+| 退室（exit） | `occupants` から該当ユーザーを除去、`occupant_count-1` |
+| 部屋作成（Room.create） | `room_status` レコードを自動生成（is_open: false, occupants: []） |
 
 ---
 

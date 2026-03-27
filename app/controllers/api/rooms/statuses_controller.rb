@@ -11,7 +11,9 @@ module Api
       def show
         room = Room.find(params[:room_id])
         session = RoomSession.active.for_room(room).first
-        occupants = RoomVisit.active.for_room(room).includes(:user).map do |visit|
+        occupants = RoomVisit.active.for_room(room).includes(:user).filter_map do |visit|
+          next unless visit.user.present? && visit.entered_at.present?
+
           {
             id: visit.user.id,
             display_name: visit.user.display_name,

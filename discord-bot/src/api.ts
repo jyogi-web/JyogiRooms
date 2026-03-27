@@ -4,6 +4,34 @@ import 'dotenv/config';
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
 const API_TIMEOUT_MS = 45000; // Cloud Runのコールドスタート(約30秒)を考慮
 
+function createRequestAbortContext(externalSignal?: AbortSignal): { signal: AbortSignal; cleanup: () => void } {
+    const controller = new AbortController();
+
+    const onExternalAbort = () => {
+        controller.abort();
+    };
+
+    if (externalSignal) {
+        if (externalSignal.aborted) {
+            controller.abort();
+        } else {
+            externalSignal.addEventListener('abort', onExternalAbort, { once: true });
+        }
+    }
+
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+    return {
+        signal: controller.signal,
+        cleanup: () => {
+            clearTimeout(timeoutId);
+            if (externalSignal) {
+                externalSignal.removeEventListener('abort', onExternalAbort);
+            }
+        }
+    };
+}
+
 export class ApiError extends Error {
     constructor(
         message: string,
@@ -118,16 +146,15 @@ export const api = {
      * 各部室の鍵持ち情報を取得する
      * @returns 部室ごとの鍵情報の配列
      */
-    async fetchKeys(): Promise<RoomKeys[]> {
+    async fetchKeys(externalSignal?: AbortSignal): Promise<RoomKeys[]> {
         const url = new URL(`${API_BASE_URL}/keys`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+        const requestAbort = createRequestAbortContext(externalSignal);
 
         try {
             const headers = {
                 'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
             };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+            const response = await fetch(url.toString(), { signal: requestAbort.signal, headers });
 
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -135,7 +162,7 @@ export const api = {
 
             return await response.json() as RoomKeys[];
         } finally {
-            clearTimeout(timeoutId);
+            requestAbort.cleanup();
         }
     },
 
@@ -220,16 +247,15 @@ export const api = {
     /**
      * 部室状況を取得する
      */
-    async fetchRoomStatus(roomId: number): Promise<RoomStatus> {
+    async fetchRoomStatus(roomId: number, externalSignal?: AbortSignal): Promise<RoomStatus> {
         const url = new URL(`${API_BASE_URL}/rooms/${roomId}/status`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+        const requestAbort = createRequestAbortContext(externalSignal);
 
         try {
             const headers = {
                 'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
             };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+            const response = await fetch(url.toString(), { signal: requestAbort.signal, headers });
 
             if (!response.ok) {
                 throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -237,7 +263,7 @@ export const api = {
 
             return await response.json() as RoomStatus;
         } finally {
-            clearTimeout(timeoutId);
+            requestAbort.cleanup();
         }
     },
 
