@@ -20,7 +20,7 @@ services:
     env_file:
       - .env.production
     environment:
-      - API_BASE_URL=http://app:8080
+      - API_BASE_URL=http://app:8080/api
       - PORT=3000
     depends_on:
       - app
