@@ -50,7 +50,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
+        uses: google-github-actions/deploy-cloudrun@v3
         with:
           service: jyogi-discord-bot
           region: ${{ env.REGION }}
