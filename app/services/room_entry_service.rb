@@ -149,7 +149,7 @@ class RoomEntryService
     status = room.room_status
     new_occupant = { "user_id" => user.id, "display_name" => user.display_name, "entered_at" => entered_at.iso8601 }
     status.update!(
-      occupants: status.occupants + [new_occupant],
+      occupants: status.occupants + [ new_occupant ],
       occupant_count: status.occupant_count + 1
     )
   end
