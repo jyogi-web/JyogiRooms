@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_000008) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,6 +105,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000008) do
     t.index ["room_id"], name: "index_room_sessions_on_room_id_active_unique", unique: true, where: "(closed_at IS NULL)"
   end
 
+  create_table "room_statuses", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "is_open", default: false, null: false
+    t.integer "occupant_count", default: 0, null: false
+    t.jsonb "occupants", default: [], null: false
+    t.datetime "opened_at"
+    t.bigint "opened_by_id"
+    t.bigint "room_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["opened_by_id"], name: "index_room_statuses_on_opened_by_id"
+    t.index ["room_id"], name: "index_room_statuses_on_room_id", unique: true
+  end
+
   create_table "room_visits", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "entered_at", null: false
@@ -165,6 +178,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_000008) do
   add_foreign_key "room_sessions", "rooms"
   add_foreign_key "room_sessions", "users", column: "closed_by_id"
   add_foreign_key "room_sessions", "users", column: "opened_by_id"
+  add_foreign_key "room_statuses", "rooms"
+  add_foreign_key "room_statuses", "users", column: "opened_by_id"
   add_foreign_key "room_visits", "rooms"
   add_foreign_key "room_visits", "users"
   add_foreign_key "users", "roles"
