@@ -1,21 +1,19 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, reply, replyEmbed } from './utils.js';
 
 export const statusCommand = {
-    data: new SlashCommandBuilder()
-        .setName('status')
-        .setDescription('部室の状況を確認します')
-        .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（例: 1, 2, 3）または all（省略時も全部室）').setRequired(false)
-        ),
+    data: {
+        name: 'status',
+        description: '部室の状況を確認します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const room = getStringOption(interaction, 'room');
 
         try {
-            const rooms = await withTimeout((signal) => api.fetchKeys(signal), 10000);
+            const api = createApi(env);
+            const rooms = await withTimeout(() => api.fetchKeys(), 10000);
 
             if (rooms.length === 0) {
                 return reply('部室情報が登録されていません。');
@@ -37,7 +35,7 @@ export const statusCommand = {
             let description = '';
 
             const statusResults = await Promise.allSettled(
-                targetRooms.map((r) => withTimeout((signal) => api.fetchRoomStatus(r.room_id, signal), 10000))
+                targetRooms.map((r) => withTimeout(() => api.fetchRoomStatus(r.room_id), 10000))
             );
 
             for (const [index, result] of statusResults.entries()) {
@@ -106,16 +104,13 @@ function formatTime(value: string): string {
     });
 }
 
-function withTimeout<T>(task: (signal: AbortSignal) => Promise<T>, timeoutMs: number): Promise<T> {
-    const controller = new AbortController();
-
+function withTimeout<T>(task: () => Promise<T>, timeoutMs: number): Promise<T> {
     return new Promise<T>((resolve, reject) => {
         const timeoutId = setTimeout(() => {
-            controller.abort();
             reject(new Error(`timeout after ${timeoutMs}ms`));
         }, timeoutMs);
 
-        task(controller.signal)
+        task()
             .then((result) => {
                 clearTimeout(timeoutId);
                 resolve(result);

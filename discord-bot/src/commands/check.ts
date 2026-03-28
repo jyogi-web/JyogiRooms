@@ -1,30 +1,14 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
-import { getStringOption, parseDateInput, reply, replyEmbed } from './utils.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
+import { getStringOption, parseDateInput, jstDate, reply, replyEmbed } from './utils.js';
 
 export const checkCommand = {
-    data: new SlashCommandBuilder()
-        .setName('check')
-        .setDescription('指定した日の予約を確認します')
-        .addStringOption(option =>
-            option
-                .setName('preset')
-                .setDescription('日付プリセット')
-                .setRequired(false)
-                .addChoices(
-                    { name: '今日 (Today)', value: 'today' },
-                    { name: '明日 (Tomorrow)', value: 'tomorrow' }
-                )
-        )
-        .addStringOption(option =>
-            option
-                .setName('date')
-                .setDescription('日付指定 (例: 11/23, 2025/01/01)')
-                .setRequired(false)
-        ),
+    data: {
+        name: 'check',
+        description: '指定した日の予約を確認します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const preset = getStringOption(interaction, 'preset');
         const dateInput = getStringOption(interaction, 'date');
 
@@ -36,19 +20,18 @@ export const checkCommand = {
         if (preset) targetDateStr = preset;
         else if (dateInput) targetDateStr = dateInput;
 
-        const targetDate = parseDateInput(targetDateStr);
-        if (!targetDate || isNaN(targetDate.getTime())) {
+        const parsed = parseDateInput(targetDateStr);
+        if (!parsed) {
             return reply('日付の形式が正しくありません。\n例: `11/23`, `2025/01/01`, `today`');
         }
 
-        const start = new Date(targetDate);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(targetDate);
-        end.setHours(23, 59, 59, 999);
+        const start = jstDate(parsed.year, parsed.month, parsed.day);
+        const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
 
         try {
+            const api = createApi(env);
             const reservations = await api.fetchReservations(start.toISOString(), end.toISOString());
-            const dateDisplay = start.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
+            const dateDisplay = start.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', timeZone: 'Asia/Tokyo' });
 
             if (reservations.length === 0) {
                 return replyEmbed(`📅 ${dateDisplay} の予約一覧`, '予約はありません。');
@@ -62,7 +45,7 @@ export const checkCommand = {
                 const res = reservations[i];
                 const s = new Date(res.start_at);
                 const e = new Date(res.end_at);
-                const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+                const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}`;
 
                 let userDisplay = `User ${res.user_id}`;
                 if (res.user) {

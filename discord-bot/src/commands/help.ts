@@ -1,6 +1,5 @@
-import { SlashCommandBuilder } from 'discord.js';
 import { InteractionResponseType } from 'discord-interactions';
-import type { Interaction } from './types.js';
+import type { Interaction, CommandEnv } from './types.js';
 const BOOLEAN_TYPE = 5;
 
 function getBooleanOption(interaction: Interaction, name: string): boolean | null {
@@ -11,17 +10,12 @@ function getBooleanOption(interaction: Interaction, name: string): boolean | nul
 }
 
 export const helpCommand = {
-    data: new SlashCommandBuilder()
-        .setName('help')
-        .setDescription('コマンドの使い方を表示します')
-        .addBooleanOption(option =>
-            option
-                .setName('public')
-                .setDescription('チャンネル全体に表示する（デフォルトは自分だけ）')
-                .setRequired(false)
-        ),
+    data: {
+        name: 'help',
+        description: 'コマンドの使い方を表示します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, _env: CommandEnv): Promise<object> {
         const isPublic = getBooleanOption(interaction, 'public') === true;
 
         const description = [

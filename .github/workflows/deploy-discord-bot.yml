@@ -1,4 +1,4 @@
-name: Deploy Discord Bot to Cloud Run
+name: Deploy Discord Bot to Cloudflare Workers
 
 on:
   push:
@@ -6,54 +6,28 @@ on:
     paths:
       - 'discord-bot/**'
 
-env:
-  PROJECT_ID: jyogirooms
-  REGION: asia-northeast1
-  IMAGE: asia-northeast1-docker.pkg.dev/jyogirooms/jyogi-rooms/discord-bot
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          workload_identity_provider: projects/877085301688/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-          service_account: 877085301688-compute@developer.gserviceaccount.com
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: discord-bot/package-lock.json
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+      - name: Install dependencies
+        working-directory: discord-bot
+        run: npm ci
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./discord-bot
-          platforms: linux/amd64
-          push: true
-          tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: jyogi-discord-bot
-          region: ${{ env.REGION }}
-          image: ${{ env.IMAGE }}:${{ github.sha }}
-          project_id: ${{ env.PROJECT_ID }}
-          flags: '--port=3000'
+      - name: Deploy to Cloudflare Workers
+        working-directory: discord-bot
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

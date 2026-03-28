@@ -22,15 +22,38 @@ export function getUserId(interaction: Interaction): string | null {
     return interaction.member?.user?.id ?? interaction.user?.id ?? null;
 }
 
-export function parseDateInput(input: string): Date | null {
-    const now = new Date();
+const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** 現在のJSTの年月日を取得 */
+function nowJST(): { year: number; month: number; day: number } {
+    const jst = new Date(Date.now() + JST_OFFSET_MS);
+    return { year: jst.getUTCFullYear(), month: jst.getUTCMonth(), day: jst.getUTCDate() };
+}
+
+/** JST年月日からJST 0:00のUTC Dateを生成 */
+export function jstDate(year: number, month: number, day: number): Date {
+    return new Date(Date.UTC(year, month, day) - JST_OFFSET_MS);
+}
+
+/** JST年月日時分からUTC Dateを生成 */
+export function jstDateTime(year: number, month: number, day: number, hour: number, minute: number): Date {
+    return new Date(Date.UTC(year, month, day, hour, minute, 0, 0) - JST_OFFSET_MS);
+}
+
+/**
+ * 日付文字列をパースしてJSTの日付として返す（{year, month(0-indexed), day}）
+ * Workers環境(UTC)でもJST基準で正しく動作する
+ */
+export function parseDateInput(input: string): { year: number; month: number; day: number } | null {
     const normalized = input.toLowerCase().trim();
 
-    if (!normalized || normalized === 'today') return now;
+    if (!normalized || normalized === 'today') {
+        const n = nowJST();
+        return n;
+    }
     if (normalized === 'tomorrow') {
-        const d = new Date(now);
-        d.setDate(d.getDate() + 1);
-        return d;
+        const tomorrow = new Date(Date.now() + JST_OFFSET_MS + 24 * 60 * 60 * 1000);
+        return { year: tomorrow.getUTCFullYear(), month: tomorrow.getUTCMonth(), day: tomorrow.getUTCDate() };
     }
 
     const ymdMatch = normalized.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
@@ -38,19 +61,19 @@ export function parseDateInput(input: string): Date | null {
         const year = parseInt(ymdMatch[1], 10);
         const month = parseInt(ymdMatch[2], 10) - 1;
         const day = parseInt(ymdMatch[3], 10);
-        const d = new Date(year, month, day);
-        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
-        return d;
+        const d = new Date(Date.UTC(year, month, day));
+        if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month || d.getUTCDate() !== day) return null;
+        return { year, month, day };
     }
 
     const mdMatch = normalized.match(/^(\d{1,2})[-/.](\d{1,2})$/);
     if (mdMatch) {
-        const year = now.getFullYear();
+        const { year } = nowJST();
         const month = parseInt(mdMatch[1], 10) - 1;
         const day = parseInt(mdMatch[2], 10);
-        const d = new Date(year, month, day);
-        if (d.getFullYear() !== year || d.getMonth() !== month || d.getDate() !== day) return null;
-        return d;
+        const d = new Date(Date.UTC(year, month, day));
+        if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month || d.getUTCDate() !== day) return null;
+        return { year, month, day };
     }
 
     return null;

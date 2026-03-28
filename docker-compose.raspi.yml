@@ -11,17 +11,3 @@ services:
       - RAILS_ENV=production
     restart: always
 
-  discord-bot:
-    build:
-      context: ./discord-bot
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    env_file:
-      - .env.production
-    environment:
-      - API_BASE_URL=http://app:8080/api
-      - PORT=3000
-    depends_on:
-      - app
-    restart: always

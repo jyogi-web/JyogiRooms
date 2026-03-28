@@ -1,18 +1,16 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, reply, replyEmbed } from './utils.js';
 
 export const keyCommand = {
-    data: new SlashCommandBuilder()
-        .setName('key')
-        .setDescription('各部室の鍵持ち一覧を表示します')
-        .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
-        ),
+    data: {
+        name: 'key',
+        description: '各部室の鍵持ち一覧を表示します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         try {
+            const api = createApi(env);
             const room = getStringOption(interaction, 'room');
             const rooms = await api.fetchKeys();
 
