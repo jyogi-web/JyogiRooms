@@ -1,30 +1,14 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, parseDateInput, reply, replyEmbed } from './utils.js';
 
 export const checkCommand = {
-    data: new SlashCommandBuilder()
-        .setName('check')
-        .setDescription('指定した日の予約を確認します')
-        .addStringOption(option =>
-            option
-                .setName('preset')
-                .setDescription('日付プリセット')
-                .setRequired(false)
-                .addChoices(
-                    { name: '今日 (Today)', value: 'today' },
-                    { name: '明日 (Tomorrow)', value: 'tomorrow' }
-                )
-        )
-        .addStringOption(option =>
-            option
-                .setName('date')
-                .setDescription('日付指定 (例: 11/23, 2025/01/01)')
-                .setRequired(false)
-        ),
+    data: {
+        name: 'check',
+        description: '指定した日の予約を確認します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const preset = getStringOption(interaction, 'preset');
         const dateInput = getStringOption(interaction, 'date');
 
@@ -47,6 +31,7 @@ export const checkCommand = {
         end.setHours(23, 59, 59, 999);
 
         try {
+            const api = createApi(env);
             const reservations = await api.fetchReservations(start.toISOString(), end.toISOString());
             const dateDisplay = start.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
 

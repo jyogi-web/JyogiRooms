@@ -1,30 +1,14 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api, ApiError } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi, ApiError } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, getUserId, parseDateInput, reply, replyEmbed } from './utils.js';
 
 export const reserveCommand = {
-    data: new SlashCommandBuilder()
-        .setName('reserve')
-        .setDescription('予約を新規作成します')
-        .addStringOption(option =>
-            option.setName('date')
-                .setDescription('日付 (例: 12/25, 2026/01/01, today)')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('start')
-                .setDescription('開始時刻 (例: 13:00, 13)')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('end')
-                .setDescription('終了時刻 (例: 14:00, 14)')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('purpose')
-                .setDescription('利用目的 (任意)')
-                .setRequired(false)),
+    data: {
+        name: 'reserve',
+        description: '予約を新規作成します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const dateInput = getStringOption(interaction, 'date');
         const startInput = getStringOption(interaction, 'start');
         const endInput = getStringOption(interaction, 'end');
@@ -80,6 +64,7 @@ export const reserveCommand = {
         }
 
         try {
+            const api = createApi(env);
             const res = await api.createReservation({
                 start_at: startAt.toISOString(),
                 end_at: endAt.toISOString(),
@@ -95,7 +80,7 @@ export const reserveCommand = {
             if (e instanceof ApiError && e.status === 422 && e.validationErrors.length > 0) {
                 const hasOverlap = e.validationErrors.some((msg: string) => msg.includes('既に予約が入っています'));
                 if (hasOverlap) {
-                    return await buildOverlapErrorResponse(startAt, endAt, e.validationErrors);
+                    return await buildOverlapErrorResponse(env, startAt, endAt, e.validationErrors);
                 }
                 const errorList = e.validationErrors.map((msg: string) => `・${msg}`).join('\n');
                 return reply(`予約を作成できませんでした。\n${errorList}`);
@@ -105,7 +90,7 @@ export const reserveCommand = {
     },
 };
 
-async function buildOverlapErrorResponse(startAt: Date, endAt: Date, errors: string[]): Promise<object> {
+async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: Date, errors: string[]): Promise<object> {
     const dayStart = new Date(startAt);
     dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(startAt);
@@ -114,6 +99,7 @@ async function buildOverlapErrorResponse(startAt: Date, endAt: Date, errors: str
     let description = '指定された時間帯に既存の予約があります。\n\n';
 
     try {
+        const api = createApi(env);
         const reservations = await api.fetchReservations(dayStart.toISOString(), dayEnd.toISOString());
         const overlapping = reservations.filter(r => {
             const rStart = new Date(r.start_at);

@@ -1,19 +1,17 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, reply } from './utils.js';
 import { InteractionResponseType } from 'discord-interactions';
 
 export const callCommand = {
-    data: new SlashCommandBuilder()
-        .setName('call')
-        .setDescription('指定した部室の鍵持ちをメンションして通知します')
-        .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（例: 1, 2, 3）').setRequired(true)
-        ),
+    data: {
+        name: 'call',
+        description: '指定した部室の鍵持ちをメンションして通知します',
+    },
 
-    async execute(interaction: Interaction): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         try {
+            const api = createApi(env);
             const room = getStringOption(interaction, 'room');
             if (!room) {
                 return reply('部室番号を指定してください。');

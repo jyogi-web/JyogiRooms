@@ -26,3 +26,13 @@ export interface Interaction {
     token: string;
     id: string;
 }
+
+export interface CommandEnv {
+    API_BASE_URL: string;
+    API_ACCESS_TOKEN: string;
+}
+
+export interface Command {
+    data: { name: string; description: string };
+    execute(interaction: Interaction, env: CommandEnv): Promise<object>;
+}

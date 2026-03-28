@@ -1,15 +1,16 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { reply, replyEmbed } from './utils.js';
 
 export const listCommand = {
-    data: new SlashCommandBuilder()
-        .setName('list')
-        .setDescription('今後の予約一覧を表示します'),
+    data: {
+        name: 'list',
+        description: '今後の予約一覧を表示します',
+    },
 
-    async execute(_interaction: Interaction): Promise<object> {
+    async execute(_interaction: Interaction, env: CommandEnv): Promise<object> {
         try {
+            const api = createApi(env);
             const now = new Date();
             const endDate = new Date(now);
             endDate.setDate(endDate.getDate() + 30);

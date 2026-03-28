@@ -1,8 +1,6 @@
-import { REST, Routes } from 'discord.js';
+import { REST, Routes, SlashCommandBuilder } from 'discord.js';
 import 'dotenv/config';
-import { commands } from './commands/index.js';
 
-// 環境変数のチェック
 const token = process.env.DISCORD_BOT_TOKEN;
 const clientId = process.env.DISCORD_CLIENT_ID;
 
@@ -16,13 +14,74 @@ if (!clientId) {
     process.exit(1);
 }
 
+// コマンド定義（オプション含む）はデプロイ時のみ必要
+const commandDefinitions = [
+    new SlashCommandBuilder()
+        .setName('list')
+        .setDescription('今後の予約一覧を表示します'),
+
+    new SlashCommandBuilder()
+        .setName('check')
+        .setDescription('指定した日の予約を確認します')
+        .addStringOption(option =>
+            option.setName('preset').setDescription('日付プリセット').setRequired(false)
+                .addChoices(
+                    { name: '今日 (Today)', value: 'today' },
+                    { name: '明日 (Tomorrow)', value: 'tomorrow' }
+                )
+        )
+        .addStringOption(option =>
+            option.setName('date').setDescription('日付指定 (例: 11/23, 2025/01/01)').setRequired(false)
+        ),
+
+    new SlashCommandBuilder()
+        .setName('reserve')
+        .setDescription('予約を新規作成します')
+        .addStringOption(option =>
+            option.setName('date').setDescription('日付 (例: 12/25, 2026/01/01, today)').setRequired(true))
+        .addStringOption(option =>
+            option.setName('start').setDescription('開始時刻 (例: 13:00, 13)').setRequired(true))
+        .addStringOption(option =>
+            option.setName('end').setDescription('終了時刻 (例: 14:00, 14)').setRequired(true))
+        .addStringOption(option =>
+            option.setName('purpose').setDescription('利用目的 (任意)').setRequired(false)),
+
+    new SlashCommandBuilder()
+        .setName('key')
+        .setDescription('各部室の鍵持ち一覧を表示します')
+        .addStringOption(option =>
+            option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
+        ),
+
+    new SlashCommandBuilder()
+        .setName('call')
+        .setDescription('指定した部室の鍵持ちをメンションして通知します')
+        .addStringOption(option =>
+            option.setName('room').setDescription('部室番号（例: 1, 2, 3）').setRequired(true)
+        ),
+
+    new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('コマンドの使い方を表示します')
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（デフォルトは自分だけ）').setRequired(false)
+        ),
+
+    new SlashCommandBuilder()
+        .setName('status')
+        .setDescription('部室の状況を確認します')
+        .addStringOption(option =>
+            option.setName('room').setDescription('部室番号（例: 1, 2, 3）または all（省略時も全部室）').setRequired(false)
+        ),
+];
+
 const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
     try {
         console.log('📦 Started refreshing application (/) commands.');
 
-        const commandData = commands.map(command => command.data.toJSON());
+        const commandData = commandDefinitions.map(command => command.toJSON());
 
         await rest.put(
             Routes.applicationCommands(clientId),
