@@ -1,6 +1,6 @@
 import { createApi, ApiError } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, getUserId, parseDateInput, reply, replyEmbed } from './utils.js';
+import { getStringOption, getUserId, parseDateInput, jstDate, jstDateTime, reply, replyEmbed } from './utils.js';
 
 export const reserveCommand = {
     data: {
@@ -46,14 +46,8 @@ export const reserveCommand = {
             return reply('時刻の形式が正しくありません。\n例: `10:00`');
         }
 
-        const setTime = (d: Date, h: number, m: number) => {
-            const newD = new Date(d);
-            newD.setHours(h, m, 0, 0);
-            return newD;
-        };
-
-        const startAt = setTime(date, startH, startM);
-        const endAt = setTime(date, endH, endM);
+        const startAt = jstDateTime(date.year, date.month, date.day, startH, startM);
+        const endAt = jstDateTime(date.year, date.month, date.day, endH, endM);
 
         if (startAt < new Date()) return reply('過去の日時は予約できません。');
         if (startAt >= endAt) return reply('終了時刻は開始時刻より後である必要があります。');
@@ -71,8 +65,8 @@ export const reserveCommand = {
                 purpose,
             }, discordUserId);
 
-            const dateStr = startAt.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
-            const timeStr = `${startAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${endAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+            const dateStr = startAt.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short', timeZone: 'Asia/Tokyo' });
+            const timeStr = `${startAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })} ~ ${endAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}`;
 
             return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
         } catch (e: any) {
@@ -91,10 +85,9 @@ export const reserveCommand = {
 };
 
 async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: Date, errors: string[]): Promise<object> {
-    const dayStart = new Date(startAt);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(startAt);
-    dayEnd.setHours(23, 59, 59, 999);
+    const jst = new Date(startAt.getTime() + 9 * 60 * 60 * 1000);
+    const dayStart = jstDate(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate());
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     let description = '指定された時間帯に既存の予約があります。\n\n';
 
@@ -112,7 +105,7 @@ async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: 
             for (const res of overlapping) {
                 const s = new Date(res.start_at);
                 const e = new Date(res.end_at);
-                const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+                const timeStr = `${s.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })} ~ ${e.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}`;
                 let userDisplay = `User ${res.user_id}`;
                 if (res.user) {
                     userDisplay = res.user.discord_id ? `<@${res.user.discord_id}>` : (res.user.display_name || res.user.username);
@@ -121,7 +114,6 @@ async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: 
             }
         }
     } catch {
-        // 予約取得に失敗した場合はバリデーションエラーをそのまま表示
         description += errors.map((msg: string) => `・${msg}`).join('\n');
     }
 
