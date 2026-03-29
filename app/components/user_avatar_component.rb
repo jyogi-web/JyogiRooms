@@ -1,14 +1,18 @@
 class UserAvatarComponent < ViewComponent::Base
-  def initialize(user:, size: :medium, extra_classes: "")
+  def initialize(user:, size: :medium, extra_classes: "", borderless: false, flat: false)
     @user = user
     @size = size
     @extra_classes = extra_classes
+    @borderless = borderless
+    @flat = flat
   end
 
   private
 
   def size_classes
     case @size
+    when :xxs
+      "w-3 h-3 text-[7px]"
     when :xs
       "w-6 h-6 text-[10px]"
     when :small
@@ -25,16 +29,21 @@ class UserAvatarComponent < ViewComponent::Base
   end
 
   def container_classes
-    base = "rounded-full flex items-center justify-center font-bold shadow-sm"
-    "#{base} #{size_classes} #{bg_color_class} #{@extra_classes}"
+    base = "rounded-full flex items-center justify-center font-bold"
+    "#{base} #{size_classes} #{shadow_class} #{bg_and_border_classes} #{@extra_classes}"
   end
 
   def image_classes
-    "#{size_classes} rounded-full object-cover shadow-sm #{@extra_classes}"
+    "#{size_classes} rounded-full object-cover #{shadow_class} #{@extra_classes}"
   end
 
-  def bg_color_class
-    "bg-gray-200 text-gray-500 border-2 border-white"
+  def bg_and_border_classes
+    border_class = @borderless ? "" : "border-2 border-white"
+    "bg-gray-200 text-gray-500 #{border_class}"
+  end
+
+  def shadow_class
+    @flat ? "" : "shadow-sm"
   end
 
   def initial

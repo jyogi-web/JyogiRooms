@@ -1,27 +1,37 @@
 <div class="px-1 py-6 md:px-8 space-y-6">
+  <div class="px-4 md:px-0">
+    <h1 class="text-2xl font-bold text-gray-800">📅 部室予約</h1>
+    <p class="text-sm text-gray-600 mt-1">予約を作成/編集したい日付をタップ</p>
+  </div>
+
   <!-- Header: Month Navigation -->
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex items-center gap-4">
-      <h1 class="text-2xl font-bold text-gray-800">
-        <%= @current_month.year %>年 <%= @current_month.month %>月
-      </h1>
-      <div class="flex gap-1">
-        <%= link_to reservations_path(start_date: @current_month.prev_month), class: "p-1 hover:bg-gray-100 rounded-full transition-colors" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-600">
+  <div class="mb-4 flex items-end justify-between gap-3">
+    <h2 class="text-xl font-semibold text-gray-700 whitespace-nowrap">
+      <%= @current_month.year %>年 <%= @current_month.month %>月
+    </h2>
+
+    <div class="flex flex-col items-end gap-2 shrink-0">
+      <% if @current_month.year != Date.current.year || @current_month.month != Date.current.month %>
+        <%= link_to reservations_path(start_date: Date.current), class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors whitespace-nowrap" do %>
+          今月に戻る
+        <% end %>
+      <% end %>
+
+      <div class="flex items-center gap-2">
+        <%= link_to reservations_path(start_date: @current_month.prev_month), class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-600">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
           </svg>
+          <span>前の月</span>
         <% end %>
-        <%= link_to reservations_path(start_date: @current_month.next_month), class: "p-1 hover:bg-gray-100 rounded-full transition-colors" do %>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-600">
+        <%= link_to reservations_path(start_date: @current_month.next_month), class: "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap" do %>
+          <span>次の月</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-600">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
           </svg>
         <% end %>
       </div>
     </div>
-    
-    <%= link_to reservations_path(start_date: Date.current), class: "text-sm text-primary hover:text-primary-dark font-medium" do %>
-      今日に戻る
-    <% end %>
   </div>
 
   <!-- Validations Error Message (if redirected from failed create) -->

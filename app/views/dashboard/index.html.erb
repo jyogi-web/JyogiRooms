@@ -1,5 +1,5 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
-  <h2 class="text-xl font-bold text-gray-800">部室状況</h2>
+  <h2 class="text-xl font-bold text-gray-800">🚪 部室状況</h2>
 
   <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
     <% @room_statuses.each do |data| %>
@@ -37,7 +37,7 @@
 
   <div class="h-px bg-gray-200 my-6"></div>
 
-    <h2 class="text-xl font-bold text-gray-800">今日の予約</h2>
+  <h2 class="text-xl font-bold text-gray-800">📅 今日の予約</h2>
 
   <%# Today's Reservations %>
   <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -55,7 +55,7 @@
   <div class="h-px bg-gray-200 my-6"></div>
 
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-bold text-gray-800">現在の鍵持ち</h2>
+    <h2 class="text-xl font-bold text-gray-800">🔑 現在の鍵持ち</h2>
   </div>
 
   <%# Key Holders %>
@@ -68,9 +68,9 @@
         <% if assigned_keys.any? %>
           <div class="flex flex-wrap gap-x-1 min-[390px]:gap-x-2 gap-y-2 pb-1 md:hidden">
             <% assigned_keys.each do |key| %>
-              <div class="w-14 flex flex-col items-center gap-1">
+              <div class="w-14 flex flex-col items-center gap-2">
                 <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
-                <p class="w-full text-xs text-gray-600 leading-none text-center truncate"><%= key.user.display_name %></p>
+                <p class="w-full text-xs text-gray-700 font-medium text-center line-clamp-2"><%= key.user.display_name %></p>
               </div>
             <% end %>
           </div>
