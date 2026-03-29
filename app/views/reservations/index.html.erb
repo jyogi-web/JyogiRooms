@@ -10,7 +10,7 @@
       <%= @current_month.year %>年 <%= @current_month.month %>月
     </h2>
 
-    <div class="flex items-center gap-2 shrink-0">
+    <div class="flex flex-wrap items-center gap-2 shrink-0">
       <% if @current_month.year != Date.current.year || @current_month.month != Date.current.month %>
         <%= link_to reservations_path(start_date: Date.current), class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors whitespace-nowrap" do %>
           今月

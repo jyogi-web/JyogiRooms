@@ -28,9 +28,11 @@
           <%= form.hidden_field :from_user_id, value: @from_user.id %>
           <%= form.hidden_field :to_user_id, id: "selected-user-id", required: true %>
           <div class="relative" id="user-search-container">
+            <label for="user-search-input" class="sr-only">譲渡先ユーザーを検索</label>
             <input type="text" id="user-search-input" placeholder="ユーザー名またはIDで検索" autocomplete="off"
+              role="combobox" aria-expanded="false" aria-controls="user-search-results" aria-autocomplete="list"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
-            <div id="user-search-results" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+            <div id="user-search-results" role="listbox" aria-label="検索結果" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
           </div>
           <div id="selected-user-display" class="hidden flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div class="flex items-center gap-3">
@@ -49,7 +51,7 @@
 
         <script>
           (function() {
-            const users = <%= raw @eligible_users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json %>;
+            const users = JSON.parse('<%= j @eligible_users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json %>');
             const input = document.getElementById('user-search-input');
             const results = document.getElementById('user-search-results');
             const hiddenField = document.getElementById('selected-user-id');
@@ -72,20 +74,45 @@
             }
 
             function renderResults(filtered) {
+              results.textContent = '';
               if (filtered.length === 0) {
-                results.innerHTML = '<div class="px-3 py-2 text-sm text-gray-400">該当するユーザーがいません</div>';
+                const empty = document.createElement('div');
+                empty.className = 'px-3 py-2 text-sm text-gray-400';
+                empty.textContent = '該当するユーザーがいません';
+                results.appendChild(empty);
               } else {
-                results.innerHTML = filtered.map(u => `
-                  <div class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors" data-user-id="${u.id}">
-                    <img src="${u.avatar_url || ''}" class="w-7 h-7 rounded-full bg-gray-200" alt="" onerror="this.style.display='none'">
-                    <div class="min-w-0">
-                      <p class="text-sm font-medium text-gray-800 truncate">${u.display_name}</p>
-                      ${u.username ? `<p class="text-xs text-gray-500">@${u.username}</p>` : ''}
-                    </div>
-                  </div>
-                `).join('');
+                filtered.forEach(u => {
+                  const row = document.createElement('button');
+                  row.type = 'button';
+                  row.className = 'flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors w-full text-left';
+                  row.setAttribute('role', 'option');
+                  row.dataset.userId = u.id;
+
+                  const img = document.createElement('img');
+                  img.src = u.avatar_url || '';
+                  img.className = 'w-7 h-7 rounded-full bg-gray-200';
+                  img.alt = '';
+                  img.onerror = function() { this.style.display = 'none'; };
+                  row.appendChild(img);
+
+                  const info = document.createElement('div');
+                  info.className = 'min-w-0';
+                  const name = document.createElement('p');
+                  name.className = 'text-sm font-medium text-gray-800 truncate';
+                  name.textContent = u.display_name;
+                  info.appendChild(name);
+                  if (u.username) {
+                    const uname = document.createElement('p');
+                    uname.className = 'text-xs text-gray-500';
+                    uname.textContent = '@' + u.username;
+                    info.appendChild(uname);
+                  }
+                  row.appendChild(info);
+                  results.appendChild(row);
+                });
               }
               results.classList.remove('hidden');
+              input.setAttribute('aria-expanded', 'true');
             }
 
             function selectUser(userId) {
@@ -118,7 +145,10 @@
             });
             clearBtn.addEventListener('click', clearSelection);
             document.addEventListener('click', (e) => {
-              if (!e.target.closest('#user-search-container')) results.classList.add('hidden');
+              if (!e.target.closest('#user-search-container')) {
+                results.classList.add('hidden');
+                input.setAttribute('aria-expanded', 'false');
+              }
             });
           })();
         </script>
