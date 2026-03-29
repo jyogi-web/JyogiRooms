@@ -24,20 +24,102 @@
     <div class="space-y-3">
       <p class="text-sm text-gray-600">譲渡先</p>
       <% if @eligible_users.any? %>
-        <%= form_with url: transfer_room_key_path(@room.id), method: :post, local: true, class: "space-y-4" do |form| %>
+        <%= form_with url: transfer_room_key_path(@room.id), method: :post, local: true, class: "space-y-4", id: "transfer-form" do |form| %>
           <%= form.hidden_field :from_user_id, value: @from_user.id %>
-          <div>
-            <%= form.label :to_user_id, "譲渡先", class: "sr-only" %>
-            <%= form.select :to_user_id,
-                options_for_select(@eligible_users.map { |u| [u.display_name, u.id] }),
-              { prompt: "ユーザーを選択" },
-              class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
-              required: true %>
+          <%= form.hidden_field :to_user_id, id: "selected-user-id", required: true %>
+          <div class="relative" id="user-search-container">
+            <input type="text" id="user-search-input" placeholder="ユーザー名またはIDで検索" autocomplete="off"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+            <div id="user-search-results" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+          </div>
+          <div id="selected-user-display" class="hidden flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div class="flex items-center gap-3">
+              <img id="selected-user-avatar" class="w-8 h-8 rounded-full" src="" alt="">
+              <div>
+                <p id="selected-user-name" class="text-sm font-semibold text-gray-800"></p>
+                <p id="selected-user-username" class="text-xs text-gray-500"></p>
+              </div>
+            </div>
+            <button type="button" id="clear-selection" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
           </div>
           <div>
-            <%= form.submit "譲渡する", class: "w-full px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors text-sm" %>
+            <%= form.submit "譲渡する", class: "w-full px-4 py-2 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed", id: "submit-btn", disabled: true %>
           </div>
         <% end %>
+
+        <script>
+          (function() {
+            const users = <%= raw @eligible_users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json %>;
+            const input = document.getElementById('user-search-input');
+            const results = document.getElementById('user-search-results');
+            const hiddenField = document.getElementById('selected-user-id');
+            const selectedDisplay = document.getElementById('selected-user-display');
+            const selectedName = document.getElementById('selected-user-name');
+            const selectedUsername = document.getElementById('selected-user-username');
+            const selectedAvatar = document.getElementById('selected-user-avatar');
+            const clearBtn = document.getElementById('clear-selection');
+            const submitBtn = document.getElementById('submit-btn');
+
+            function filterUsers(query) {
+              if (!query) return users;
+              const q = query.toLowerCase();
+              return users.filter(u =>
+                u.display_name.toLowerCase().includes(q) ||
+                (u.username && u.username.toLowerCase().includes(q))
+              );
+            }
+
+            function renderResults(filtered) {
+              if (filtered.length === 0) {
+                results.innerHTML = '<div class="px-3 py-2 text-sm text-gray-400">該当するユーザーがいません</div>';
+              } else {
+                results.innerHTML = filtered.map(u => `
+                  <div class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors" data-user-id="${u.id}">
+                    <img src="${u.avatar_url || ''}" class="w-7 h-7 rounded-full bg-gray-200" alt="" onerror="this.style.display='none'">
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium text-gray-800 truncate">${u.display_name}</p>
+                      ${u.username ? `<p class="text-xs text-gray-500">@${u.username}</p>` : ''}
+                    </div>
+                  </div>
+                `).join('');
+              }
+              results.classList.remove('hidden');
+            }
+
+            function selectUser(userId) {
+              const user = users.find(u => u.id === userId);
+              if (!user) return;
+              hiddenField.value = user.id;
+              selectedName.textContent = user.display_name;
+              selectedUsername.textContent = user.username ? '@' + user.username : '';
+              selectedAvatar.src = user.avatar_url || '';
+              selectedDisplay.classList.remove('hidden');
+              input.classList.add('hidden');
+              results.classList.add('hidden');
+              submitBtn.disabled = false;
+            }
+
+            function clearSelection() {
+              hiddenField.value = '';
+              selectedDisplay.classList.add('hidden');
+              input.classList.remove('hidden');
+              input.value = '';
+              input.focus();
+              submitBtn.disabled = true;
+            }
+
+            input.addEventListener('input', () => renderResults(filterUsers(input.value)));
+            input.addEventListener('focus', () => renderResults(filterUsers(input.value)));
+            results.addEventListener('click', (e) => {
+              const row = e.target.closest('[data-user-id]');
+              if (row) selectUser(parseInt(row.dataset.userId));
+            });
+            clearBtn.addEventListener('click', clearSelection);
+            document.addEventListener('click', (e) => {
+              if (!e.target.closest('#user-search-container')) results.classList.add('hidden');
+            });
+          })();
+        </script>
       <% else %>
         <p class="text-sm text-gray-500">譲渡可能なユーザーがいません。</p>
       <% end %>
