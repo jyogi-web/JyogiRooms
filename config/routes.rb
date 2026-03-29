@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   resources :reservations, except: [ :show ]
   resources :keys, only: [ :index ]
   resources :nfc_cards, only: %i[index destroy]
+  get "stats/ranking", to: "stats#ranking", as: :stats_ranking
+  get "stats/me", to: "stats#me", as: :stats_me
   resources :room_statuses, only: %i[index] do
     member do
       post :exit_room
