@@ -1,0 +1,63 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-800">利用統計</h1>
+    <%= link_to stats_ranking_path, class: "btn btn-secondary text-sm" do %>
+      ランキングを見る
+    <% end %>
+  </div>
+
+  <!-- 年度フィルター -->
+  <%= form_with url: stats_me_path, method: :get, class: "card p-4", local: true do %>
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">年度</label>
+        <select name="year" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="all" <%= "selected" if @year_param == "all" %>>全期間</option>
+          <% (2025..Time.current.in_time_zone("Asia/Tokyo").year).each do |y| %>
+            <option value="<%= y %>" <%= "selected" if @year_param == y.to_s %>><%= y %>年度</option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary text-sm">表示</button>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 全体統計 -->
+  <div class="card p-5">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">
+      全体
+      <span class="text-sm font-normal text-gray-500">（<%= year_label(@year) %>）</span>
+    </h2>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="bg-blue-50 rounded-xl p-4 text-center">
+        <p class="text-xs text-blue-600 font-medium mb-1">訪問日数</p>
+        <p class="text-2xl font-bold text-blue-800"><%= @total_visit_days %><span class="text-sm font-normal">日</span></p>
+      </div>
+      <div class="bg-green-50 rounded-xl p-4 text-center">
+        <p class="text-xs text-green-600 font-medium mb-1">滞在時間</p>
+        <p class="text-2xl font-bold text-green-800"><%= format_duration(@total_duration) %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 部室ごと -->
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <% @per_room.each do |data| %>
+      <div class="card p-5">
+        <h3 class="text-base font-bold text-gray-800 mb-3"><%= data[:room].name %></h3>
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">訪問日数</span>
+            <span class="text-sm font-semibold text-gray-800"><%= data[:visit_days] %>日</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">滞在時間</span>
+            <span class="text-sm font-semibold text-gray-800"><%= format_duration(data[:total_seconds]) %></span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
