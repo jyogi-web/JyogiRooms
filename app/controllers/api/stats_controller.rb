@@ -16,10 +16,10 @@ module Api
       end
 
       base_scope = RoomVisit.all
-      if year_param == "all"
-        year = "all"
-      else
-        year = year_param.to_i
+      year = parse_year_param(year_param)
+      return render json: { error: "Invalid year." }, status: :bad_request if year.nil?
+
+      if year != "all"
         start_date, end_date = fiscal_year_range(year)
         base_scope = base_scope.where(entered_at: start_date..end_date)
       end
@@ -47,10 +47,10 @@ module Api
       year_param = params[:year].presence || current_fiscal_year.to_s
 
       base_scope = RoomVisit.where(user: user)
-      if year_param == "all"
-        year = "all"
-      else
-        year = year_param.to_i
+      year = parse_year_param(year_param)
+      return render json: { error: "Invalid year." }, status: :bad_request if year.nil?
+
+      if year != "all"
         start_date, end_date = fiscal_year_range(year)
         base_scope = base_scope.where(entered_at: start_date..end_date)
       end
@@ -90,6 +90,13 @@ module Api
 
     private
 
+    def parse_year_param(year_param)
+      return "all" if year_param == "all"
+      return nil unless year_param.match?(/\A\d{4}\z/)
+
+      year_param.to_i
+    end
+
     def current_fiscal_year
       today = Time.current.in_time_zone("Asia/Tokyo").to_date
       today.month >= 4 ? today.year : today.year - 1
@@ -101,22 +108,14 @@ module Api
       [ start_date, end_date ]
     end
 
-    def visit_ranking(scope, room)
+    def visit_ranking(scope, _room)
       # 訪問回数: 1日1カウント（同日複数入室でも1）
-      # room=all の場合は部室横断で日付DISTINCT
-      if room == "all"
-        results = scope
-          .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
-          .group(:user_id)
-          .order("visit_count DESC")
-          .limit(10)
-      else
-        results = scope
-          .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
-          .group(:user_id)
-          .order("visit_count DESC")
-          .limit(10)
-      end
+      # room=all の場合は部室横断で日付DISTINCT、部室指定時はscopeで既に絞り込み済み
+      results = scope
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .group(:user_id)
+        .order("visit_count DESC")
+        .limit(10)
 
       users = User.where(id: results.map(&:user_id)).index_by(&:id)
 
