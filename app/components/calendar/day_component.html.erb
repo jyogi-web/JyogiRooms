@@ -19,7 +19,7 @@
   <!-- Reservations List -->
   <div class="flex-1 flex flex-col gap-0.5 md:gap-1 overflow-hidden mt-0.5 md:mt-1 px-0.5 md:px-1">
     <% day_reservations.each do |res| %>
-      <div class="text-[10px] bg-indigo-50 text-indigo-700 border-l-2 border-indigo-500 pl-0.5 md:pl-1 pr-0.5 py-0.5 rounded-sm flex items-center justify-between group/res shadow-sm hover:shadow-md transition-shadow cursor-default">
+      <div class="text-[10px] bg-indigo-50 text-indigo-700 pl-0.5 md:pl-1 pr-0.5 py-0.5 rounded-sm flex items-center justify-between group/res shadow-sm hover:shadow-md transition-shadow cursor-default">
         <span class="font-bold md:truncate md:mr-1 whitespace-nowrap leading-tight w-full md:w-auto">
           <%= helpers.format_time_short(res.start_at) %>~<span class="hidden md:inline"><%= helpers.format_time_short(res.end_at) %></span>
         </span>
