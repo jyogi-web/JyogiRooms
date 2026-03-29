@@ -68,9 +68,9 @@
         <% if assigned_keys.any? %>
           <div class="flex flex-wrap gap-x-1 min-[390px]:gap-x-2 gap-y-2 pb-1 md:hidden">
             <% assigned_keys.each do |key| %>
-              <div class="w-14 flex flex-col items-center gap-1">
+              <div class="w-14 flex flex-col items-center gap-2">
                 <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
-                <p class="w-full text-xs text-gray-600 leading-none text-center truncate"><%= key.user.display_name %></p>
+                <p class="w-full text-xs text-gray-700 font-medium text-center line-clamp-2"><%= key.user.display_name %></p>
               </div>
             <% end %>
           </div>
