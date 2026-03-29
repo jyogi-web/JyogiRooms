@@ -3,7 +3,7 @@
 
   <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
     <% @room_statuses.each do |data| %>
-      <div class="card p-4 flex items-center justify-between">
+      <div class="card p-4 flex items-center justify-between <%= '!bg-gray-100 !border-gray-200' unless data[:is_open] %>">
         <h3 class="text-base font-bold text-gray-800"><%= data[:room].name %></h3>
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-1.5">
