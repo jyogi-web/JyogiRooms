@@ -1,0 +1,87 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-800">ランキング</h1>
+    <%= link_to stats_me_path, class: "btn btn-secondary text-sm" do %>
+      自分の統計を見る
+    <% end %>
+  </div>
+
+  <!-- フィルター -->
+  <%= form_with url: stats_ranking_path, method: :get, class: "card p-4", local: true do %>
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">種類</label>
+        <select name="type" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="visits" <%= "selected" if @type == "visits" %>>訪問日数</option>
+          <option value="duration" <%= "selected" if @type == "duration" %>>滞在時間</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">年度</label>
+        <select name="year" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="all" <%= "selected" if @year_param == "all" %>>全期間</option>
+          <% available_fiscal_years.each do |y| %>
+            <option value="<%= y %>" <%= "selected" if @year_param == y.to_s %>><%= y %>年度</option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">部室</label>
+        <select name="room" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="all" <%= "selected" if @room_param == "all" %>>全部室</option>
+          <% @rooms.each do |room| %>
+            <option value="<%= room.id %>" <%= "selected" if @room_param == room.id.to_s %>><%= room.name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary text-sm">表示</button>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- ランキング -->
+  <div class="card">
+    <div class="px-5 py-4 border-b border-gray-100">
+      <h2 class="text-lg font-bold text-gray-800">
+        <%= @type == "visits" ? "訪問日数" : "滞在時間" %>ランキング
+        <span class="text-sm font-normal text-gray-500">
+          （<%= year_label(@year) %> / <%= @room_param == "all" ? "全部室" : @rooms.find { |r| r.id.to_s == @room_param }&.name || "全部室" %>）
+        </span>
+      </h2>
+    </div>
+
+    <% if @ranking.empty? %>
+      <div class="px-5 py-8 text-center text-gray-400">
+        該当期間のデータがありません
+      </div>
+    <% else %>
+      <div class="divide-y divide-gray-100">
+        <% @ranking.each_with_index do |entry, i| %>
+          <div class="flex items-center gap-4 px-5 py-3">
+            <span class="w-8 text-center text-lg font-bold <%= i < 3 ? 'text-2xl' : 'text-gray-400' %>">
+              <%= rank_medal(i) %>
+            </span>
+            <% if entry[:user] %>
+              <%= render(UserAvatarComponent.new(user: entry[:user], size: :small)) %>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate"><%= entry[:user].display_name %></p>
+              </div>
+            <% else %>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-400">不明なユーザー</p>
+              </div>
+            <% end %>
+            <span class="text-sm font-semibold text-gray-700">
+              <% if @type == "visits" %>
+                <%= entry[:count] %>日
+              <% else %>
+                <%= format_duration(entry[:total_seconds]) %>
+              <% end %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
