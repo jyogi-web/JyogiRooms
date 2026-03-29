@@ -3,10 +3,15 @@ module NavigationHelper
     items = [
       { path: root_path, icon: :home, label: "ホーム", active: current_page?(root_path) },
       { path: room_statuses_path, icon: :door, label: "部室状況", active: current_page?(room_statuses_path) },
-      { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) },
-      { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) },
-      { path: stats_me_path, icon: :chart, label: "統計", active: controller_name == "stats" }
+      { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) }
     ]
+
+    # 鍵持ちまたは管理者のみ鍵管理を表示
+    if effective_admin? || current_user&.keys&.exists?
+      items << { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) }
+    end
+
+    items << { path: stats_me_path, icon: :chart, label: "統計", active: controller_name == "stats" }
 
     # 管理者のみ管理画面へのリンクを表示
     if effective_admin?

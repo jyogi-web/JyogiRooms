@@ -1,5 +1,6 @@
 class KeysController < ApplicationController
   before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer, :assign_form, :assign, :unassign ]
+  before_action :require_key_holder_or_admin!, only: [ :index ]
   before_action :set_room, only: [ :transfer_form, :transfer, :assign_form, :assign, :unassign ]
   before_action :require_admin!, only: [ :assign_form, :assign, :unassign ]
 
@@ -131,6 +132,12 @@ class KeysController < ApplicationController
 
       redirect_to keys_path, alert: "権限がありません"
       nil
+    end
+  end
+
+  def require_key_holder_or_admin!
+    unless effective_admin? || current_user.keys.exists?
+      redirect_to root_path, alert: "鍵持ちまたは管理者のみアクセスできます"
     end
   end
 
