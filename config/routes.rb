@@ -56,6 +56,10 @@ Rails.application.routes.draw do
       get :status, to: "rooms/statuses#show"
     end
 
+    # 統計
+    get "stats/ranking", to: "stats#ranking"
+    get "stats/me", to: "stats#me"
+
     # NFC登録
     resources :nfc_registrations, only: %i[create show destroy] do
       member do
