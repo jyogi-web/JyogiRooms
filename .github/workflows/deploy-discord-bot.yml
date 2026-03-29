@@ -2,7 +2,7 @@ name: Deploy Discord Bot to Cloudflare Workers
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, 249/create_rank_command]
     paths:
       - 'discord-bot/**'
 
