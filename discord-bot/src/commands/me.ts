@@ -44,6 +44,12 @@ export const meCommand = {
 
             const lines: string[] = [];
 
+            // ランキング順位
+            if (data.rank.position !== null) {
+                lines.push(`🏅 訪問日数ランキング: **${data.rank.position}位** / ${data.rank.total_users}人中（${data.rank.fiscal_year}年度）`);
+                lines.push('');
+            }
+
             // 全体の統計
             lines.push('### 🏠 全体');
             lines.push(`訪問日数: **${data.total.visit_days}日**`);

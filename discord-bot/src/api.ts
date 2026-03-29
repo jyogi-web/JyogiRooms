@@ -87,11 +87,18 @@ export interface MyStatsRoom {
 	total_seconds: number;
 }
 
+export interface MyStatsRank {
+	position: number | null;
+	total_users: number;
+	fiscal_year: number;
+}
+
 export interface MyStatsResponse {
 	user: { id: number; display_name: string; discord_id?: string };
 	year: string;
 	total: { visit_days: number; total_seconds: number };
 	rooms: MyStatsRoom[];
+	rank: MyStatsRank;
 }
 
 export interface RankingEntry {

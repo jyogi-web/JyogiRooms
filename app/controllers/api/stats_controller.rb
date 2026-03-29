@@ -80,11 +80,24 @@ module Api
         }
       end
 
+      # デフォルト条件（訪問日数/今年度/全部室）でのランキング順位
+      fiscal_year = current_fiscal_year
+      rank_start, rank_end = fiscal_year_range(fiscal_year)
+      rank_scope = RoomVisit.where(entered_at: rank_start..rank_end)
+      all_visit_counts = rank_scope
+        .group(:user_id)
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .order("visit_count DESC")
+      rank_position = all_visit_counts.each_with_index.find { |r, _| r.user_id == user.id }&.last
+      visit_rank = rank_position ? rank_position + 1 : nil
+      total_ranked_users = all_visit_counts.length
+
       render json: {
         user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
         year: year,
         total: { visit_days: total_visit_days, total_seconds: total_duration },
-        rooms: per_room
+        rooms: per_room,
+        rank: { position: visit_rank, total_users: total_ranked_users, fiscal_year: fiscal_year }
       }
     end
 
