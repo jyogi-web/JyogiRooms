@@ -35,11 +35,11 @@
                   <p class="text-xs text-gray-700 font-medium text-center line-clamp-2" title="<%= key.user&.display_name %>">
                     <%= key.user&.display_name %>
                   </p>
-                  <% if current_user.admin? || key.user_id == current_user.id %>
+                  <% if effective_admin? || key.user_id == current_user.id %>
                     <%= link_to "譲渡", transfer_form_room_key_path(room.id, from_user_id: key.user_id),
                         class: "w-full px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-md text-center hover:bg-primary-dark transition-colors" %>
                   <% end %>
-                  <% if current_user.admin? %>
+                  <% if effective_admin? %>
                     <%= button_to "解除", unassign_room_key_path(room.id, user_id: key.user_id),
                         method: :post,
                         form: { onsubmit: "return confirm('#{j(key.user&.display_name.to_s)} の鍵の割り当てを解除しますか？')" },
@@ -53,7 +53,7 @@
           </div>
         </div>
 
-        <% if current_user.admin? && room.keys.any? { |k| k.user_id.nil? } %>
+        <% if effective_admin? && room.keys.any? { |k| k.user_id.nil? } %>
           <div class="flex items-center justify-between">
             <p class="text-sm text-gray-500">未割り当ての鍵: <%= room.keys.count { |k| k.user_id.nil? } %>本</p>
             <%= link_to "割り当て", assign_form_room_key_path(room.id),

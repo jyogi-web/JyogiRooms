@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   resources :reservations, except: [ :show ]
   resources :keys, only: [ :index ]
   resources :nfc_cards, only: %i[index destroy]
+  post "admin_disguise/toggle", to: "admin_disguise#toggle", as: :toggle_admin_disguise
   get "stats/ranking", to: "stats#ranking", as: :stats_ranking
   get "stats/me", to: "stats#me", as: :stats_me
   resources :room_statuses, only: %i[index] do

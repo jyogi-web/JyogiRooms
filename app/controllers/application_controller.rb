@@ -5,5 +5,10 @@ class ApplicationController < ActionController::Base
   include JyogiAuthenticatable
 
   # ビューでもcurrent_userを使えるようにする
-  helper_method :current_user, :user_signed_in?
+  helper_method :current_user, :user_signed_in?, :effective_admin?
+
+  # 管理者偽装モード中はfalseを返す（実際のDB権限は変更しない）
+  def effective_admin?
+    current_user&.admin? && !session[:admin_disguise]
+  end
 end

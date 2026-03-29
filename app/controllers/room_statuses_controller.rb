@@ -59,7 +59,7 @@ class RoomStatusesController < ApplicationController
   end
 
   def can_close?(room)
-    return true if current_user.admin?
+    return true if effective_admin?
 
     current_user.keys.any? { |key| key.room_id == room.id }
   end
