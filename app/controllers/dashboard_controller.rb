@@ -1,5 +1,12 @@
 class DashboardController < ApplicationController
+  skip_before_action :authenticate_user!, only: [ :index ]
+
   def index
+    unless user_signed_in?
+      render :landing
+      return
+    end
+
     @reservations = Reservation.where(start_at: Time.zone.now.all_day).includes(:user).order(:start_at)
     @rooms = Room.includes(keys: :user).order(room_number: :desc)
 
