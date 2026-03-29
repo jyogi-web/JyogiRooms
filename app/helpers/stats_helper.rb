@@ -11,6 +11,15 @@ module StatsHelper
     end
   end
 
+  def format_duration_styled(total_seconds)
+    hours = total_seconds / 3600
+    minutes = (total_seconds % 3600) / 60
+    parts = []
+    parts << "#{hours}<span class=\"text-sm font-normal\">時間</span>" if hours > 0
+    parts << "#{minutes}<span class=\"text-sm font-normal\">分</span>"
+    parts.join.html_safe
+  end
+
   def year_label(year)
     year == "all" ? "全期間" : "#{year}年度"
   end
