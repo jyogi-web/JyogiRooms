@@ -14,10 +14,15 @@ module StatsHelper
   def format_duration_styled(total_seconds)
     hours = total_seconds / 3600
     minutes = (total_seconds % 3600) / 60
+    unit_class = "text-sm font-normal"
     parts = []
-    parts << "#{hours}<span class=\"text-sm font-normal\">時間</span>" if hours > 0
-    parts << "#{minutes}<span class=\"text-sm font-normal\">分</span>"
-    parts.join.html_safe
+    if hours > 0
+      parts << hours.to_s
+      parts << content_tag(:span, "時間", class: unit_class)
+    end
+    parts << minutes.to_s
+    parts << content_tag(:span, "分", class: unit_class)
+    safe_join(parts)
   end
 
   def year_label(year)
