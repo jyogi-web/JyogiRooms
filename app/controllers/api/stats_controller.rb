@@ -39,6 +39,55 @@ module Api
       }
     end
 
+    # GET /api/stats/me
+    def me
+      user = User.find_by(discord_id: params[:discord_user_id])
+      return render json: { error: "User not found." }, status: :not_found unless user
+
+      year_param = params[:year].presence || current_fiscal_year.to_s
+
+      base_scope = RoomVisit.where(user: user)
+      if year_param == "all"
+        year = "all"
+      else
+        year = year_param.to_i
+        start_date, end_date = fiscal_year_range(year)
+        base_scope = base_scope.where(entered_at: start_date..end_date)
+      end
+
+      # 全部室合算
+      total_visit_days = base_scope
+        .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+      total_duration = base_scope
+        .where.not(exited_at: nil)
+        .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
+
+      # 部室ごと
+      rooms = Room.order(:id)
+      per_room = rooms.map do |room|
+        room_scope = base_scope.where(room: room)
+        visit_days = room_scope
+          .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+        duration = room_scope
+          .where.not(exited_at: nil)
+          .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
+
+        {
+          room_id: room.id,
+          room_name: room.name,
+          visit_days: visit_days,
+          total_seconds: duration
+        }
+      end
+
+      render json: {
+        user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
+        year: year,
+        total: { visit_days: total_visit_days, total_seconds: total_duration },
+        rooms: per_room
+      }
+    end
+
     private
 
     def current_fiscal_year

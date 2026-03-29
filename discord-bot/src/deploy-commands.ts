@@ -113,6 +113,13 @@ const commandDefinitions = [
                     { name: 'all', value: 'all' }
                 )
         ),
+
+    new SlashCommandBuilder()
+        .setName('me')
+        .setDescription('自分の部室利用統計を表示します')
+        .addStringOption(option =>
+            option.setName('year').setDescription('年度（例: 2025, 2026, all）').setRequired(false)
+        ),
 ];
 
 const rest = new REST({ version: '10' }).setToken(token);

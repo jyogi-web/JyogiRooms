@@ -6,6 +6,7 @@ import { callCommand } from './call.js';
 import { helpCommand } from './help.js';
 import { statusCommand } from './status.js';
 import { rankCommand } from './rank.js';
+import { meCommand } from './me.js';
 
 export const commands = [
     listCommand,
@@ -16,4 +17,5 @@ export const commands = [
     helpCommand,
     statusCommand,
     rankCommand,
+    meCommand,
 ];

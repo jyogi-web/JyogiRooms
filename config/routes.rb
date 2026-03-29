@@ -58,6 +58,7 @@ Rails.application.routes.draw do
 
     # 統計
     get "stats/ranking", to: "stats#ranking"
+    get "stats/me", to: "stats#me"
 
     # NFC登録
     resources :nfc_registrations, only: %i[create show destroy] do

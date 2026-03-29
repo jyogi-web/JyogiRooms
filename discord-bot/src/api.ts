@@ -80,6 +80,20 @@ export interface RoomStatus {
 	occupant_count: number;
 }
 
+export interface MyStatsRoom {
+	room_id: number;
+	room_name: string;
+	visit_days: number;
+	total_seconds: number;
+}
+
+export interface MyStatsResponse {
+	user: { id: number; display_name: string; discord_id?: string };
+	year: string;
+	total: { visit_days: number; total_seconds: number };
+	rooms: MyStatsRoom[];
+}
+
 export interface RankingEntry {
 	user_id: number;
 	display_name: string;
@@ -190,6 +204,16 @@ function createApi(env: ApiEnv) {
 			if (!response.ok) await handleErrorResponse(response);
 			const data = await response.json() as { users: UserInfo[] };
 			return data.users.find(u => u.discord_id === discordUserId) ?? null;
+		},
+
+		async fetchMyStats(discordUserId: string, year?: string): Promise<MyStatsResponse> {
+			const url = new URL(`${baseUrl}/stats/me`);
+			url.searchParams.append('discord_user_id', discordUserId);
+			if (year) url.searchParams.append('year', year);
+
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as MyStatsResponse;
 		},
 
 		async fetchRanking(type?: string, year?: string, room?: string): Promise<RankingResponse> {
