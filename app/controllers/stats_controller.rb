@@ -78,7 +78,6 @@ class StatsController < ApplicationController
       .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
       .group(:user_id)
       .order("visit_count DESC")
-      .limit(10)
 
     users = User.where(id: results.map(&:user_id)).index_by(&:id)
     results.map { |r| { user: users[r.user_id], count: r.visit_count.to_i } }
@@ -90,7 +89,6 @@ class StatsController < ApplicationController
       .select("user_id, SUM(EXTRACT(EPOCH FROM (exited_at - entered_at))) AS total_seconds")
       .group(:user_id)
       .order("total_seconds DESC")
-      .limit(10)
 
     users = User.where(id: results.map(&:user_id)).index_by(&:id)
     results.map { |r| { user: users[r.user_id], total_seconds: r.total_seconds.to_i } }
