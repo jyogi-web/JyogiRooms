@@ -52,7 +52,7 @@ export const helpCommand = {
             '',
             '### 🌐 Webアプリ',
             '予約の編集・削除、鍵の受け渡しなど、より詳細な操作はWebアプリをご利用ください',
-            'https://jyogi-rooms.jyogi.net',
+            'https://rooms.jyogi.net',
             '',
             '### ❓ その他',
             '`/help` — このヘルプを表示',
