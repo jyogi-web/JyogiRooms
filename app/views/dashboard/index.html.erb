@@ -38,7 +38,7 @@
   <div class="h-px bg-gray-200 my-6"></div>
 
   <h2 class="text-xl font-bold text-gray-800">📅 今後の予約</h2>
-  <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+  <div class="grid gap-2 max-w-lg">
     <% if @reservations.any? %>
       <% @reservations.each do |reservation| %>
         <%= render ReservationComponent.new(reservation: reservation, layout: :dashboard) %>
