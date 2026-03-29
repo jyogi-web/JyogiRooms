@@ -1,0 +1,166 @@
+<div class="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50">
+  <!-- Hero Section -->
+  <div class="px-4 pt-16 pb-12 md:pt-24 md:pb-16 text-center">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-6">
+        <img src="/JyogiRoomsIcon.webp" alt="Jyogi Rooms" class="w-20 h-20 md:w-24 md:h-24 mx-auto rounded-2xl shadow-lg">
+      </div>
+      <h1 class="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+        Jyogi Rooms
+      </h1>
+      <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        部室の利用状況確認・予約・鍵管理を<br class="md:hidden">ひとつにまとめた運用アプリ
+      </p>
+      <div class="mt-8">
+        <%= render "shared/discord_login_button" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="px-4 py-12 md:py-16">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-center text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Features</h2>
+      <p class="text-center text-2xl md:text-3xl font-bold text-gray-900 mb-10">主な機能</p>
+
+      <div class="grid gap-6 md:grid-cols-3">
+        <!-- 部室状況 -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">🚪</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">部室状況</h3>
+          <p class="text-sm text-gray-600 leading-relaxed">
+            今だれが部室にいるか、開室中かをリアルタイムで確認。NFCカードで入退室を自動記録します。
+          </p>
+        </div>
+
+        <!-- 部室予約 -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">📅</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">部室予約</h3>
+          <p class="text-sm text-gray-600 leading-relaxed">
+            カレンダーから日付を選んで予約の作成・編集。予約状況はWeb・Discordどちらからでも確認可能。
+          </p>
+        </div>
+
+        <!-- 鍵管理 -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4">
+            <span class="text-2xl">🔑</span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">鍵管理</h3>
+          <p class="text-sm text-gray-600 leading-relaxed">
+            鍵の所持者を一目で確認。譲渡や割り当てもアプリ上で完結します。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- More Features -->
+  <div class="px-4 py-12 md:py-16 bg-white">
+    <div class="max-w-5xl mx-auto">
+      <div class="grid gap-6 md:grid-cols-2">
+        <!-- 統計 -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+              <span class="text-xl">📊</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-800 mb-1">利用統計・ランキング</h3>
+              <p class="text-sm text-gray-600">訪問日数や滞在時間の統計を確認。ランキング形式で部員間の順位も確認できます。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Discord Bot -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+              <span class="text-xl">🤖</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-800 mb-1">Discord Bot連携</h3>
+              <p class="text-sm text-gray-600">スラッシュコマンドで予約確認・部室状況チェックがDiscord上で完結。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- NFC -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center shrink-0">
+              <span class="text-xl">🪪</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-800 mb-1">NFCカード対応</h3>
+              <p class="text-sm text-gray-600">カードをかざすだけで入退室を記録。学生証もそのまま使えます。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 通知 -->
+        <div class="card p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center shrink-0">
+              <span class="text-xl">🔔</span>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-gray-800 mb-1">自動通知</h3>
+              <p class="text-sm text-gray-600">入退室・鍵譲渡・予約などのイベントをDiscordに自動通知。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How to use -->
+  <div class="px-4 py-12 md:py-16">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-center text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Getting Started</h2>
+      <p class="text-center text-2xl md:text-3xl font-bold text-gray-900 mb-10">はじめかた</p>
+
+      <div class="space-y-4">
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 text-sm font-bold">1</div>
+          <div class="card flex-1 p-4">
+            <h3 class="text-sm font-bold text-gray-800">Discordアカウントでログイン</h3>
+            <p class="text-xs text-gray-600 mt-1">じょぎサーバーに参加済みのDiscordアカウントでログインしてください。</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 text-sm font-bold">2</div>
+          <div class="card flex-1 p-4">
+            <h3 class="text-sm font-bold text-gray-800">ホーム画面から各機能にアクセス</h3>
+            <p class="text-xs text-gray-600 mt-1">部室状況・予約・鍵管理をホームからすぐに確認できます。</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-4">
+          <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shrink-0 text-sm font-bold">3</div>
+          <div class="card flex-1 p-4">
+            <h3 class="text-sm font-bold text-gray-800">NFCカードを登録</h3>
+            <p class="text-xs text-gray-600 mt-1">カードを登録すると、入退室が自動で記録されるようになります。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="px-4 py-16 md:py-20 text-center">
+    <div class="max-w-2xl mx-auto">
+      <p class="text-xl md:text-2xl font-bold text-gray-900 mb-6">さっそく使ってみよう</p>
+      <%= render "shared/discord_login_button" %>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="px-4 py-6 border-t border-gray-200">
+    <p class="text-center text-xs text-gray-400">Jyogi Rooms &mdash; 部員による部員のための部室管理システム</p>
+  </div>
+</div>
