@@ -50,7 +50,7 @@ export const rankCommand = {
             }
 
             const typeLabel = type === 'visits' ? '訪問日数' : '滞在時間';
-            const roomLabel = room === 'all' ? '🚪 全部室' : `🚪 第${room}部室`;
+            const roomLabel = room === 'all' ? '🚪全部室' : `🚪第${room}部室`;
             const yearLabel = year === 'all' ? '全期間' : `${year}年度`;
             const title = `📊 ${typeLabel}ランキング（${yearLabel} / ${roomLabel}）`;
 
