@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "deploy-commands": "tsc && node dist/deploy-commands.js",
+    "deploy-commands": "tsc -p tsconfig.deploy.json && node dist/deploy-commands.js",
     "build": "tsc -p tsconfig.worker.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,7 +15,8 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "discord-interactions": "^4.4.0"
+    "discord-interactions": "^4.4.0",
+    "dotenv": "^17.3.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260317.1",

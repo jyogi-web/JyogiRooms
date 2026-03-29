@@ -73,6 +73,29 @@ const commandDefinitions = [
         .addStringOption(option =>
             option.setName('room').setDescription('部室番号（例: 1, 2, 3）または all（省略時も全部室）').setRequired(false)
         ),
+
+    new SlashCommandBuilder()
+        .setName('rank')
+        .setDescription('部室の訪問回数・滞在時間ランキングを表示します')
+        .addStringOption(option =>
+            option.setName('type').setDescription('ランキングの種類').setRequired(false)
+                .addChoices(
+                    { name: '訪問日数', value: 'visits' },
+                    { name: '滞在時間', value: 'duration' }
+                )
+        )
+        .addIntegerOption(option =>
+            option.setName('year').setDescription('年度（例: 2025, 2026）').setRequired(false)
+        )
+        .addStringOption(option =>
+            option.setName('room').setDescription('部室番号（1, 2, 3）または all（省略時は全部室）').setRequired(false)
+                .addChoices(
+                    { name: '全部室', value: 'all' },
+                    { name: '部室1', value: '1' },
+                    { name: '部室2', value: '2' },
+                    { name: '部室3', value: '3' }
+                )
+        ),
 ];
 
 const rest = new REST({ version: '10' }).setToken(token);

@@ -80,6 +80,21 @@ export interface RoomStatus {
 	occupant_count: number;
 }
 
+export interface RankingEntry {
+	user_id: number;
+	display_name: string;
+	discord_id?: string;
+	count?: number;
+	total_seconds?: number;
+}
+
+export interface RankingResponse {
+	type: string;
+	year: number;
+	room: string;
+	ranking: RankingEntry[];
+}
+
 function createApi(env: ApiEnv) {
 	const baseUrl = env.API_BASE_URL;
 	const apiKey = env.API_ACCESS_TOKEN;
@@ -175,6 +190,17 @@ function createApi(env: ApiEnv) {
 			if (!response.ok) await handleErrorResponse(response);
 			const data = await response.json() as { users: UserInfo[] };
 			return data.users.find(u => u.discord_id === discordUserId) ?? null;
+		},
+
+		async fetchRanking(type?: string, year?: number, room?: string): Promise<RankingResponse> {
+			const url = new URL(`${baseUrl}/stats/ranking`);
+			if (type) url.searchParams.append('type', type);
+			if (year) url.searchParams.append('year', year.toString());
+			if (room) url.searchParams.append('room', room);
+
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as RankingResponse;
 		},
 
 		async postRoomAction(path: string, discordUserId: string): Promise<RoomActionResponse> {
