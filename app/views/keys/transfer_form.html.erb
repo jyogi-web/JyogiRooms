@@ -51,7 +51,7 @@
 
         <script>
           (function() {
-            const users = JSON.parse('<%= j @eligible_users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json %>');
+            const users = <%= json_escape(@eligible_users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json).html_safe %>;
             const input = document.getElementById('user-search-input');
             const results = document.getElementById('user-search-results');
             const hiddenField = document.getElementById('selected-user-id');
@@ -125,6 +125,7 @@
               selectedDisplay.classList.remove('hidden');
               input.classList.add('hidden');
               results.classList.add('hidden');
+              input.setAttribute('aria-expanded', 'false');
               submitBtn.disabled = false;
             }
 
