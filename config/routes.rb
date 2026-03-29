@@ -1,7 +1,11 @@
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root "dashboard#index"
-  resources :reservations, except: [ :show ]
+  resources :reservations, except: [ :show ] do
+    collection do
+      get :show_date
+    end
+  end
   resources :keys, only: [ :index ]
   resources :nfc_cards, only: %i[index destroy]
   post "admin_disguise/toggle", to: "admin_disguise#toggle", as: :toggle_admin_disguise

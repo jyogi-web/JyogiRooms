@@ -1,24 +1,17 @@
 <% if @layout == :dashboard %>
   <!-- Dashboard Style: Box with Blue Sidebar -->
-  <div class="card flex flex-col gap-2 relative overflow-hidden group border border-gray-100 shadow-sm">
+  <div class="card !rounded-lg flex items-center gap-3 relative overflow-hidden border border-gray-100 shadow-sm pl-4 pr-3 py-2.5">
     <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
-    <div class="flex justify-between items-center pl-3 py-1">
-      <div class="flex-shrink-0">
-        <p class="text-sm font-bold text-gray-800">
-          <%= start_time %> ~ <%= end_time %>
-        </p>
-      </div>
-      <% if purpose.present? %>
-        <div class="flex-1 px-3 text-left min-w-0">
-          <span class="text-sm font-medium text-gray-700 truncate block"><%= purpose %></span>
-        </div>
-      <% else %>
-        <div class="flex-1"></div>
-      <% end %>
-      <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="text-sm font-medium text-gray-700"><%= user_name %></span>
-        <%= render(UserAvatarComponent.new(user: @reservation.user, size: :small, extra_classes: "bg-gray-200")) %>
-      </div>
+    <div class="flex-shrink-0 text-sm text-gray-800 flex">
+      <span class="font-bold w-16"><%= date_label %></span>
+      <span><%= start_time %>~<%= end_time %></span>
+    </div>
+    <% if purpose.present? %>
+      <span class="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded truncate min-w-0"><%= purpose %></span>
+    <% end %>
+    <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
+      <span class="text-sm font-medium text-gray-700"><%= user_name %></span>
+      <%= render(UserAvatarComponent.new(user: @reservation.user, size: :small, extra_classes: "bg-gray-200")) %>
     </div>
   </div>
 
@@ -38,7 +31,7 @@
             <%= start_time %> ~ <%= end_time %>
           </div>
           <% if purpose.present? %>
-            <div class="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded truncate max-w-[200px]">
+            <div class="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded truncate max-w-[200px]">
               <%= purpose %>
             </div>
           <% end %>
@@ -59,6 +52,31 @@
         <% end %>
       </div>
     <% end %>
+  </div>
+
+<% elsif @layout == :readonly %>
+  <!-- Readonly Style: List without edit/delete actions -->
+  <div class="flex items-center bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+    <div class="flex items-center min-w-0">
+      <div class="flex-shrink-0 mr-3">
+        <%= render UserAvatarComponent.new(user: @reservation.user, size: :small) %>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium text-gray-900 truncate">
+          <%= user_name %>
+        </div>
+        <div class="flex items-center gap-2 mt-0.5">
+          <div class="text-xs text-gray-500 whitespace-nowrap">
+            <%= start_time %> ~ <%= end_time %>
+          </div>
+          <% if purpose.present? %>
+            <div class="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded truncate max-w-[200px]">
+              <%= purpose %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
   </div>
 
 <% end %>

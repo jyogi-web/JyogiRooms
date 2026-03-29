@@ -27,7 +27,7 @@ class Calendar::DayComponent < ViewComponent::Base
     base = "relative bg-white min-h-[120px] p-1 md:p-2 flex flex-col gap-0.5 md:gap-1"
 
     if past?
-      "#{base} bg-gray-100/50 cursor-not-allowed text-gray-400"
+      "#{base} bg-gray-100/50 text-gray-400 hover:bg-gray-100 transition-colors"
     else
       style = current_month? ? "hover:bg-gray-50 transition-colors group" : "opacity-50 bg-gray-50/30 hover:bg-gray-50"
       "#{base} #{style}"

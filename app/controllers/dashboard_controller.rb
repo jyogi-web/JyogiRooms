@@ -7,7 +7,7 @@ class DashboardController < ApplicationController
       return
     end
 
-    @reservations = Reservation.where(start_at: Time.zone.now.all_day).includes(:user).order(:start_at)
+    @reservations = Reservation.where("end_at > ?", Time.zone.now).includes(:user).order(:start_at).limit(10)
     @rooms = Room.includes(keys: :user).order(room_number: :desc)
 
     @rooms = @rooms.includes(:room_status)

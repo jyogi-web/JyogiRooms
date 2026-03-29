@@ -10,6 +10,10 @@ class ReservationComponent < ViewComponent::Base
 
   private
 
+  def date_label
+    @reservation.start_at.strftime("%-m/%-d(#{%w[日 月 火 水 木 金 土][@reservation.start_at.wday]})")
+  end
+
   def start_time
     @reservation.start_at.strftime("%H:%M")
   end

@@ -14,7 +14,7 @@
 
   <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
     <% @room_data.each do |data| %>
-      <div class="card p-5">
+      <div class="card p-5 <%= '!bg-gray-100 !border-gray-200' unless data[:is_open] %>">
         <!-- ヘッダー: 部室名 + 状態バッジ -->
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-gray-800"><%= data[:room].name %></h2>
