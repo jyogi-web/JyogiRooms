@@ -60,11 +60,13 @@
             const clearBtn = document.getElementById('clear-selection');
             const submitBtn = document.getElementById('submit-btn');
 
+            function toKatakana(s) { return s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60)); }
+
             function filterUsers(query) {
               if (!query) return users;
-              const q = query.toLowerCase();
+              const q = toKatakana(query.toLowerCase());
               return users.filter(u =>
-                u.display_name.toLowerCase().includes(q) ||
+                toKatakana(u.display_name.toLowerCase()).includes(q) ||
                 (u.username && u.username.toLowerCase().includes(q))
               );
             }
