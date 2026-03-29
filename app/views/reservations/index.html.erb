@@ -11,8 +11,10 @@
     </h2>
 
     <div class="flex flex-col items-end gap-2 shrink-0">
-      <%= link_to reservations_path(start_date: Date.current), class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors whitespace-nowrap" do %>
-        今月に戻る
+      <% if @current_month.year != Date.current.year || @current_month.month != Date.current.month %>
+        <%= link_to reservations_path(start_date: Date.current), class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors whitespace-nowrap" do %>
+          今月に戻る
+        <% end %>
       <% end %>
 
       <div class="flex items-center gap-2">
