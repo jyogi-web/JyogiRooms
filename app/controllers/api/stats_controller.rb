@@ -8,16 +8,21 @@ module Api
     # GET /api/stats/ranking
     def ranking
       type = params[:type].presence || "visits"
-      year = (params[:year].presence || current_fiscal_year).to_i
+      year_param = params[:year].presence || current_fiscal_year.to_s
       room = params[:room].presence || "all"
 
       unless %w[visits duration].include?(type)
         return render json: { error: "Invalid type. Use 'visits' or 'duration'." }, status: :bad_request
       end
 
-      start_date, end_date = fiscal_year_range(year)
-
-      base_scope = RoomVisit.where(entered_at: start_date..end_date)
+      base_scope = RoomVisit.all
+      if year_param == "all"
+        year = "all"
+      else
+        year = year_param.to_i
+        start_date, end_date = fiscal_year_range(year)
+        base_scope = base_scope.where(entered_at: start_date..end_date)
+      end
       base_scope = base_scope.where(room_id: room) unless room == "all"
 
       ranking_data = if type == "visits"

@@ -1,7 +1,7 @@
 import { createApi } from '../api.js';
 import type { RankingEntry } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, getIntegerOption, reply, replyEmbed } from './utils.js';
+import { getStringOption, reply, replyEmbed } from './utils.js';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -36,10 +36,10 @@ export const rankCommand = {
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const type = getStringOption(interaction, 'type') ?? 'visits';
-        const yearOption = getIntegerOption(interaction, 'year');
+        const yearOption = getStringOption(interaction, 'year');
         const room = getStringOption(interaction, 'room') ?? 'all';
 
-        const year = yearOption ?? currentFiscalYear();
+        const year = yearOption ?? currentFiscalYear().toString();
 
         try {
             const api = createApi(env);
@@ -51,7 +51,8 @@ export const rankCommand = {
 
             const typeLabel = type === 'visits' ? '訪問日数' : '滞在時間';
             const roomLabel = room === 'all' ? '全部室' : `部室${room}`;
-            const title = `📊 ${typeLabel}ランキング（${year}年度 / ${roomLabel}）`;
+            const yearLabel = year === 'all' ? '全期間' : `${year}年度`;
+            const title = `📊 ${typeLabel}ランキング（${yearLabel} / ${roomLabel}）`;
 
             const lines = data.ranking.map((entry: RankingEntry, i: number) => {
                 const name = entry.display_name ?? '不明なユーザー';

@@ -84,8 +84,8 @@ const commandDefinitions = [
                     { name: '滞在時間', value: 'duration' }
                 )
         )
-        .addIntegerOption(option =>
-            option.setName('year').setDescription('年度（例: 2025, 2026）').setRequired(false)
+        .addStringOption(option =>
+            option.setName('year').setDescription('年度（例: 2025, 2026, all）').setRequired(false)
         )
         .addStringOption(option =>
             option.setName('room').setDescription('部室番号（1, 2, 3）または all（省略時は全部室）').setRequired(false)

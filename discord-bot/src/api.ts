@@ -90,7 +90,7 @@ export interface RankingEntry {
 
 export interface RankingResponse {
 	type: string;
-	year: number;
+	year: string;
 	room: string;
 	ranking: RankingEntry[];
 }
@@ -192,10 +192,10 @@ function createApi(env: ApiEnv) {
 			return data.users.find(u => u.discord_id === discordUserId) ?? null;
 		},
 
-		async fetchRanking(type?: string, year?: number, room?: string): Promise<RankingResponse> {
+		async fetchRanking(type?: string, year?: string, room?: string): Promise<RankingResponse> {
 			const url = new URL(`${baseUrl}/stats/ranking`);
 			if (type) url.searchParams.append('type', type);
-			if (year) url.searchParams.append('year', year.toString());
+			if (year) url.searchParams.append('year', year);
 			if (room) url.searchParams.append('room', room);
 
 			const response = await fetchWithTimeout(url.toString());
