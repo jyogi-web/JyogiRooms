@@ -3,7 +3,7 @@
   <div class="flex items-center justify-between mb-4">
     <div class="flex items-center gap-4">
       <h1 class="text-2xl font-bold text-gray-800">
-        <%= @current_month.year %>年 <%= @current_month.month %>月
+        📅 <%= @current_month.year %>年 <%= @current_month.month %>月
       </h1>
       <div class="flex gap-1">
         <%= link_to reservations_path(start_date: @current_month.prev_month), class: "p-1 hover:bg-gray-100 rounded-full transition-colors" do %>
