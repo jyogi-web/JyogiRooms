@@ -24,10 +24,10 @@
           <%= helpers.format_time_short(res.start_at) %><span class="hidden md:inline">~<%= helpers.format_time_short(res.end_at) %></span>
         </span>
         <div class="md:hidden flex-shrink-0 ml-0.5">
-          <%= render UserAvatarComponent.new(user: res.user, size: :xxs, extra_classes: "border-0 shadow-none") %>
+          <%= render UserAvatarComponent.new(user: res.user, size: :xxs, borderless: true, flat: true) %>
         </div>
         <div class="hidden md:block flex-shrink-0">
-          <%= render UserAvatarComponent.new(user: res.user, size: :xs, extra_classes: "border-0 shadow-none") %>
+          <%= render UserAvatarComponent.new(user: res.user, size: :xs, borderless: true, flat: true) %>
         </div>
       </div>
     <% end %>
