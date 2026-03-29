@@ -124,7 +124,7 @@ class KeysController < ApplicationController
   def resolve_from_user
     from_user_id = params[:from_user_id]
 
-    if current_user.admin?
+    if effective_admin?
       User.find(from_user_id)
     else
       return current_user if from_user_id.blank? || from_user_id.to_i == current_user.id
@@ -135,7 +135,7 @@ class KeysController < ApplicationController
   end
 
   def require_admin!
-    unless current_user.admin?
+    unless effective_admin?
       redirect_to keys_path, alert: "権限がありません"
     end
   end

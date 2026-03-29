@@ -4,7 +4,7 @@ class Admin::BaseController < ApplicationController
   private
 
   def require_admin!
-    unless current_user&.admin?
+    unless effective_admin?
       redirect_to root_path, alert: "権限がありません"
     end
   end
