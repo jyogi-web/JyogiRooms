@@ -15,6 +15,12 @@ module StatsHelper
     year == "all" ? "全期間" : "#{year}年度"
   end
 
+  def available_fiscal_years(first_year = 2025)
+    today = Time.current.in_time_zone("Asia/Tokyo").to_date
+    current = today.month >= 4 ? today.year : today.year - 1
+    (first_year..current).to_a
+  end
+
   def rank_medal(index)
     case index
     when 0 then "🥇"

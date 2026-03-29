@@ -15,7 +15,10 @@ class StatsController < ApplicationController
       start_date, end_date = fiscal_year_range(@year)
       base_scope = base_scope.where(entered_at: start_date..end_date)
     end
-    base_scope = base_scope.where(room_id: @room_param) unless @room_param == "all"
+    unless @room_param == "all"
+      parsed_room = @rooms.find { |r| r.id.to_s == @room_param }
+      base_scope = base_scope.where(room_id: parsed_room.id) if parsed_room
+    end
 
     @ranking = if @type == "duration"
       duration_ranking(base_scope)
@@ -42,13 +45,21 @@ class StatsController < ApplicationController
       .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
 
     @rooms = Room.order(:id)
+
+    visit_by_room = base_scope
+      .group(:room_id)
+      .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+
+    duration_by_room = base_scope
+      .where.not(exited_at: nil)
+      .group(:room_id)
+      .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))")
+
     @per_room = @rooms.map do |room|
-      room_scope = base_scope.where(room: room)
       {
         room: room,
-        visit_days: room_scope.count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')"),
-        total_seconds: room_scope.where.not(exited_at: nil)
-          .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
+        visit_days: visit_by_room[room.id] || 0,
+        total_seconds: (duration_by_room[room.id] || 0).to_i
       }
     end
   end

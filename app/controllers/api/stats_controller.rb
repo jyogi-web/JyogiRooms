@@ -87,7 +87,7 @@ module Api
       all_visit_counts = rank_scope
         .group(:user_id)
         .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
-        .order("visit_count DESC")
+        .order("visit_count DESC, user_id ASC")
       rank_position = all_visit_counts.each_with_index.find { |r, _| r.user_id == user.id }&.last
       visit_rank = rank_position ? rank_position + 1 : nil
       total_ranked_users = all_visit_counts.length

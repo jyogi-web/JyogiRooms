@@ -13,7 +13,7 @@
         <label class="block text-xs font-medium text-gray-600 mb-1">年度</label>
         <select name="year" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
           <option value="all" <%= "selected" if @year_param == "all" %>>全期間</option>
-          <% (2025..Time.current.in_time_zone("Asia/Tokyo").year).each do |y| %>
+          <% available_fiscal_years.each do |y| %>
             <option value="<%= y %>" <%= "selected" if @year_param == y.to_s %>><%= y %>年度</option>
           <% end %>
         </select>
