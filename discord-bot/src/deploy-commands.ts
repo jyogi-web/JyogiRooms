@@ -51,6 +51,12 @@ const commandDefinitions = [
         .setDescription('各部室の鍵持ち一覧を表示します')
         .addStringOption(option =>
             option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
+                .addChoices(
+                    { name: '1', value: '1' },
+                    { name: '2', value: '2' },
+                    { name: '3', value: '3' },
+                    { name: 'all', value: 'all' }
+                )
         ),
 
     new SlashCommandBuilder()
@@ -58,6 +64,11 @@ const commandDefinitions = [
         .setDescription('指定した部室の鍵持ちをメンションして通知します')
         .addStringOption(option =>
             option.setName('room').setDescription('部室番号（例: 1, 2, 3）').setRequired(true)
+                .addChoices(
+                    { name: '1', value: '1' },
+                    { name: '2', value: '2' },
+                    { name: '3', value: '3' }
+                )
         ),
 
     new SlashCommandBuilder()
@@ -71,7 +82,13 @@ const commandDefinitions = [
         .setName('status')
         .setDescription('部室の状況を確認します')
         .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（例: 1, 2, 3）または all（省略時も全部室）').setRequired(false)
+            option.setName('room').setDescription('部室番号（省略時も全部室）').setRequired(false)
+                .addChoices(
+                    { name: '1', value: '1' },
+                    { name: '2', value: '2' },
+                    { name: '3', value: '3' },
+                    { name: 'all', value: 'all' }
+                )
         ),
 
     new SlashCommandBuilder()
@@ -88,12 +105,12 @@ const commandDefinitions = [
             option.setName('year').setDescription('年度（例: 2025, 2026, all）').setRequired(false)
         )
         .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（1, 2, 3）または all（省略時は全部室）').setRequired(false)
+            option.setName('room').setDescription('部室番号（省略時も全部室）').setRequired(false)
                 .addChoices(
-                    { name: '全部室', value: 'all' },
-                    { name: '部室1', value: '1' },
-                    { name: '部室2', value: '2' },
-                    { name: '部室3', value: '3' }
+                    { name: '1', value: '1' },
+                    { name: '2', value: '2' },
+                    { name: '3', value: '3' },
+                    { name: 'all', value: 'all' }
                 )
         ),
 ];
