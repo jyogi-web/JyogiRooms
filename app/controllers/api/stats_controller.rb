@@ -18,7 +18,7 @@ module Api
       start_date, end_date = fiscal_year_range(year)
 
       base_scope = RoomVisit.where(entered_at: start_date..end_date)
-      base_scope = base_scope.where(room: Room.find_by!(room_number: room)) unless room == "all"
+      base_scope = base_scope.where(room_id: room) unless room == "all"
 
       ranking_data = if type == "visits"
         visit_ranking(base_scope, room)
@@ -32,8 +32,6 @@ module Api
         room: room,
         ranking: ranking_data
       }
-    rescue ActiveRecord::RecordNotFound
-      render json: { error: "Room not found." }, status: :not_found
     end
 
     private
