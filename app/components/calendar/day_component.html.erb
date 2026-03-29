@@ -1,5 +1,10 @@
-<% tag_name = past? ? :div : :a %>
-<% tag_options = past? ? { class: container_classes } : { href: new_reservation_path(date: @date), class: container_classes } %>
+<% if past? %>
+  <% tag_name = :a %>
+  <% tag_options = { href: helpers.show_date_reservations_path(date: @date), class: container_classes } %>
+<% else %>
+  <% tag_name = :a %>
+  <% tag_options = { href: new_reservation_path(date: @date), class: container_classes } %>
+<% end %>
 
 <%= content_tag(tag_name, tag_options) do %>
   <!-- Date Number -->

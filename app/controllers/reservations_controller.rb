@@ -27,6 +27,15 @@ class ReservationsController < ApplicationController
     @reservations_by_date = @reservations.group_by { |r| r.start_at.to_date }
   end
 
+  def show_date
+    @date = begin
+      Date.parse(params[:date])
+    rescue ArgumentError, TypeError
+      redirect_to reservations_path and return
+    end
+    @reservations = fetch_existing_reservations(@date)
+  end
+
   def new
     @reservation = Reservation.new
     @reservation.start_time = "13:00"

@@ -1,0 +1,20 @@
+<div class="max-w-md mx-auto px-4 py-8">
+  <div class="mb-6 flex items-center">
+    <%= link_to reservations_path(start_date: @date.beginning_of_month), class: "text-gray-500 hover:text-gray-700 mr-4" do %>
+      <%= render Icons::ArrowLeftComponent.new(classes: "w-6 h-6") %>
+    <% end %>
+    <h1 class="text-2xl font-bold text-gray-800">📅 <%= format_date_with_weekday(@date) %></h1>
+  </div>
+
+  <% if @reservations.any? %>
+    <div class="space-y-2">
+      <% @reservations.each do |reservation| %>
+        <%= render ReservationComponent.new(reservation: reservation, layout: :readonly) %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card py-8 text-center text-gray-500">
+      この日の予約はありません
+    </div>
+  <% end %>
+</div>
