@@ -37,20 +37,20 @@ export const rankCommand = {
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const type = getStringOption(interaction, 'type') ?? 'visits';
         const yearOption = getStringOption(interaction, 'year');
-        const room = getStringOption(interaction, 'room') ?? 'all';
+        const room = getStringOption(interaction, 'room');
 
         const year = yearOption ?? currentFiscalYear().toString();
 
         try {
             const api = createApi(env);
-            const data = await api.fetchRanking(type, year, room);
+            const data = await api.fetchRanking(type, year, room ?? 'all');
 
             if (data.ranking.length === 0) {
                 return reply('該当期間のデータがありません。');
             }
 
             const typeLabel = type === 'visits' ? '訪問日数' : '滞在時間';
-            const roomLabel = room === 'all' ? '🚪全部室' : `🚪第${room}部室`;
+            const roomLabel = room ? `🚪第${room}部室` : '🚪全部室';
             const yearLabel = year === 'all' ? '全期間' : `${year}年度`;
             const title = `📊 ${typeLabel}ランキング（${yearLabel} / ${roomLabel}）`;
 

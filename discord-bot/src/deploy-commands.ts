@@ -54,8 +54,7 @@ const commandDefinitions = [
                 .addChoices(
                     { name: '1', value: '1' },
                     { name: '2', value: '2' },
-                    { name: '3', value: '3' },
-                    { name: 'all', value: 'all' }
+                    { name: '3', value: '3' }
                 )
         ),
 
@@ -82,12 +81,11 @@ const commandDefinitions = [
         .setName('status')
         .setDescription('部室の状況を確認します')
         .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（省略時も全部室）').setRequired(false)
+            option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
                 .addChoices(
                     { name: '1', value: '1' },
                     { name: '2', value: '2' },
-                    { name: '3', value: '3' },
-                    { name: 'all', value: 'all' }
+                    { name: '3', value: '3' }
                 )
         ),
 
@@ -105,12 +103,11 @@ const commandDefinitions = [
             option.setName('year').setDescription('年度（例: 2025, 2026, all）').setRequired(false)
         )
         .addStringOption(option =>
-            option.setName('room').setDescription('部室番号（省略時も全部室）').setRequired(false)
+            option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
                 .addChoices(
                     { name: '1', value: '1' },
                     { name: '2', value: '2' },
-                    { name: '3', value: '3' },
-                    { name: 'all', value: 'all' }
+                    { name: '3', value: '3' }
                 )
         ),
 
