@@ -4,4 +4,4 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-API_BASE_URL = "https://jyogi-rooms-dev.jyogi.net/api"
+API_BASE_URL = "https://rooms.jyogi.net/api"
