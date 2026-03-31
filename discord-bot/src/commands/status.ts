@@ -20,10 +20,10 @@ export const statusCommand = {
             }
 
             let targetRooms = rooms;
-            if (room && room.toLowerCase() !== 'all') {
+            if (room) {
                 const roomId = parseInt(room, 10);
                 if (isNaN(roomId)) {
-                    return reply('部室番号は数字で指定するか、`all` で全部室を表示できます。');
+                    return reply('部室番号は数字で指定してください。省略すると全部室を表示します。');
                 }
                 targetRooms = rooms.filter(r => r.room_id === roomId);
                 if (targetRooms.length === 0) {
