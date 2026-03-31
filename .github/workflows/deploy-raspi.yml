@@ -3,6 +3,8 @@ name: Deploy to Raspberry Pi
 on:
   push:
     branches: [develop,main]
+    paths-ignore:
+      - 'discord-bot/**'
 
 jobs:
   deploy:
