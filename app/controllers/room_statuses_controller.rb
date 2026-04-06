@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class RoomStatusesController < ApplicationController
+  include PeriodFilterable
+
   before_action :set_room, only: %i[exit_room close_room]
 
   # GET /room_statuses
@@ -30,6 +32,24 @@ class RoomStatusesController < ApplicationController
         is_current_user_inside: occupants.any? { |o| o[:user]&.id == current_user.id }
       }
     end
+  end
+
+  # GET /room_statuses/logs
+  def logs
+    @rooms = Room.order(room_number: :desc)
+    @room_param = params[:room] || "all"
+    @period = PeriodFilterable::VALID_PERIODS.include?(params[:period]) ? params[:period] : "all"
+
+    visits = RoomVisit.includes(:user, :room).where.not(exited_at: nil).order(entered_at: :desc)
+
+    if @room_param != "all"
+      visits = visits.where(room_id: @room_param)
+    end
+
+    range = period_date_range(@period)
+    visits = visits.where(entered_at: range) if range
+
+    @visits = visits.limit(100)
   end
 
   # POST /room_statuses/:id/exit_room

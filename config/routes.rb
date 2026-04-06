@@ -16,6 +16,9 @@ Rails.application.routes.draw do
       post :exit_room
       post :close_room
     end
+    collection do
+      get :logs
+    end
   end
 
   resources :rooms, only: [] do
