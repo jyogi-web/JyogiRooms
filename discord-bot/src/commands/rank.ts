@@ -1,16 +1,8 @@
 import { createApi } from '../api.js';
 import type { RankingEntry } from '../api.js';
+import { PERIOD_LABELS } from '../constants.js';
 import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, reply, replyEmbed } from './utils.js';
-
-const PERIOD_LABELS: Record<string, string> = {
-    today: '今日',
-    week: '今週',
-    month: '今月',
-    half_year: '半年間',
-    year: '1年間',
-    all: '全期間',
-};
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
