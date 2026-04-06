@@ -3,14 +3,14 @@ import type { RankingEntry } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, reply, replyEmbed } from './utils.js';
 
-const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-function currentFiscalYear(): number {
-    const jst = new Date(Date.now() + JST_OFFSET_MS);
-    const month = jst.getUTCMonth() + 1; // 1-indexed
-    const year = jst.getUTCFullYear();
-    return month >= 4 ? year : year - 1;
-}
+const PERIOD_LABELS: Record<string, string> = {
+    today: '今日',
+    week: '今週',
+    month: '今月',
+    half_year: '半年間',
+    year: '1年間',
+    all: '全期間',
+};
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
@@ -36,14 +36,12 @@ export const rankCommand = {
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const type = getStringOption(interaction, 'type') ?? 'visits';
-        const yearOption = getStringOption(interaction, 'year');
+        const period = getStringOption(interaction, 'period') ?? 'month';
         const room = getStringOption(interaction, 'room');
-
-        const year = yearOption ?? currentFiscalYear().toString();
 
         try {
             const api = createApi(env);
-            const data = await api.fetchRanking(type, year, room ?? 'all');
+            const data = await api.fetchRanking(type, period, room ?? 'all');
 
             if (data.ranking.length === 0) {
                 return reply('該当期間のデータがありません。');
@@ -51,8 +49,8 @@ export const rankCommand = {
 
             const typeLabel = type === 'visits' ? '訪問日数' : '滞在時間';
             const roomLabel = room ? `🚪第${room}部室` : '🚪全部室';
-            const yearLabel = year === 'all' ? '全期間' : `${year}年度`;
-            const title = `📊 ${typeLabel}ランキング（${yearLabel} / ${roomLabel}）`;
+            const periodLabel = PERIOD_LABELS[period] ?? period;
+            const title = `📊 ${typeLabel}ランキング（${periodLabel} / ${roomLabel}）`;
 
             const lines = data.ranking.map((entry: RankingEntry, i: number) => {
                 const name = entry.display_name ?? '不明なユーザー';
