@@ -61,6 +61,16 @@
         <% end %>
       </nav>
       
+      <!-- アップデート履歴リンク -->
+      <div class="px-4 pb-2">
+        <%= link_to app_updates_path, class: "flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+          </svg>
+          <span class="text-sm font-medium">アップデート履歴</span>
+        <% end %>
+      </div>
+
       <!-- User Profile Footer with Dropdown -->
       <div class="p-4 border-t border-gray-200 relative">
         <div class="group">
@@ -114,6 +124,13 @@
     <!-- Mobile Header (Optional, for brand) -->
     <header class="md:hidden fixed top-0 left-0 w-full h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-30">
       <%= render "shared/app_brand", size_class: "w-11 h-11 rounded-full object-cover" %>
+      <div class="flex items-center gap-3">
+      <!-- アップデート履歴ボタン -->
+      <%= link_to app_updates_path, class: "text-gray-500 hover:text-gray-700 transition-colors" do %>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+        </svg>
+      <% end %>
       <!-- Mobile User Menu (checkbox toggle for real mobile support) -->
       <div class="relative">
         <input type="checkbox" id="mobile-menu-toggle" class="peer hidden">
@@ -158,6 +175,7 @@
             <span class="text-sm font-medium">ログアウト</span>
           <% end %>
         </div>
+      </div>
       </div>
     </header>
     <% end %>

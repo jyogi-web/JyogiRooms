@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   post "admin_disguise/toggle", to: "admin_disguise#toggle", as: :toggle_admin_disguise
   get "stats/ranking", to: "stats#ranking", as: :stats_ranking
   get "stats/me", to: "stats#me", as: :stats_me
+  resources :app_updates, only: %i[index]
   resources :room_statuses, only: %i[index] do
     member do
       post :exit_room
