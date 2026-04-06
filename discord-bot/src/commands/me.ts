@@ -24,7 +24,7 @@ export const meCommand = {
             return reply('ユーザー情報を取得できませんでした。');
         }
 
-        const period = getStringOption(interaction, 'period') ?? 'month';
+        const period = getStringOption(interaction, 'period') ?? 'all';
 
         try {
             const api = createApi(env);

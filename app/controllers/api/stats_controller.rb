@@ -9,7 +9,7 @@ module Api
     # GET /api/stats/ranking
     def ranking
       type = params[:type].presence || "visits"
-      period = params[:period].presence || "month"
+      period = params[:period].presence || "all"
       room = params[:room].presence || "all"
 
       unless %w[visits duration].include?(type)
@@ -43,7 +43,7 @@ module Api
       user = User.find_by(discord_id: params[:discord_user_id])
       return render json: { error: "User not found." }, status: :not_found unless user
 
-      period = params[:period].presence || "month"
+      period = params[:period].presence || "all"
       unless VALID_PERIODS.include?(period)
         return render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
       end

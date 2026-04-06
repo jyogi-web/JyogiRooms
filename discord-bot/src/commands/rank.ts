@@ -28,7 +28,7 @@ export const rankCommand = {
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
         const type = getStringOption(interaction, 'type') ?? 'visits';
-        const period = getStringOption(interaction, 'period') ?? 'month';
+        const period = getStringOption(interaction, 'period') ?? 'all';
         const room = getStringOption(interaction, 'room');
 
         try {

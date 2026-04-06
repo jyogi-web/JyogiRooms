@@ -64,7 +64,7 @@ class StatsController < ApplicationController
 
   def valid_period(param)
     value = param.presence
-    VALID_PERIODS.include?(value) ? value : "month"
+    VALID_PERIODS.include?(value) ? value : "all"
   end
 
   def visit_ranking(scope)
