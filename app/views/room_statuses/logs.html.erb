@@ -1,0 +1,251 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-gray-800">📋 入退室ログ</h1>
+    <%= link_to room_statuses_path, class: "btn btn-secondary text-sm" do %>
+      🚪 部室状況に戻る
+    <% end %>
+  </div>
+
+  <!-- フィルター -->
+  <%= form_with url: logs_room_statuses_path, method: :get, class: "card p-4", local: true, id: "logs-filter-form" do %>
+    <div class="flex flex-wrap gap-3 items-end">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">期間</label>
+        <select name="period" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <% StatsHelper::PERIOD_OPTIONS.each do |opt| %>
+            <option value="<%= opt[:value] %>" <%= "selected" if @period == opt[:value] %>><%= opt[:label] %></option>
+          <% end %>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1">部室</label>
+        <select name="room" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <option value="all" <%= "selected" if @room_param == "all" %>>全部室</option>
+          <% @rooms.each do |room| %>
+            <option value="<%= room.id %>" <%= "selected" if @room_param == room.id.to_s %>><%= room.name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs font-medium text-gray-600 mb-1">ユーザー</label>
+        <input type="hidden" name="user_id" id="filter-user-id" value="<%= @user_id_param %>">
+        <div class="relative" id="user-search-container">
+          <input type="text" id="user-search-input" placeholder="ユーザー名で検索" autocomplete="off"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent <%= 'hidden' if @user_id_param.present? %>">
+          <div id="user-search-results" role="listbox" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+          <% if @user_id_param.present? %>
+            <% selected_user = @users.find { |u| u.id.to_s == @user_id_param.to_s } %>
+            <% if selected_user %>
+              <div id="selected-user-display" class="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2">
+                <div class="flex items-center gap-2">
+                  <img src="<%= selected_user.avatar_url %>" class="w-6 h-6 rounded-full" alt="" onerror="this.style.display='none'">
+                  <span class="text-sm font-medium text-gray-800"><%= selected_user.display_name %></span>
+                </div>
+                <button type="button" id="clear-user" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+              </div>
+            <% end %>
+          <% else %>
+            <div id="selected-user-display" class="hidden flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2">
+              <div class="flex items-center gap-2">
+                <img id="selected-user-avatar" src="" class="w-6 h-6 rounded-full" alt="" onerror="this.style.display='none'">
+                <span id="selected-user-name" class="text-sm font-medium text-gray-800"></span>
+              </div>
+              <button type="button" id="clear-user" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary text-sm">表示</button>
+      </div>
+    </div>
+  <% end %>
+
+  <script>
+    (function() {
+      const users = <%= json_escape(@users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json).html_safe %>;
+      const input = document.getElementById('user-search-input');
+      const results = document.getElementById('user-search-results');
+      const hiddenField = document.getElementById('filter-user-id');
+      const selectedDisplay = document.getElementById('selected-user-display');
+      const clearBtn = document.getElementById('clear-user');
+
+      function toKatakana(s) { return s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60)); }
+
+      function filterUsers(query) {
+        if (!query) return users.slice(0, 20);
+        const q = toKatakana(query.toLowerCase());
+        return users.filter(u =>
+          toKatakana(u.display_name.toLowerCase()).includes(q) ||
+          (u.username && u.username.toLowerCase().includes(q))
+        );
+      }
+
+      function renderResults(filtered) {
+        results.textContent = '';
+        if (filtered.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'px-3 py-2 text-sm text-gray-400';
+          empty.textContent = '該当するユーザーがいません';
+          results.appendChild(empty);
+        } else {
+          filtered.forEach(u => {
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors w-full text-left';
+            row.dataset.userId = u.id;
+
+            const img = document.createElement('img');
+            img.src = u.avatar_url || '';
+            img.className = 'w-7 h-7 rounded-full bg-gray-200';
+            img.alt = '';
+            img.onerror = function() { this.style.display = 'none'; };
+            row.appendChild(img);
+
+            const info = document.createElement('div');
+            info.className = 'min-w-0';
+            const name = document.createElement('p');
+            name.className = 'text-sm font-medium text-gray-800 truncate';
+            name.textContent = u.display_name;
+            info.appendChild(name);
+            if (u.username) {
+              const uname = document.createElement('p');
+              uname.className = 'text-xs text-gray-500';
+              uname.textContent = '@' + u.username;
+              info.appendChild(uname);
+            }
+            row.appendChild(info);
+            results.appendChild(row);
+          });
+        }
+        results.classList.remove('hidden');
+      }
+
+      function selectUser(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+        hiddenField.value = user.id;
+        if (!document.getElementById('selected-user-name')) {
+          selectedDisplay.querySelector('img').src = user.avatar_url || '';
+          selectedDisplay.querySelector('span').textContent = user.display_name;
+        } else {
+          document.getElementById('selected-user-avatar').src = user.avatar_url || '';
+          document.getElementById('selected-user-name').textContent = user.display_name;
+        }
+        selectedDisplay.classList.remove('hidden');
+        input.classList.add('hidden');
+        results.classList.add('hidden');
+      }
+
+      function clearSelection() {
+        hiddenField.value = '';
+        selectedDisplay.classList.add('hidden');
+        input.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+      }
+
+      input.addEventListener('input', () => renderResults(filterUsers(input.value)));
+      input.addEventListener('focus', () => renderResults(filterUsers(input.value)));
+      results.addEventListener('click', (e) => {
+        const row = e.target.closest('[data-user-id]');
+        if (row) selectUser(parseInt(row.dataset.userId));
+      });
+      clearBtn.addEventListener('click', clearSelection);
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#user-search-container')) {
+          results.classList.add('hidden');
+        }
+      });
+    })();
+  </script>
+
+  <!-- ログ一覧 -->
+  <div class="card">
+    <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+      <h2 class="text-lg font-bold text-gray-800 whitespace-nowrap">
+        入退室履歴
+        <span class="text-sm font-normal text-gray-500">（最新100件）</span>
+      </h2>
+      <div class="flex bg-gray-100 rounded-lg p-0.5 shrink-0 self-start sm:self-auto" id="view-toggle">
+        <button type="button" data-view="split" class="px-3 py-1 text-xs font-medium rounded-md transition-colors bg-white text-gray-800 shadow-sm whitespace-nowrap">入退室別</button>
+        <button type="button" data-view="combined" class="px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-500 whitespace-nowrap">まとめて表示</button>
+      </div>
+    </div>
+
+    <% if @visits.empty? %>
+      <div class="px-5 py-8 text-center text-gray-400">
+        該当期間のデータがありません
+      </div>
+    <% else %>
+      <!-- まとめて表示 -->
+      <div id="view-combined" class="divide-y divide-gray-100 hidden">
+        <% @visits.each do |visit| %>
+          <% entered = visit.entered_at.in_time_zone("Asia/Tokyo") %>
+          <div class="flex items-center gap-3 px-5 py-3">
+            <%= render(UserAvatarComponent.new(user: visit.user, size: :small)) %>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm font-medium text-gray-800 truncate"><%= visit.user.display_name %></p>
+                <% if visit.exited_at %>
+                  <span class="shrink-0 inline-block px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded"><%= format_duration((visit.exited_at - visit.entered_at).to_i) %></span>
+                <% end %>
+              </div>
+              <p class="text-xs text-gray-500">
+                <span class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 font-medium rounded"><%= visit.room.name %></span>
+                <%= entered.strftime("%m/%d %H:%M") %>
+                <% if visit.exited_at %>
+                  → <%= visit.exited_at.in_time_zone("Asia/Tokyo").strftime("%H:%M") %>
+                <% else %>
+                  <span class="text-green-600 font-medium">入室中</span>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 入退室別表示 -->
+      <div id="view-split" class="divide-y divide-gray-100">
+        <% @logs.each do |log| %>
+          <% time = log[:at].in_time_zone("Asia/Tokyo") %>
+          <% is_enter = log[:type] == :enter %>
+          <div class="flex items-center gap-3 px-5 py-3">
+            <span class="w-14 text-center text-xs font-semibold px-2 py-0.5 rounded-full <%= is_enter ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700' %>">
+              <%= is_enter ? '入室' : '退室' %>
+            </span>
+            <%= render(UserAvatarComponent.new(user: log[:user], size: :small)) %>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate"><%= log[:user].display_name %></p>
+              <p class="text-xs text-gray-500">
+                <span class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 font-medium rounded"><%= log[:room].name %></span>
+                                <%= time.strftime("%m/%d %H:%M") %>
+              </p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <script>
+    (function() {
+      const toggle = document.getElementById('view-toggle');
+      const combined = document.getElementById('view-combined');
+      const split = document.getElementById('view-split');
+      if (!toggle || !combined || !split) return;
+
+      toggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-view]');
+        if (!btn) return;
+        const view = btn.dataset.view;
+        toggle.querySelectorAll('[data-view]').forEach(b => {
+          b.className = 'px-3 py-1 text-xs font-medium rounded-md transition-colors ' +
+            (b.dataset.view === view ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500');
+        });
+        combined.classList.toggle('hidden', view !== 'combined');
+        split.classList.toggle('hidden', view !== 'split');
+      });
+    })();
+  </script>
+</div>

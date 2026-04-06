@@ -1,0 +1,29 @@
+<%= form_with model: [:admin, @app_update], class: "card p-6 space-y-4", local: true do |f| %>
+  <% if @app_update.errors.any? %>
+    <div class="bg-red-50 text-red-700 p-4 rounded-lg text-sm">
+      <% @app_update.errors.full_messages.each do |msg| %>
+        <p><%= msg %></p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :title, "タイトル", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_field :title, class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent", placeholder: "例: 入退室ログ機能を追加" %>
+  </div>
+
+  <div>
+    <%= f.label :description, "説明", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.text_area :description, rows: 5, class: "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent", placeholder: "更新内容の詳細を記入" %>
+  </div>
+
+  <div>
+    <%= f.label :released_on, "更新日", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    <%= f.date_field :released_on, class: "px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" %>
+  </div>
+
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit @app_update.persisted? ? "更新する" : "追加する", class: "px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors cursor-pointer" %>
+    <%= link_to "キャンセル", admin_app_updates_path, class: "text-sm text-gray-500 hover:text-gray-700 font-medium" %>
+  </div>
+<% end %>

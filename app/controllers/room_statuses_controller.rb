@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class RoomStatusesController < ApplicationController
+  include PeriodFilterable
+
   before_action :set_room, only: %i[exit_room close_room]
 
   # GET /room_statuses
@@ -30,6 +32,34 @@ class RoomStatusesController < ApplicationController
         is_current_user_inside: occupants.any? { |o| o[:user]&.id == current_user.id }
       }
     end
+  end
+
+  # GET /room_statuses/logs
+  def logs
+    @rooms = Room.order(room_number: :desc)
+    @room_param = params[:room] || "all"
+    @period = PeriodFilterable::VALID_PERIODS.include?(params[:period]) ? params[:period] : "all"
+    @user_id_param = params[:user_id]
+
+    visits = RoomVisit.includes(:user, :room).order(entered_at: :desc)
+
+    visits = visits.where(room_id: @room_param) if @room_param != "all"
+    visits = visits.where(user_id: @user_id_param) if @user_id_param.present?
+
+    range = period_date_range(@period)
+    visits = visits.where(entered_at: range) if range
+
+    @visits = visits.limit(100)
+
+    # 入室・退室を個別のログエントリに分解し、時刻降順でソート
+    @logs = @visits.flat_map { |visit|
+      entries = []
+      entries << { type: :enter, user: visit.user, room: visit.room, at: visit.entered_at }
+      entries << { type: :exit, user: visit.user, room: visit.room, at: visit.exited_at } if visit.exited_at
+      entries
+    }.sort_by { |e| e[:at] }.reverse
+
+    @users = User.order(:display_name)
   end
 
   # POST /room_statuses/:id/exit_room

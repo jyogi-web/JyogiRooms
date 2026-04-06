@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_07_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -25,6 +25,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_000002) do
     t.index ["token"], name: "index_access_tokens_on_token", unique: true
     t.index ["user_id", "revoked"], name: "index_access_tokens_on_user_id_and_revoked"
     t.index ["user_id"], name: "index_access_tokens_on_user_id"
+  end
+
+  create_table "app_updates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description", null: false
+    t.date "released_on", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["released_on"], name: "index_app_updates_on_released_on"
   end
 
   create_table "key_transfer_logs", force: :cascade do |t|

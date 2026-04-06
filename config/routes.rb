@@ -11,10 +11,14 @@ Rails.application.routes.draw do
   post "admin_disguise/toggle", to: "admin_disguise#toggle", as: :toggle_admin_disguise
   get "stats/ranking", to: "stats#ranking", as: :stats_ranking
   get "stats/me", to: "stats#me", as: :stats_me
+  resources :app_updates, only: %i[index]
   resources :room_statuses, only: %i[index] do
     member do
       post :exit_room
       post :close_room
+    end
+    collection do
+      get :logs
     end
   end
 
@@ -80,6 +84,8 @@ Rails.application.routes.draw do
     root "roles#index"
     resources :roles, only: %i[index show update]
     resources :users, only: %i[show update]
+    resources :nfc_cards, only: %i[index]
+    resources :app_updates, only: %i[index new create edit update destroy]
     resources :key_transfer_logs, only: %i[index show]
     resource :scheduled_announcement, only: %i[edit update]
   end

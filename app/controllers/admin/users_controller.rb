@@ -1,11 +1,11 @@
 class Admin::UsersController < Admin::BaseController
   def show
-    @user = User.includes(:role, :access_tokens, :reservations, :keys).find(params[:id])
+    @user = User.includes(:role, :access_tokens, :reservations, :keys, :nfc_card).find(params[:id])
     @roles = Role.order(:name)
   end
 
   def update
-    @user = User.includes(:role, :access_tokens, :reservations, :keys).find(params[:id])
+    @user = User.includes(:role, :access_tokens, :reservations, :keys, :nfc_card).find(params[:id])
     if @user.update(user_params)
       redirect_to admin_user_path(@user), notice: "ユーザー「#{@user.display_name}」を更新しました"
     else
