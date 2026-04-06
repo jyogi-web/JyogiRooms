@@ -17,11 +17,10 @@
         </select>
       </div>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">年度</label>
-        <select name="year" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
-          <option value="all" <%= "selected" if @year_param == "all" %>>全期間</option>
-          <% available_fiscal_years.each do |y| %>
-            <option value="<%= y %>" <%= "selected" if @year_param == y.to_s %>><%= y %>年度</option>
+        <label class="block text-xs font-medium text-gray-600 mb-1">期間</label>
+        <select name="period" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <% StatsHelper::PERIOD_OPTIONS.each do |opt| %>
+            <option value="<%= opt[:value] %>" <%= "selected" if @period == opt[:value] %>><%= opt[:label] %></option>
           <% end %>
         </select>
       </div>
@@ -47,7 +46,7 @@
         <%= @type == "visits" ? "訪問日数" : "滞在時間" %>ランキング
         <br class="md:hidden">
         <span class="text-sm font-normal text-gray-500 whitespace-nowrap">
-          （<%= year_label(@year) %> / <%= @room_param == "all" ? "全部室" : @rooms.find { |r| r.id.to_s == @room_param }&.name || "全部室" %>）
+          （<%= period_label(@period) %> / <%= @room_param == "all" ? "全部室" : @rooms.find { |r| r.id.to_s == @room_param }&.name || "全部室" %>）
         </span>
       </h2>
     </div>

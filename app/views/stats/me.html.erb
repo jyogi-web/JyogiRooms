@@ -6,15 +6,14 @@
     <% end %>
   </div>
 
-  <!-- 年度フィルター -->
+  <!-- 期間フィルター -->
   <%= form_with url: stats_me_path, method: :get, class: "card p-4", local: true do %>
     <div class="flex flex-wrap gap-3 items-end">
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">年度</label>
-        <select name="year" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
-          <option value="all" <%= "selected" if @year_param == "all" %>>全期間</option>
-          <% available_fiscal_years.each do |y| %>
-            <option value="<%= y %>" <%= "selected" if @year_param == y.to_s %>><%= y %>年度</option>
+        <label class="block text-xs font-medium text-gray-600 mb-1">期間</label>
+        <select name="period" class="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+          <% StatsHelper::PERIOD_OPTIONS.each do |opt| %>
+            <option value="<%= opt[:value] %>" <%= "selected" if @period == opt[:value] %>><%= opt[:label] %></option>
           <% end %>
         </select>
       </div>
@@ -28,7 +27,7 @@
   <div class="card p-5">
     <h2 class="text-lg font-bold text-gray-800 mb-4">
       全体
-      <span class="text-sm font-normal text-gray-500">（<%= year_label(@year) %>）</span>
+      <span class="text-sm font-normal text-gray-500">（<%= period_label(@period) %>）</span>
     </h2>
     <div class="grid grid-cols-2 gap-4">
       <div class="bg-blue-50 rounded-xl p-4 text-center">

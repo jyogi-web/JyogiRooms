@@ -25,14 +25,17 @@ module StatsHelper
     safe_join(parts)
   end
 
-  def year_label(year)
-    year == "all" ? "全期間" : "#{year}年度"
-  end
+  PERIOD_OPTIONS = [
+    { value: "today", label: "今日" },
+    { value: "week", label: "今週" },
+    { value: "month", label: "今月" },
+    { value: "half_year", label: "半年間" },
+    { value: "year", label: "1年間" },
+    { value: "all", label: "全期間" }
+  ].freeze
 
-  def available_fiscal_years(first_year = 2025)
-    today = Time.current.in_time_zone("Asia/Tokyo").to_date
-    current = today.month >= 4 ? today.year : today.year - 1
-    (first_year..current).to_a
+  def period_label(period)
+    PERIOD_OPTIONS.find { |o| o[:value] == period }&.dig(:label) || "全期間"
   end
 
   def rank_medal(index)
