@@ -85,6 +85,7 @@ Rails.application.routes.draw do
     resources :roles, only: %i[index show update]
     resources :users, only: %i[show update]
     resources :nfc_cards, only: %i[index]
+    resources :app_updates, only: %i[index new create edit update destroy]
     resources :key_transfer_logs, only: %i[index show]
     resource :scheduled_announcement, only: %i[edit update]
   end
