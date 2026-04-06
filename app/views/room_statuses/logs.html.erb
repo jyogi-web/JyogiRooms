@@ -187,7 +187,7 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-800 truncate"><%= visit.user.display_name %></p>
               <p class="text-xs text-gray-500">
-                <%= visit.room.name %>
+                <span class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 font-medium rounded"><%= visit.room.name %></span>
                 <span class="mx-1">·</span>
                 <%= entered.strftime("%m/%d %H:%M") %>
                 <% if visit.exited_at %>
@@ -217,7 +217,7 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-800 truncate"><%= log[:user].display_name %></p>
               <p class="text-xs text-gray-500">
-                <%= log[:room].name %>
+                <span class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 font-medium rounded"><%= log[:room].name %></span>
                 <span class="mx-1">·</span>
                 <%= time.strftime("%m/%d %H:%M") %>
               </p>
