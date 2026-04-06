@@ -1,15 +1,7 @@
 import { createApi } from '../api.js';
+import { PERIOD_LABELS } from '../constants.js';
 import type { Interaction, CommandEnv } from './types.js';
 import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
-
-const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
-
-function currentFiscalYear(): number {
-    const jst = new Date(Date.now() + JST_OFFSET_MS);
-    const month = jst.getUTCMonth() + 1;
-    const year = jst.getUTCFullYear();
-    return month >= 4 ? year : year - 1;
-}
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
@@ -32,21 +24,20 @@ export const meCommand = {
             return reply('ユーザー情報を取得できませんでした。');
         }
 
-        const yearOption = getStringOption(interaction, 'year');
-        const year = yearOption ?? currentFiscalYear().toString();
+        const period = getStringOption(interaction, 'period') ?? 'all';
 
         try {
             const api = createApi(env);
-            const data = await api.fetchMyStats(discordUserId, year);
+            const data = await api.fetchMyStats(discordUserId, period);
 
-            const yearLabel = year === 'all' ? '全期間' : `${year}年度`;
-            const title = `📊 ${data.user.display_name} の部室利用統計（${yearLabel}）`;
+            const periodLabel = PERIOD_LABELS[period] ?? period;
+            const title = `📊 ${data.user.display_name} の部室利用統計（${periodLabel}）`;
 
             const lines: string[] = [];
 
             // ランキング順位
             if (data.rank.position !== null) {
-                lines.push(`🏅 訪問日数ランキング: **${data.rank.position}位** / ${data.rank.total_users}人中（${data.rank.fiscal_year}年度）`);
+                lines.push(`🏅 訪問日数ランキング: **${data.rank.position}位** / ${data.rank.total_users}人中（${PERIOD_LABELS[data.rank.period] ?? data.rank.period}）`);
                 lines.push('');
             }
 

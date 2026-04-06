@@ -90,12 +90,12 @@ export interface MyStatsRoom {
 export interface MyStatsRank {
 	position: number | null;
 	total_users: number;
-	fiscal_year: number;
+	period: string;
 }
 
 export interface MyStatsResponse {
 	user: { id: number; display_name: string; discord_id?: string };
-	year: string;
+	period: string;
 	total: { visit_days: number; total_seconds: number };
 	rooms: MyStatsRoom[];
 	rank: MyStatsRank;
@@ -111,7 +111,7 @@ export interface RankingEntry {
 
 export interface RankingResponse {
 	type: string;
-	year: string;
+	period: string;
 	room: string;
 	ranking: RankingEntry[];
 }
@@ -213,20 +213,20 @@ function createApi(env: ApiEnv) {
 			return data.users.find(u => u.discord_id === discordUserId) ?? null;
 		},
 
-		async fetchMyStats(discordUserId: string, year?: string): Promise<MyStatsResponse> {
+		async fetchMyStats(discordUserId: string, period?: string): Promise<MyStatsResponse> {
 			const url = new URL(`${baseUrl}/stats/me`);
 			url.searchParams.append('discord_user_id', discordUserId);
-			if (year) url.searchParams.append('year', year);
+			if (period) url.searchParams.append('period', period);
 
 			const response = await fetchWithTimeout(url.toString());
 			if (!response.ok) await handleErrorResponse(response);
 			return await response.json() as MyStatsResponse;
 		},
 
-		async fetchRanking(type?: string, year?: string, room?: string): Promise<RankingResponse> {
+		async fetchRanking(type?: string, period?: string, room?: string): Promise<RankingResponse> {
 			const url = new URL(`${baseUrl}/stats/ranking`);
 			if (type) url.searchParams.append('type', type);
-			if (year) url.searchParams.append('year', year);
+			if (period) url.searchParams.append('period', period);
 			if (room) url.searchParams.append('room', room);
 
 			const response = await fetchWithTimeout(url.toString());

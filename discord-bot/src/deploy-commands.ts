@@ -100,7 +100,15 @@ const commandDefinitions = [
                 )
         )
         .addStringOption(option =>
-            option.setName('year').setDescription('年度（例: 2025, 2026, all）').setRequired(false)
+            option.setName('period').setDescription('期間').setRequired(false)
+                .addChoices(
+                    { name: '今日', value: 'today' },
+                    { name: '今週', value: 'week' },
+                    { name: '今月', value: 'month' },
+                    { name: '半年間', value: 'half_year' },
+                    { name: '1年間', value: 'year' },
+                    { name: '全期間', value: 'all' }
+                )
         )
         .addStringOption(option =>
             option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
@@ -115,7 +123,15 @@ const commandDefinitions = [
         .setName('me')
         .setDescription('自分の部室利用統計を表示します')
         .addStringOption(option =>
-            option.setName('year').setDescription('年度（例: 2025, 2026, all）').setRequired(false)
+            option.setName('period').setDescription('期間').setRequired(false)
+                .addChoices(
+                    { name: '今日', value: 'today' },
+                    { name: '今週', value: 'week' },
+                    { name: '今月', value: 'month' },
+                    { name: '半年間', value: 'half_year' },
+                    { name: '1年間', value: 'year' },
+                    { name: '全期間', value: 'all' }
+                )
         ),
 ];
 

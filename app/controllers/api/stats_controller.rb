@@ -4,25 +4,24 @@ module Api
   class StatsController < BaseController
     skip_before_action :authenticate_user!
     before_action :authenticate_api_key!
+    include PeriodFilterable
 
     # GET /api/stats/ranking
     def ranking
       type = params[:type].presence || "visits"
-      year_param = params[:year].presence || current_fiscal_year.to_s
+      period = params[:period].presence || "all"
       room = params[:room].presence || "all"
 
       unless %w[visits duration].include?(type)
         return render json: { error: "Invalid type. Use 'visits' or 'duration'." }, status: :bad_request
       end
+      unless VALID_PERIODS.include?(period)
+        return render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
+      end
 
       base_scope = RoomVisit.all
-      year = parse_year_param(year_param)
-      return render json: { error: "Invalid year." }, status: :bad_request if year.nil?
-
-      if year != "all"
-        start_date, end_date = fiscal_year_range(year)
-        base_scope = base_scope.where(entered_at: start_date..end_date)
-      end
+      date_range = period_date_range(period)
+      base_scope = base_scope.where(entered_at: date_range) if date_range
       base_scope = base_scope.where(room_id: room) unless room == "all"
 
       ranking_data = if type == "visits"
@@ -33,7 +32,7 @@ module Api
 
       render json: {
         type: type,
-        year: year,
+        period: period,
         room: room,
         ranking: ranking_data
       }
@@ -44,20 +43,18 @@ module Api
       user = User.find_by(discord_id: params[:discord_user_id])
       return render json: { error: "User not found." }, status: :not_found unless user
 
-      year_param = params[:year].presence || current_fiscal_year.to_s
+      period = params[:period].presence || "all"
+      unless VALID_PERIODS.include?(period)
+        return render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
+      end
 
       base_scope = RoomVisit.where(user: user)
-      year = parse_year_param(year_param)
-      return render json: { error: "Invalid year." }, status: :bad_request if year.nil?
-
-      if year != "all"
-        start_date, end_date = fiscal_year_range(year)
-        base_scope = base_scope.where(entered_at: start_date..end_date)
-      end
+      date_range = period_date_range(period)
+      base_scope = base_scope.where(entered_at: date_range) if date_range
 
       # 全部室合算
       total_visit_days = base_scope
-        .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+        .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
       total_duration = base_scope
         .where.not(exited_at: nil)
         .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
@@ -67,7 +64,7 @@ module Api
       per_room = rooms.map do |room|
         room_scope = base_scope.where(room: room)
         visit_days = room_scope
-          .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+          .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
         duration = room_scope
           .where.not(exited_at: nil)
           .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
@@ -80,13 +77,12 @@ module Api
         }
       end
 
-      # デフォルト条件（訪問日数/今年度/全部室）でのランキング順位
-      fiscal_year = current_fiscal_year
-      rank_start, rank_end = fiscal_year_range(fiscal_year)
-      rank_scope = RoomVisit.where(entered_at: rank_start..rank_end)
+      # ランキング順位（ユーザーが選択した期間と同じ範囲で算出）
+      rank_range = period_date_range(period)
+      rank_scope = rank_range ? RoomVisit.where(entered_at: rank_range) : RoomVisit.all
       all_visit_counts = rank_scope
         .group(:user_id)
-        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
         .order("visit_count DESC, user_id ASC")
       rank_position = all_visit_counts.each_with_index.find { |r, _| r.user_id == user.id }&.last
       visit_rank = rank_position ? rank_position + 1 : nil
@@ -94,38 +90,20 @@ module Api
 
       render json: {
         user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
-        year: year,
+        period: period,
         total: { visit_days: total_visit_days, total_seconds: total_duration },
         rooms: per_room,
-        rank: { position: visit_rank, total_users: total_ranked_users, fiscal_year: fiscal_year }
+        rank: { position: visit_rank, total_users: total_ranked_users, period: period }
       }
     end
 
     private
 
-    def parse_year_param(year_param)
-      return "all" if year_param == "all"
-      return nil unless year_param.match?(/\A\d{4}\z/)
-
-      year_param.to_i
-    end
-
-    def current_fiscal_year
-      today = Time.current.in_time_zone("Asia/Tokyo").to_date
-      today.month >= 4 ? today.year : today.year - 1
-    end
-
-    def fiscal_year_range(year)
-      start_date = Time.zone.parse("#{year}-04-01").in_time_zone("Asia/Tokyo").beginning_of_day
-      end_date = Time.zone.parse("#{year + 1}-03-31").in_time_zone("Asia/Tokyo").end_of_day
-      [ start_date, end_date ]
-    end
-
     def visit_ranking(scope, _room)
       # 訪問回数: 1日1カウント（同日複数入室でも1）
       # room=all の場合は部室横断で日付DISTINCT、部室指定時はscopeで既に絞り込み済み
       results = scope
-        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
         .group(:user_id)
         .order("visit_count DESC")
         .limit(10)
