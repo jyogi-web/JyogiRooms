@@ -53,7 +53,7 @@
             </td>
             <td class="px-6 py-4 text-sm text-gray-600">
               <% if user.last_synced_at %>
-                <%= user.last_synced_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %>
+                <%= format_jst_datetime(user.last_synced_at) %>
               <% else %>
                 <span class="text-gray-400">-</span>
               <% end %>
@@ -81,7 +81,7 @@
           <%= user_role_badge(user, :sm) %>
         </div>
         <% if user.last_synced_at %>
-          <p class="text-xs text-gray-400">最終同期: <%= user.last_synced_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
+          <p class="text-xs text-gray-400">最終同期: <%= format_jst_datetime(user.last_synced_at) %></p>
         <% end %>
       <% end %>
     <% end %>

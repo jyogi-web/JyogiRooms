@@ -32,7 +32,7 @@
           <td class="px-6 py-4 font-mono text-gray-800"><%= card.card_uid %></td>
           <td class="px-6 py-4 text-gray-800"><%= card.student_id.presence || "-" %></td>
           <td class="px-6 py-4 text-gray-800"><%= card.student_name.presence || "-" %></td>
-          <td class="px-6 py-4 text-gray-600"><%= card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></td>
+          <td class="px-6 py-4 text-gray-600"><%= format_jst_datetime(card.created_at) %></td>
         </tr>
       <% end %>
     </tbody>
@@ -58,7 +58,7 @@
         <% if card.student_name.present? %>
           <p>学生氏名: <span class="font-medium text-gray-800"><%= card.student_name %></span></p>
         <% end %>
-        <p class="text-gray-400">登録: <%= card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
+        <p class="text-gray-400">登録: <%= format_jst_datetime(card.created_at) %></p>
       </div>
     <% end %>
   <% end %>

@@ -63,7 +63,7 @@
 
   <script>
     (function() {
-      const users = <%= raw @users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json %>;
+      const users = <%= json_escape(@users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json).html_safe %>;
       const input = document.getElementById('user-search-input');
       const results = document.getElementById('user-search-results');
       const hiddenField = document.getElementById('filter-user-id');
