@@ -7,7 +7,7 @@
   </div>
 
   <!-- フィルター -->
-  <%= form_with url: logs_room_statuses_path, method: :get, class: "card p-4", local: true do %>
+  <%= form_with url: logs_room_statuses_path, method: :get, class: "card p-4", local: true, id: "logs-filter-form" do %>
     <div class="flex flex-wrap gap-3 items-end">
       <div>
         <label class="block text-xs font-medium text-gray-600 mb-1">期間</label>
@@ -26,11 +26,139 @@
           <% end %>
         </select>
       </div>
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs font-medium text-gray-600 mb-1">ユーザー</label>
+        <input type="hidden" name="user_id" id="filter-user-id" value="<%= @user_id_param %>">
+        <div class="relative" id="user-search-container">
+          <input type="text" id="user-search-input" placeholder="ユーザー名で検索" autocomplete="off"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent <%= 'hidden' if @user_id_param.present? %>">
+          <div id="user-search-results" role="listbox" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"></div>
+          <% if @user_id_param.present? %>
+            <% selected_user = @users.find { |u| u.id.to_s == @user_id_param.to_s } %>
+            <% if selected_user %>
+              <div id="selected-user-display" class="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2">
+                <div class="flex items-center gap-2">
+                  <img src="<%= selected_user.avatar_url %>" class="w-6 h-6 rounded-full" alt="" onerror="this.style.display='none'">
+                  <span class="text-sm font-medium text-gray-800"><%= selected_user.display_name %></span>
+                </div>
+                <button type="button" id="clear-user" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+              </div>
+            <% end %>
+          <% else %>
+            <div id="selected-user-display" class="hidden flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-2">
+              <div class="flex items-center gap-2">
+                <img id="selected-user-avatar" src="" class="w-6 h-6 rounded-full" alt="" onerror="this.style.display='none'">
+                <span id="selected-user-name" class="text-sm font-medium text-gray-800"></span>
+              </div>
+              <button type="button" id="clear-user" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+            </div>
+          <% end %>
+        </div>
+      </div>
       <div>
         <button type="submit" class="btn btn-primary text-sm">表示</button>
       </div>
     </div>
   <% end %>
+
+  <script>
+    (function() {
+      const users = <%= raw @users.map { |u| { id: u.id, display_name: u.display_name, username: u.username, avatar_url: u.avatar_url } }.to_json %>;
+      const input = document.getElementById('user-search-input');
+      const results = document.getElementById('user-search-results');
+      const hiddenField = document.getElementById('filter-user-id');
+      const selectedDisplay = document.getElementById('selected-user-display');
+      const clearBtn = document.getElementById('clear-user');
+
+      function toKatakana(s) { return s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60)); }
+
+      function filterUsers(query) {
+        if (!query) return users.slice(0, 20);
+        const q = toKatakana(query.toLowerCase());
+        return users.filter(u =>
+          toKatakana(u.display_name.toLowerCase()).includes(q) ||
+          (u.username && u.username.toLowerCase().includes(q))
+        );
+      }
+
+      function renderResults(filtered) {
+        results.textContent = '';
+        if (filtered.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'px-3 py-2 text-sm text-gray-400';
+          empty.textContent = '該当するユーザーがいません';
+          results.appendChild(empty);
+        } else {
+          filtered.forEach(u => {
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer transition-colors w-full text-left';
+            row.dataset.userId = u.id;
+
+            const img = document.createElement('img');
+            img.src = u.avatar_url || '';
+            img.className = 'w-7 h-7 rounded-full bg-gray-200';
+            img.alt = '';
+            img.onerror = function() { this.style.display = 'none'; };
+            row.appendChild(img);
+
+            const info = document.createElement('div');
+            info.className = 'min-w-0';
+            const name = document.createElement('p');
+            name.className = 'text-sm font-medium text-gray-800 truncate';
+            name.textContent = u.display_name;
+            info.appendChild(name);
+            if (u.username) {
+              const uname = document.createElement('p');
+              uname.className = 'text-xs text-gray-500';
+              uname.textContent = '@' + u.username;
+              info.appendChild(uname);
+            }
+            row.appendChild(info);
+            results.appendChild(row);
+          });
+        }
+        results.classList.remove('hidden');
+      }
+
+      function selectUser(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+        hiddenField.value = user.id;
+        if (!document.getElementById('selected-user-name')) {
+          selectedDisplay.querySelector('img').src = user.avatar_url || '';
+          selectedDisplay.querySelector('span').textContent = user.display_name;
+        } else {
+          document.getElementById('selected-user-avatar').src = user.avatar_url || '';
+          document.getElementById('selected-user-name').textContent = user.display_name;
+        }
+        selectedDisplay.classList.remove('hidden');
+        input.classList.add('hidden');
+        results.classList.add('hidden');
+      }
+
+      function clearSelection() {
+        hiddenField.value = '';
+        selectedDisplay.classList.add('hidden');
+        input.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+      }
+
+      input.addEventListener('input', () => renderResults(filterUsers(input.value)));
+      input.addEventListener('focus', () => renderResults(filterUsers(input.value)));
+      results.addEventListener('click', (e) => {
+        const row = e.target.closest('[data-user-id]');
+        if (row) selectUser(parseInt(row.dataset.userId));
+      });
+      clearBtn.addEventListener('click', clearSelection);
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#user-search-container')) {
+          results.classList.add('hidden');
+        }
+      });
+    })();
+  </script>
 
   <!-- ログ一覧 -->
   <div class="card">
