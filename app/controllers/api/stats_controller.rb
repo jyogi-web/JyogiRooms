@@ -57,7 +57,7 @@ module Api
 
       # 全部室合算
       total_visit_days = base_scope
-        .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+        .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
       total_duration = base_scope
         .where.not(exited_at: nil)
         .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
@@ -67,7 +67,7 @@ module Api
       per_room = rooms.map do |room|
         room_scope = base_scope.where(room: room)
         visit_days = room_scope
-          .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+          .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
         duration = room_scope
           .where.not(exited_at: nil)
           .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
@@ -86,7 +86,7 @@ module Api
       rank_scope = RoomVisit.where(entered_at: rank_start..rank_end)
       all_visit_counts = rank_scope
         .group(:user_id)
-        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
         .order("visit_count DESC, user_id ASC")
       rank_position = all_visit_counts.each_with_index.find { |r, _| r.user_id == user.id }&.last
       visit_rank = rank_position ? rank_position + 1 : nil
@@ -125,7 +125,7 @@ module Api
       # 訪問回数: 1日1カウント（同日複数入室でも1）
       # room=all の場合は部室横断で日付DISTINCT、部室指定時はscopeで既に絞り込み済み
       results = scope
-        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
         .group(:user_id)
         .order("visit_count DESC")
         .limit(10)

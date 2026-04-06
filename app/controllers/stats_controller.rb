@@ -39,7 +39,7 @@ class StatsController < ApplicationController
     end
 
     @total_visit_days = base_scope
-      .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+      .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
     @total_duration = base_scope
       .where.not(exited_at: nil)
       .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
@@ -48,7 +48,7 @@ class StatsController < ApplicationController
 
     visit_by_room = base_scope
       .group(:room_id)
-      .count("DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')")
+      .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
 
     duration_by_room = base_scope
       .where.not(exited_at: nil)
@@ -86,7 +86,7 @@ class StatsController < ApplicationController
 
   def visit_ranking(scope)
     results = scope
-      .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+      .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
       .group(:user_id)
       .order("visit_count DESC")
 
