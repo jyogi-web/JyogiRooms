@@ -34,14 +34,14 @@
         
         <div>
           <p class="text-sm text-gray-600">登録日時</p>
-          <p class="font-medium text-gray-800"><%= l(@user.created_at, format: :short) %></p>
+          <p class="font-medium text-gray-800"><%= @user.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
         </div>
         
         <div>
           <p class="text-sm text-gray-600">最終同期</p>
           <p class="font-medium text-gray-800">
             <% if @user.last_synced_at %>
-              <%= l(@user.last_synced_at, format: :short) %>
+              <%= @user.last_synced_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %>
             <% else %>
               <span class="text-gray-400">未同期</span>
             <% end %>
@@ -111,7 +111,7 @@
         <% end %>
         <div>
           <p class="text-sm text-gray-600">登録日時</p>
-          <p class="font-medium text-gray-800"><%= l(@user.nfc_card.created_at, format: :short) %></p>
+          <p class="font-medium text-gray-800"><%= @user.nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d %H:%M") %></p>
         </div>
       </div>
     <% else %>
