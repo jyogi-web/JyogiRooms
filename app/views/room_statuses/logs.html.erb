@@ -162,11 +162,15 @@
 
   <!-- ログ一覧 -->
   <div class="card">
-    <div class="px-5 py-4 border-b border-gray-100">
-      <h2 class="text-lg font-bold text-gray-800">
+    <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+      <h2 class="text-lg font-bold text-gray-800 whitespace-nowrap">
         入退室履歴
         <span class="text-sm font-normal text-gray-500">（最新100件）</span>
       </h2>
+      <div class="flex bg-gray-100 rounded-lg p-0.5 shrink-0 self-start sm:self-auto" id="view-toggle">
+        <button type="button" data-view="split" class="px-3 py-1 text-xs font-medium rounded-md transition-colors bg-white text-gray-800 shadow-sm whitespace-nowrap">入退室別</button>
+        <button type="button" data-view="combined" class="px-3 py-1 text-xs font-medium rounded-md transition-colors text-gray-500 whitespace-nowrap">まとめて表示</button>
+      </div>
     </div>
 
     <% if @visits.empty? %>
@@ -174,11 +178,10 @@
         該当期間のデータがありません
       </div>
     <% else %>
-      <div class="divide-y divide-gray-100">
+      <!-- まとめて表示 -->
+      <div id="view-combined" class="divide-y divide-gray-100 hidden">
         <% @visits.each do |visit| %>
           <% entered = visit.entered_at.in_time_zone("Asia/Tokyo") %>
-          <% exited = visit.exited_at.in_time_zone("Asia/Tokyo") %>
-          <% duration_seconds = (visit.exited_at - visit.entered_at).to_i %>
           <div class="flex items-center gap-3 px-5 py-3">
             <%= render(UserAvatarComponent.new(user: visit.user, size: :small)) %>
             <div class="flex-1 min-w-0">
@@ -186,9 +189,37 @@
               <p class="text-xs text-gray-500">
                 <%= visit.room.name %>
                 <span class="mx-1">·</span>
-                <%= entered.strftime("%m/%d %H:%M") %> → <%= exited.strftime("%H:%M") %>
+                <%= entered.strftime("%m/%d %H:%M") %>
+                <% if visit.exited_at %>
+                  → <%= visit.exited_at.in_time_zone("Asia/Tokyo").strftime("%H:%M") %>
+                  <span class="mx-1">·</span>
+                  <%= format_duration((visit.exited_at - visit.entered_at).to_i) %>
+                <% else %>
+                  <span class="mx-1">·</span>
+                  <span class="text-green-600 font-medium">入室中</span>
+                <% end %>
+              </p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 入退室別表示 -->
+      <div id="view-split" class="divide-y divide-gray-100">
+        <% @logs.each do |log| %>
+          <% time = log[:at].in_time_zone("Asia/Tokyo") %>
+          <% is_enter = log[:type] == :enter %>
+          <div class="flex items-center gap-3 px-5 py-3">
+            <span class="w-14 text-center text-xs font-semibold px-2 py-0.5 rounded-full <%= is_enter ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700' %>">
+              <%= is_enter ? '入室' : '退室' %>
+            </span>
+            <%= render(UserAvatarComponent.new(user: log[:user], size: :small)) %>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 truncate"><%= log[:user].display_name %></p>
+              <p class="text-xs text-gray-500">
+                <%= log[:room].name %>
                 <span class="mx-1">·</span>
-                <%= format_duration(duration_seconds) %>
+                <%= time.strftime("%m/%d %H:%M") %>
               </p>
             </div>
           </div>
@@ -196,4 +227,25 @@
       </div>
     <% end %>
   </div>
+
+  <script>
+    (function() {
+      const toggle = document.getElementById('view-toggle');
+      const combined = document.getElementById('view-combined');
+      const split = document.getElementById('view-split');
+      if (!toggle || !combined || !split) return;
+
+      toggle.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-view]');
+        if (!btn) return;
+        const view = btn.dataset.view;
+        toggle.querySelectorAll('[data-view]').forEach(b => {
+          b.className = 'px-3 py-1 text-xs font-medium rounded-md transition-colors ' +
+            (b.dataset.view === view ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500');
+        });
+        combined.classList.toggle('hidden', view !== 'combined');
+        split.classList.toggle('hidden', view !== 'split');
+      });
+    })();
+  </script>
 </div>
