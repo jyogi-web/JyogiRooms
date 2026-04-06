@@ -88,6 +88,37 @@
     </div>
   </div>
 
+  <!-- NFCカード情報 -->
+  <div class="card p-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">NFCカード情報</h2>
+    <% if @user.nfc_card %>
+      <div class="space-y-3">
+        <div>
+          <p class="text-sm text-gray-600">カードUID</p>
+          <p class="font-medium text-gray-800 font-mono"><%= @user.nfc_card.card_uid %></p>
+        </div>
+        <% if @user.nfc_card.student_id.present? %>
+          <div>
+            <p class="text-sm text-gray-600">学籍番号</p>
+            <p class="font-medium text-gray-800"><%= @user.nfc_card.student_id %></p>
+          </div>
+        <% end %>
+        <% if @user.nfc_card.student_name.present? %>
+          <div>
+            <p class="text-sm text-gray-600">学生氏名</p>
+            <p class="font-medium text-gray-800"><%= @user.nfc_card.student_name %></p>
+          </div>
+        <% end %>
+        <div>
+          <p class="text-sm text-gray-600">登録日時</p>
+          <p class="font-medium text-gray-800"><%= l(@user.nfc_card.created_at, format: :short) %></p>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400">NFCカード未登録</p>
+    <% end %>
+  </div>
+
   <div class="mt-6">
     <%= link_to admin_roles_path, class: "px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors inline-flex items-center gap-2" do %>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
