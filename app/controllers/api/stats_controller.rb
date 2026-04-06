@@ -4,8 +4,7 @@ module Api
   class StatsController < BaseController
     skip_before_action :authenticate_user!
     before_action :authenticate_api_key!
-
-    VALID_PERIODS = %w[today week month half_year year all].freeze
+    include PeriodFilterable
 
     # GET /api/stats/ranking
     def ranking
@@ -78,9 +77,9 @@ module Api
         }
       end
 
-      # デフォルト条件（訪問日数/今月/全部室）でのランキング順位
-      rank_range = period_date_range("month")
-      rank_scope = RoomVisit.where(entered_at: rank_range)
+      # ランキング順位（ユーザーが選択した期間と同じ範囲で算出）
+      rank_range = period_date_range(period)
+      rank_scope = rank_range ? RoomVisit.where(entered_at: rank_range) : RoomVisit.all
       all_visit_counts = rank_scope
         .group(:user_id)
         .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
@@ -94,29 +93,11 @@ module Api
         period: period,
         total: { visit_days: total_visit_days, total_seconds: total_duration },
         rooms: per_room,
-        rank: { position: visit_rank, total_users: total_ranked_users, period: "month" }
+        rank: { position: visit_rank, total_users: total_ranked_users, period: period }
       }
     end
 
     private
-
-    def period_date_range(period)
-      now = Time.current.in_time_zone("Asia/Tokyo")
-      case period
-      when "today"
-        now.beginning_of_day..now
-      when "week"
-        now.beginning_of_week(:monday)..now
-      when "month"
-        now.beginning_of_month..now
-      when "half_year"
-        6.months.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
-      when "year"
-        1.year.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
-      when "all"
-        nil
-      end
-    end
 
     def visit_ranking(scope, _room)
       # 訪問回数: 1日1カウント（同日複数入室でも1）

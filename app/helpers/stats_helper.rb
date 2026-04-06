@@ -38,6 +38,12 @@ module StatsHelper
     PERIOD_OPTIONS.find { |o| o[:value] == period }&.dig(:label) || "全期間"
   end
 
+  def room_label(room_param, rooms)
+    return "全部室" if room_param == "all"
+
+    rooms.find { |r| r.id.to_s == room_param }&.name || "全部室"
+  end
+
   def rank_medal(index)
     case index
     when 0 then "🥇"

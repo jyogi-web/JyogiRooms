@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 class StatsController < ApplicationController
+  include PeriodFilterable
+
   # GET /stats/ranking
   def ranking
-    @period = params[:period].presence || "month"
+    @period = valid_period(params[:period])
     @type = params[:type].presence || "visits"
     @room_param = params[:room].presence || "all"
 
@@ -26,7 +28,7 @@ class StatsController < ApplicationController
 
   # GET /stats/me
   def me
-    @period = params[:period].presence || "month"
+    @period = valid_period(params[:period])
 
     base_scope = RoomVisit.where(user: current_user)
     date_range = period_date_range(@period)
@@ -60,22 +62,9 @@ class StatsController < ApplicationController
 
   private
 
-  def period_date_range(period)
-    now = Time.current.in_time_zone("Asia/Tokyo")
-    case period
-    when "today"
-      now.beginning_of_day..now
-    when "week"
-      now.beginning_of_week(:monday)..now
-    when "month"
-      now.beginning_of_month..now
-    when "half_year"
-      6.months.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
-    when "year"
-      1.year.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
-    when "all"
-      nil
-    end
+  def valid_period(param)
+    value = param.presence
+    VALID_PERIODS.include?(value) ? value : "month"
   end
 
   def visit_ranking(scope)

@@ -46,7 +46,7 @@
         <%= @type == "visits" ? "訪問日数" : "滞在時間" %>ランキング
         <br class="md:hidden">
         <span class="text-sm font-normal text-gray-500 whitespace-nowrap">
-          （<%= period_label(@period) %> / <%= @room_param == "all" ? "全部室" : @rooms.find { |r| r.id.to_s == @room_param }&.name || "全部室" %>）
+          （<%= period_label(@period) %> / <%= room_label(@room_param, @rooms) %>）
         </span>
       </h2>
     </div>
