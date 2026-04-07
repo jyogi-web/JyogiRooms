@@ -1,5 +1,5 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
-  <h1 class="text-2xl font-bold text-gray-800">🪪 NFCカード管理</h1>
+  <h1 class="text-2xl font-bold text-gray-800">🪪 学生証管理</h1>
 
   <!-- Flash Messages -->
   <% if flash[:notice] %>
@@ -23,7 +23,7 @@
           <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"></path>
           </svg>
-          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+          <span class="text-xs font-medium text-gray-500">学生証</span>
         </div>
         <span class="text-xs text-gray-500"><%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d") %> 登録</span>
       </div>
@@ -85,7 +85,7 @@
           <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"></path>
           </svg>
-          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+          <span class="text-xs font-medium text-gray-500">学生証</span>
         </div>
         <div id="detected-card-info" class="mb-3 hidden"></div>
         <p class="text-xs font-mono text-gray-500 tracking-wider"><span id="detected-card-uid"></span></p>

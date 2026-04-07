@@ -64,7 +64,7 @@ module Api
       end
 
       @registration.destroy!
-      render json: { message: "NFCカードを登録しました" }, status: :ok
+      render json: { message: "学生証を登録しました" }, status: :ok
     end
 
     # DELETE /api/nfc_registrations/:id
