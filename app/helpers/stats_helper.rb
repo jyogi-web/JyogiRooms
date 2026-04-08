@@ -44,12 +44,12 @@ module StatsHelper
     rooms.find { |r| r.id.to_s == room_param }&.name || "全部室"
   end
 
-  def rank_medal(index)
-    case index
-    when 0 then "🥇"
-    when 1 then "🥈"
-    when 2 then "🥉"
-    else "#{index + 1}"
+  def rank_medal(rank)
+    case rank
+    when 1 then "🥇"
+    when 2 then "🥈"
+    when 3 then "🥉"
+    else rank.to_s
     end
   end
 end

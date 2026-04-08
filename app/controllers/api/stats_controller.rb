@@ -110,7 +110,7 @@ module Api
 
       users = User.where(id: results.map(&:user_id)).index_by(&:id)
 
-      results.map do |r|
+      entries = results.map do |r|
         user = users[r.user_id]
         {
           user_id: r.user_id,
@@ -119,6 +119,7 @@ module Api
           count: r.visit_count.to_i
         }
       end
+      assign_ranks(entries) { |e| e[:count] }
     end
 
     def duration_ranking(scope)
@@ -132,7 +133,7 @@ module Api
 
       users = User.where(id: results.map(&:user_id)).index_by(&:id)
 
-      results.map do |r|
+      entries = results.map do |r|
         user = users[r.user_id]
         {
           user_id: r.user_id,
@@ -141,6 +142,19 @@ module Api
           total_seconds: r.total_seconds.to_i
         }
       end
+      assign_ranks(entries) { |e| e[:total_seconds] }
+    end
+
+    def assign_ranks(entries)
+      rank = 0
+      prev_value = nil
+      entries.each_with_index do |entry, i|
+        value = yield(entry)
+        rank = i + 1 if value != prev_value
+        entry[:rank] = rank
+        prev_value = value
+      end
+      entries
     end
   end
 end

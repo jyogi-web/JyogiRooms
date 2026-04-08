@@ -57,10 +57,11 @@
       </div>
     <% else %>
       <div class="divide-y divide-gray-100">
-        <% @ranking.each_with_index do |entry, i| %>
+        <% @ranking.each do |entry| %>
+          <% rank = entry[:rank] %>
           <div class="flex items-center gap-4 px-5 py-3">
-            <span class="w-8 text-center text-lg font-bold <%= i < 3 ? 'text-2xl' : 'text-gray-400' %>">
-              <%= rank_medal(i) %>
+            <span class="w-8 text-center text-lg font-bold <%= rank <= 3 ? 'text-2xl' : 'text-gray-400' %>">
+              <%= rank_medal(rank) %>
             </span>
             <% if entry[:user] %>
               <%= render(UserAvatarComponent.new(user: entry[:user], size: :small)) %>

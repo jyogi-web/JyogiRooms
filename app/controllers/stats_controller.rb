@@ -74,7 +74,8 @@ class StatsController < ApplicationController
       .order("visit_count DESC")
 
     users = User.where(id: results.map(&:user_id)).index_by(&:id)
-    results.map { |r| { user: users[r.user_id], count: r.visit_count.to_i } }
+    entries = results.map { |r| { user: users[r.user_id], count: r.visit_count.to_i } }
+    assign_ranks(entries) { |e| e[:count] }
   end
 
   def duration_ranking(scope)
@@ -85,6 +86,19 @@ class StatsController < ApplicationController
       .order("total_seconds DESC")
 
     users = User.where(id: results.map(&:user_id)).index_by(&:id)
-    results.map { |r| { user: users[r.user_id], total_seconds: r.total_seconds.to_i } }
+    entries = results.map { |r| { user: users[r.user_id], total_seconds: r.total_seconds.to_i } }
+    assign_ranks(entries) { |e| e[:total_seconds] }
+  end
+
+  def assign_ranks(entries)
+    rank = 0
+    prev_value = nil
+    entries.each_with_index do |entry, i|
+      value = yield(entry)
+      rank = i + 1 if value != prev_value
+      entry[:rank] = rank
+      prev_value = value
+    end
+    entries
   end
 end
