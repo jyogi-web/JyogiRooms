@@ -25,6 +25,17 @@ class DiscordNotifier
     "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
   }.freeze
 
+  ROOM_EMOJIS = {
+    "第１部室" => "<:dai1:1225676713384607764>",
+    "第２部室" => "<:dai2:1225677193779216426>",
+    "第３部室" => "<:dai3:1363112241897017565>"
+  }.freeze
+
+  ACTION_EMOJIS = {
+    "room_opened" => "<:ake:1225676720493822003>",
+    "room_closed" => "<:shime:1225676717478252736>"
+  }.freeze
+
   def self.notify(type:, data:)
     return unless enabled?
 
@@ -186,21 +197,27 @@ class DiscordNotifier
   end
 
   def self.send_room_notification(type, data)
-    label = ROOM_LABELS[type] || { title: "🚪 部室通知", color: 0x0099ff }
-    room_name = "#{data[:room_name]}（#{data[:room_number]}）"
-    user = format_user_mention(data[:user_discord_id], data[:user_display_name])
-
     # 入退室は専用チャンネル、開閉は通常チャンネル
     target = %w[room_entered room_exited].include?(type) ? entry_channel_id : channel_id
 
-    post_message({
-      embeds: [ {
-        title: label[:title],
-        description: "🚪 #{room_name}\n#{user}",
-        color: label[:color],
-        timestamp: Time.current.iso8601
-      } ]
-    }, target_channel_id: target)
+    # 開閉通知はカスタム絵文字で送信
+    if %w[room_opened room_closed].include?(type)
+      room_emoji = ROOM_EMOJIS[data[:room_name]] || "🚪"
+      action_emoji = ACTION_EMOJIS[type] || ""
+      post_message({ content: "#{room_emoji} #{action_emoji}" }, target_channel_id: target)
+    else
+      label = ROOM_LABELS[type] || { title: "🚪 部室通知", color: 0x0099ff }
+      room_name = "#{data[:room_name]}（#{data[:room_number]}）"
+      user = format_user_mention(data[:user_discord_id], data[:user_display_name])
+      post_message({
+        embeds: [ {
+          title: label[:title],
+          description: "🚪 #{room_name}\n#{user}",
+          color: label[:color],
+          timestamp: Time.current.iso8601
+        } ]
+      }, target_channel_id: target)
+    end
   end
 
   private_class_method :post_message, :format_user_mention, :format_date_time,
