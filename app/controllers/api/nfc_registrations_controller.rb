@@ -42,7 +42,7 @@ module Api
       end
 
       if @registration.student_id.blank? || @registration.student_name.blank?
-        return render json: { error: "学生証以外のカードは登録できません。学生証をかざしてください。" }, status: :unprocessable_entity
+        return render json: { error: "学生証の情報を読み取れませんでした。長めにかざしてみてください。" }, status: :unprocessable_entity
       end
 
       # 既に登録済みのカードでないか確認
