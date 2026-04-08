@@ -107,6 +107,7 @@ export interface RankingEntry {
 	discord_id?: string;
 	count?: number;
 	total_seconds?: number;
+	rank?: number;
 }
 
 export interface RankingResponse {

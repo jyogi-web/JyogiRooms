@@ -13,11 +13,11 @@ function formatDuration(totalSeconds: number): string {
     return `${minutes}分`;
 }
 
-function rankEmoji(index: number): string {
-    if (index === 0) return '🥇';
-    if (index === 1) return '🥈';
-    if (index === 2) return '🥉';
-    return `**${index + 1}.**`;
+function rankEmoji(rank: number): string {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `**${rank}.**`;
 }
 
 export const rankCommand = {
@@ -44,12 +44,13 @@ export const rankCommand = {
             const periodLabel = PERIOD_LABELS[period] ?? period;
             const title = `📊 ${typeLabel}ランキング（${periodLabel} / ${roomLabel}）`;
 
-            const lines = data.ranking.map((entry: RankingEntry, i: number) => {
+            const lines = data.ranking.map((entry: RankingEntry) => {
+                const rank = entry.rank ?? 0;
                 const name = entry.display_name ?? '不明なユーザー';
                 const value = type === 'visits'
                     ? `${entry.count}日`
                     : formatDuration(entry.total_seconds ?? 0);
-                return `${rankEmoji(i)} ${name} — ${value}`;
+                return `${rankEmoji(rank)} ${name} — ${value}`;
             });
 
             return replyEmbed(title, lines.join('\n'));
