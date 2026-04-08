@@ -86,26 +86,27 @@ module Api
         .order("visit_count DESC, user_id ASC")
       total_ranked_users = all_visit_counts.length
 
-      # 同順位を考慮した順位計算
-      visit_rank = nil
-      rank = 0
-      prev_value = nil
-      all_visit_counts.each_with_index do |r, i|
-        value = r.visit_count.to_i
-        rank = i + 1 if value != prev_value
-        if r.user_id == user.id
-          visit_rank = rank
-          break
-        end
-        prev_value = value
-      end
+      visit_rank = find_user_rank(all_visit_counts, user.id) { |r| r.visit_count.to_i }
+
+      # 滞在時間ランキング順位
+      all_durations = rank_scope
+        .where.not(exited_at: nil)
+        .group(:user_id)
+        .select("user_id, SUM(EXTRACT(EPOCH FROM (exited_at - entered_at))) AS total_seconds")
+        .order("total_seconds DESC, user_id ASC")
+
+      duration_rank = find_user_rank(all_durations, user.id) { |r| r.total_seconds.to_i }
 
       render json: {
         user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
         period: period,
         total: { visit_days: total_visit_days, total_seconds: total_duration },
         rooms: per_room,
-        rank: { position: visit_rank, total_users: total_ranked_users, period: period }
+        rank: {
+          visit: { position: visit_rank, total_users: total_ranked_users },
+          duration: { position: duration_rank, total_users: all_durations.length },
+          period: period
+        }
       }
     end
 
@@ -155,6 +156,18 @@ module Api
         }
       end
       assign_ranks(entries) { |e| e[:total_seconds] }
+    end
+
+    def find_user_rank(results, user_id)
+      rank = 0
+      prev_value = nil
+      results.each_with_index do |r, i|
+        value = yield(r)
+        rank = i + 1 if value != prev_value
+        return rank if r.user_id == user_id
+        prev_value = value
+      end
+      nil
     end
 
     def assign_ranks(entries)

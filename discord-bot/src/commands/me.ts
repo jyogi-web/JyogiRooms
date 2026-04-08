@@ -36,8 +36,14 @@ export const meCommand = {
             const lines: string[] = [];
 
             // ランキング順位
-            if (data.rank.position !== null) {
-                lines.push(`🏅 訪問日数ランキング: **${data.rank.position}位** / ${data.rank.total_users}人中（${PERIOD_LABELS[data.rank.period] ?? data.rank.period}）`);
+            const rankPeriodLabel = PERIOD_LABELS[data.rank.period] ?? data.rank.period;
+            if (data.rank.visit.position !== null) {
+                lines.push(`🏅 訪問日数ランキング: **${data.rank.visit.position}位** / ${data.rank.visit.total_users}人中（${rankPeriodLabel}）`);
+            }
+            if (data.rank.duration.position !== null) {
+                lines.push(`⏱️ 滞在時間ランキング: **${data.rank.duration.position}位** / ${data.rank.duration.total_users}人中（${rankPeriodLabel}）`);
+            }
+            if (data.rank.visit.position !== null || data.rank.duration.position !== null) {
                 lines.push('');
             }
 
