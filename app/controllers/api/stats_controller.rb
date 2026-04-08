@@ -84,9 +84,21 @@ module Api
         .group(:user_id)
         .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
         .order("visit_count DESC, user_id ASC")
-      rank_position = all_visit_counts.each_with_index.find { |r, _| r.user_id == user.id }&.last
-      visit_rank = rank_position ? rank_position + 1 : nil
       total_ranked_users = all_visit_counts.length
+
+      # 同順位を考慮した順位計算
+      visit_rank = nil
+      rank = 0
+      prev_value = nil
+      all_visit_counts.each_with_index do |r, i|
+        value = r.visit_count.to_i
+        rank = i + 1 if value != prev_value
+        if r.user_id == user.id
+          visit_rank = rank
+          break
+        end
+        prev_value = value
+      end
 
       render json: {
         user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
