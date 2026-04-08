@@ -92,9 +92,13 @@ class DiscordNotifier
     ENV["ANNOUNCE_CHANNEL_ID"]
   end
 
+  def self.entry_channel_id
+    ENV.fetch("ENTRY_CHANNEL_ID", channel_id)
+  end
+
   # Discord APIにメッセージを送信する
-  def self.post_message(body)
-    uri = URI("#{DISCORD_API_BASE}/channels/#{channel_id}/messages")
+  def self.post_message(body, target_channel_id: channel_id)
+    uri = URI("#{DISCORD_API_BASE}/channels/#{target_channel_id}/messages")
     request = Net::HTTP::Post.new(uri.request_uri)
     request["Content-Type"] = "application/json"
     request["Authorization"] = "Bot #{bot_token}"
@@ -186,6 +190,9 @@ class DiscordNotifier
     room_name = "#{data[:room_name]}（#{data[:room_number]}）"
     user = format_user_mention(data[:user_discord_id], data[:user_display_name])
 
+    # 入退室は専用チャンネル、開閉は通常チャンネル
+    target = %w[room_entered room_exited].include?(type) ? entry_channel_id : channel_id
+
     post_message({
       embeds: [ {
         title: label[:title],
@@ -193,10 +200,11 @@ class DiscordNotifier
         color: label[:color],
         timestamp: Time.current.iso8601
       } ]
-    })
+    }, target_channel_id: target)
   end
 
   private_class_method :post_message, :format_user_mention, :format_date_time,
                        :send_reservation_notification, :send_key_notification,
-                       :send_room_notification, :bot_token, :channel_id
+                       :send_room_notification, :bot_token, :channel_id,
+                       :entry_channel_id
 end
