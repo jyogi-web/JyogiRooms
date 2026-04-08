@@ -1,5 +1,5 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
-  <h1 class="text-2xl font-bold text-gray-800">🪪 NFCカード管理</h1>
+  <h1 class="text-2xl font-bold text-gray-800">🪪 学生証管理</h1>
 
   <!-- Flash Messages -->
   <% if flash[:notice] %>
@@ -23,7 +23,7 @@
           <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"></path>
           </svg>
-          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+          <span class="text-xs font-medium text-gray-500">学生証</span>
         </div>
         <span class="text-xs text-gray-500"><%= @nfc_card.created_at.in_time_zone("Asia/Tokyo").strftime("%Y/%m/%d") %> 登録</span>
       </div>
@@ -53,7 +53,7 @@
     <h2 class="text-lg font-bold text-gray-800 mb-4">学生証を登録</h2>
     <p class="text-sm text-gray-600 mb-4">
       登録を開始すると1分間カードの読み取り待ち状態になります。<br>
-      部室のNFCリーダーに学生証をかざしてください。
+      部室のカードリーダーに学生証をかざしてください。
     </p>
 
     <!-- 登録前 -->
@@ -85,7 +85,7 @@
           <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"></path>
           </svg>
-          <span class="text-xs font-medium text-gray-500">NFC Card</span>
+          <span class="text-xs font-medium text-gray-500">学生証</span>
         </div>
         <div id="detected-card-info" class="mb-3 hidden"></div>
         <p class="text-xs font-mono text-gray-500 tracking-wider"><span id="detected-card-uid"></span></p>
@@ -123,14 +123,14 @@
         <h3 class="text-sm font-bold text-gray-700 mb-2">学生証の登録方法</h3>
         <ol class="text-sm text-gray-600 list-decimal list-inside space-y-1">
           <li>「カード登録を開始」ボタンを押す</li>
-          <li>1分以内に部室のNFCリーダーに学生証をかざす</li>
+          <li>1分以内に部室のカードリーダーに学生証をかざす</li>
           <li>画面に表示されたカード情報を確認して「登録する」を押す</li>
         </ol>
       </div>
       <div>
         <h3 class="text-sm font-bold text-gray-700 mb-2">入退室の仕方</h3>
         <p class="text-sm text-gray-600">
-          登録済みの学生証を部室のNFCリーダーにかざすだけで入退室できます。<br>
+          登録済みの学生証を部室のカードリーダーにかざすだけで入退室できます。<br>
           かざすたびに入室と退室が自動で切り替わります。
         </p>
       </div>

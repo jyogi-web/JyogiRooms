@@ -84,16 +84,29 @@ module Api
         .group(:user_id)
         .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
         .order("visit_count DESC, user_id ASC")
-      rank_position = all_visit_counts.each_with_index.find { |r, _| r.user_id == user.id }&.last
-      visit_rank = rank_position ? rank_position + 1 : nil
       total_ranked_users = all_visit_counts.length
+
+      visit_rank = find_user_rank(all_visit_counts, user.id) { |r| r.visit_count.to_i }
+
+      # 滞在時間ランキング順位
+      all_durations = rank_scope
+        .where.not(exited_at: nil)
+        .group(:user_id)
+        .select("user_id, SUM(EXTRACT(EPOCH FROM (exited_at - entered_at))) AS total_seconds")
+        .order("total_seconds DESC, user_id ASC")
+
+      duration_rank = find_user_rank(all_durations, user.id) { |r| r.total_seconds.to_i }
 
       render json: {
         user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
         period: period,
         total: { visit_days: total_visit_days, total_seconds: total_duration },
         rooms: per_room,
-        rank: { position: visit_rank, total_users: total_ranked_users, period: period }
+        rank: {
+          visit: { position: visit_rank, total_users: total_ranked_users },
+          duration: { position: duration_rank, total_users: all_durations.length },
+          period: period
+        }
       }
     end
 
@@ -110,7 +123,7 @@ module Api
 
       users = User.where(id: results.map(&:user_id)).index_by(&:id)
 
-      results.map do |r|
+      entries = results.map do |r|
         user = users[r.user_id]
         {
           user_id: r.user_id,
@@ -119,6 +132,7 @@ module Api
           count: r.visit_count.to_i
         }
       end
+      assign_ranks(entries) { |e| e[:count] }
     end
 
     def duration_ranking(scope)
@@ -132,7 +146,7 @@ module Api
 
       users = User.where(id: results.map(&:user_id)).index_by(&:id)
 
-      results.map do |r|
+      entries = results.map do |r|
         user = users[r.user_id]
         {
           user_id: r.user_id,
@@ -141,6 +155,31 @@ module Api
           total_seconds: r.total_seconds.to_i
         }
       end
+      assign_ranks(entries) { |e| e[:total_seconds] }
+    end
+
+    def find_user_rank(results, user_id)
+      rank = 0
+      prev_value = nil
+      results.each_with_index do |r, i|
+        value = yield(r)
+        rank = i + 1 if value != prev_value
+        return rank if r.user_id == user_id
+        prev_value = value
+      end
+      nil
+    end
+
+    def assign_ranks(entries)
+      rank = 0
+      prev_value = nil
+      entries.each_with_index do |entry, i|
+        value = yield(entry)
+        rank = i + 1 if value != prev_value
+        entry[:rank] = rank
+        prev_value = value
+      end
+      entries
     end
   end
 end

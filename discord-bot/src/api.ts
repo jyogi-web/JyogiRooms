@@ -87,9 +87,14 @@ export interface MyStatsRoom {
 	total_seconds: number;
 }
 
-export interface MyStatsRank {
+export interface MyStatsRankEntry {
 	position: number | null;
 	total_users: number;
+}
+
+export interface MyStatsRank {
+	visit: MyStatsRankEntry;
+	duration: MyStatsRankEntry;
 	period: string;
 }
 
@@ -107,6 +112,7 @@ export interface RankingEntry {
 	discord_id?: string;
 	count?: number;
 	total_seconds?: number;
+	rank?: number;
 }
 
 export interface RankingResponse {

@@ -41,6 +41,10 @@ module Api
         return render json: { error: "カードがまだ読み取られていません" }, status: :unprocessable_entity
       end
 
+      if @registration.student_id.blank? || @registration.student_name.blank?
+        return render json: { error: "学生証の情報を読み取れませんでした。長めにかざしてみてください。" }, status: :unprocessable_entity
+      end
+
       # 既に登録済みのカードでないか確認
       if NfcCard.exists?(card_uid: @registration.card_uid)
         return render json: { error: "このカードは既に登録されています" }, status: :unprocessable_entity
@@ -60,7 +64,7 @@ module Api
       end
 
       @registration.destroy!
-      render json: { message: "NFCカードを登録しました" }, status: :ok
+      render json: { message: "学生証を登録しました" }, status: :ok
     end
 
     # DELETE /api/nfc_registrations/:id

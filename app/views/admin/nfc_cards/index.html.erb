@@ -3,7 +3,7 @@
 
 <%= render "admin/nav" %>
 
-<h2 class="text-xl font-bold text-gray-800">NFC情報</h2>
+<h2 class="text-xl font-bold text-gray-800">学生証情報</h2>
 
 <!-- デスクトップ: テーブル表示 -->
 <div class="hidden md:block overflow-x-auto card">
@@ -66,7 +66,7 @@
 
 <% if @nfc_cards.empty? %>
   <div class="card p-8 text-center text-gray-400">
-    登録されているNFCカードはありません
+    登録されている学生証はありません
   </div>
 <% else %>
   <p class="text-sm text-gray-600 mt-4">
