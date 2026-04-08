@@ -20,6 +20,6 @@ class NfcCardsController < ApplicationController
     card.destroy!
     redirect_to nfc_cards_path, notice: "学生証を削除しました"
   rescue ActiveRecord::RecordNotFound
-    redirect_to nfc_cards_path, alert: "カードが見つかりません"
+    redirect_to nfc_cards_path, alert: "学生証が見つかりません"
   end
 end
