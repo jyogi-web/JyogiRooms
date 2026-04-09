@@ -12,7 +12,9 @@ scheduler = Rufus::Scheduler.singleton
 # 毎分チェックして、設定された時刻と一致したら施錠アナウンスを実行
 scheduler.cron("* * * * * Asia/Tokyo") do
   now = Time.current.in_time_zone("Asia/Tokyo")
-  announcement = ScheduledAnnouncement.find_by(enabled: true)
+  announcement = Rails.cache.fetch("scheduled_announcement") do
+    ScheduledAnnouncement.find_by(enabled: true)
+  end
   next unless announcement
   next unless now.hour == announcement.hour && now.min == announcement.minute
 
