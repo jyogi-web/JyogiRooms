@@ -56,8 +56,7 @@ module Api
       total_visit_days = base_scope
         .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
       total_duration = base_scope
-        .where.not(exited_at: nil)
-        .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
+        .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))").to_i
 
       # 部室ごと
       rooms = Room.order(:id)
@@ -66,8 +65,7 @@ module Api
         visit_days = room_scope
           .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
         duration = room_scope
-          .where.not(exited_at: nil)
-          .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
+          .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))").to_i
 
         {
           room_id: room.id,
@@ -90,9 +88,8 @@ module Api
 
       # 滞在時間ランキング順位
       all_durations = rank_scope
-        .where.not(exited_at: nil)
         .group(:user_id)
-        .select("user_id, SUM(EXTRACT(EPOCH FROM (exited_at - entered_at))) AS total_seconds")
+        .select("user_id, SUM(EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))) AS total_seconds")
         .order("total_seconds DESC, user_id ASC")
 
       duration_rank = find_user_rank(all_durations, user.id) { |r| r.total_seconds.to_i }
@@ -136,10 +133,8 @@ module Api
     end
 
     def duration_ranking(scope)
-      # 滞在時間: exited_at IS NOT NULL のみ集計
       results = scope
-        .where.not(exited_at: nil)
-        .select("user_id, SUM(EXTRACT(EPOCH FROM (exited_at - entered_at))) AS total_seconds")
+        .select("user_id, SUM(EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))) AS total_seconds")
         .group(:user_id)
         .order("total_seconds DESC")
         .limit(10)
