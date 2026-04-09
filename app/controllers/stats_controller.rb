@@ -37,8 +37,7 @@ class StatsController < ApplicationController
     @total_visit_days = base_scope
       .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
     @total_duration = base_scope
-      .where.not(exited_at: nil)
-      .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))").to_i
+      .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))").to_i
 
     @rooms = Room.order(:id)
 
@@ -47,9 +46,8 @@ class StatsController < ApplicationController
       .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
 
     duration_by_room = base_scope
-      .where.not(exited_at: nil)
       .group(:room_id)
-      .sum("EXTRACT(EPOCH FROM (exited_at - entered_at))")
+      .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))")
 
     @per_room = @rooms.map do |room|
       {
@@ -80,8 +78,7 @@ class StatsController < ApplicationController
 
   def duration_ranking(scope)
     results = scope
-      .where.not(exited_at: nil)
-      .select("user_id, SUM(EXTRACT(EPOCH FROM (exited_at - entered_at))) AS total_seconds")
+      .select("user_id, SUM(EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))) AS total_seconds")
       .group(:user_id)
       .order("total_seconds DESC")
 
