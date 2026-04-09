@@ -60,7 +60,9 @@ class ReservationsController < ApplicationController
     @reservation.user = current_user
 
     if @reservation.save
-      DiscordNotifier.notify(type: "reservation_created", data: DiscordNotifier.reservation_data(@reservation))
+      data = DiscordNotifier.reservation_data(@reservation)
+      data[:notify_key_holders] = @reservation.notify_key_holders != "0"
+      DiscordNotifier.notify(type: "reservation_created", data: data)
       redirect_to reservations_path, notice: "予約を作成しました"
     else
       # Re-populate existing reservations for the view
@@ -114,7 +116,7 @@ class ReservationsController < ApplicationController
   private
 
   def reservation_params
-    permitted = [ :start_time, :end_time, :purpose ]
+    permitted = [ :start_time, :end_time, :purpose, :notify_key_holders ]
     permitted << :reservation_date if [ "create", "new" ].include?(action_name)
     params.require(:reservation).permit(permitted)
   end

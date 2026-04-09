@@ -156,8 +156,8 @@ class DiscordNotifier
       } ]
     })
 
-    # 予約作成時のみ鍵持ちにメンション
-    if type == "reservation_created"
+    # 予約作成時のみ鍵持ちにメンション（notify_key_holdersがfalseでない場合）
+    if type == "reservation_created" && data[:notify_key_holders] != false
       holders = (data[:key_holders] || []).select { |h| h[:discord_id].present? }
       if holders.any?
         mentions = holders.map { |h| "<@#{h[:discord_id]}>" }.join(" ")

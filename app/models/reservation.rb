@@ -2,6 +2,7 @@ class Reservation < ApplicationRecord
   belongs_to :user
 
   attr_writer :reservation_date, :start_time, :end_time
+  attr_accessor :notify_key_holders
 
   validates :start_time, presence: { message: "開始時間を入力してください" }
   validates :end_time, presence: { message: "終了時間を入力してください" }
