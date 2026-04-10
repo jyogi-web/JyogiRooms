@@ -116,6 +116,11 @@ module Api
     private
 
     def load_user_and_scope
+      unless params[:discord_user_id].present?
+        render json: { error: "discord_user_id is required." }, status: :bad_request
+        return []
+      end
+
       user = User.find_by(discord_id: params[:discord_user_id])
       unless user
         render json: { error: "User not found." }, status: :not_found
