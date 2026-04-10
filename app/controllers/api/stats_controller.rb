@@ -38,19 +38,25 @@ module Api
       }
     end
 
+    # GET /api/stats/visit_days?discord_user_id=xxx&period=all
+    def visit_days
+      user, period, base_scope = load_user_and_scope
+      return if performed?
+
+      visit_days = base_scope
+        .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
+
+      render json: {
+        discord_id: user.discord_id,
+        period: period,
+        visit_days: visit_days
+      }
+    end
+
     # GET /api/stats/me
     def me
-      user = User.find_by(discord_id: params[:discord_user_id])
-      return render json: { error: "User not found." }, status: :not_found unless user
-
-      period = params[:period].presence || "all"
-      unless VALID_PERIODS.include?(period)
-        return render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
-      end
-
-      base_scope = RoomVisit.where(user: user)
-      date_range = period_date_range(period)
-      base_scope = base_scope.where(entered_at: date_range) if date_range
+      user, period, base_scope = load_user_and_scope
+      return if performed?
 
       # 全部室合算
       total_visit_days = base_scope
@@ -108,6 +114,31 @@ module Api
     end
 
     private
+
+    def load_user_and_scope
+      unless params[:discord_user_id].present?
+        render json: { error: "discord_user_id is required." }, status: :bad_request
+        return []
+      end
+
+      user = User.find_by(discord_id: params[:discord_user_id])
+      unless user
+        render json: { error: "User not found." }, status: :not_found
+        return []
+      end
+
+      period = params[:period].presence || "all"
+      unless VALID_PERIODS.include?(period)
+        render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
+        return []
+      end
+
+      date_range = period_date_range(period)
+      scope = RoomVisit.where(user: user)
+      scope = scope.where(entered_at: date_range) if date_range
+
+      [ user, period, scope ]
+    end
 
     def visit_ranking(scope, _room)
       # 訪問回数: 1日1カウント（同日複数入室でも1）
