@@ -70,6 +70,7 @@ Rails.application.routes.draw do
     # 統計
     get "stats/ranking", to: "stats#ranking"
     get "stats/me", to: "stats#me"
+    get "stats/visit_days", to: "stats#visit_days"
 
     # NFC登録
     resources :nfc_registrations, only: %i[create show destroy] do

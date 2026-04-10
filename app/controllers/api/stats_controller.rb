@@ -38,6 +38,30 @@ module Api
       }
     end
 
+    # GET /api/stats/visit_days?discord_user_id=xxx&period=all
+    def visit_days
+      user = User.find_by(discord_id: params[:discord_user_id])
+      return render json: { error: "User not found." }, status: :not_found unless user
+
+      period = params[:period].presence || "all"
+      unless VALID_PERIODS.include?(period)
+        return render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
+      end
+
+      base_scope = RoomVisit.where(user: user)
+      date_range = period_date_range(period)
+      base_scope = base_scope.where(entered_at: date_range) if date_range
+
+      visit_days = base_scope
+        .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
+
+      render json: {
+        discord_id: user.discord_id,
+        period: period,
+        visit_days: visit_days
+      }
+    end
+
     # GET /api/stats/me
     def me
       user = User.find_by(discord_id: params[:discord_user_id])
