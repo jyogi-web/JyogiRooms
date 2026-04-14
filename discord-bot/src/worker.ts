@@ -58,6 +58,7 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 		const command = commands.find(c => c.data.name === interaction.data.name);
 
 		if (!command) {
+			// 不明なコマンドは常にephemeral（コマンドが存在しないためpublicオプションを取得できない）
 			return jsonResponse(200, {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 				data: { content: '不明なコマンドです。', flags: EPHEMERAL_FLAG },
