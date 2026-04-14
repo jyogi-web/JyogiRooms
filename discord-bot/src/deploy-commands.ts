@@ -14,7 +14,7 @@ if (!clientId) {
     process.exit(1);
 }
 
-const PUBLIC_OPTION_DESCRIPTION = PUBLIC_OPTION_DESCRIPTION;
+const PUBLIC_OPTION_DESCRIPTION = 'チャンネル全体に表示する（falseにすると自分だけに表示）';
 
 // コマンド定義（オプション含む）はデプロイ時のみ必要
 const commandDefinitions = [
