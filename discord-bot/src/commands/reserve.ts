@@ -1,6 +1,6 @@
 import { createApi, ApiError } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, getUserId, parseDateInput, jstDate, jstDateTime, reply, replyEmbed } from './utils.js';
+import { getStringOption, getUserId, parseDateInput, jstDate, jstDateTime, reply, replyEmbed, isEphemeral } from './utils.js';
 
 export const reserveCommand = {
     data: {
@@ -9,18 +9,19 @@ export const reserveCommand = {
     },
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
+        const ephemeral = isEphemeral(interaction);
         const dateInput = getStringOption(interaction, 'date');
         const startInput = getStringOption(interaction, 'start');
         const endInput = getStringOption(interaction, 'end');
         const purpose = getStringOption(interaction, 'purpose') || '';
 
         if (!dateInput || !startInput || !endInput) {
-            return reply('必須パラメータが不足しています。');
+            return reply('必須パラメータが不足しています。', { ephemeral });
         }
 
         const date = parseDateInput(dateInput);
         if (!date) {
-            return reply('日付の形式が正しくありません。\n例: `12/25`, `2026/01/01`, `today`');
+            return reply('日付の形式が正しくありません。\n例: `12/25`, `2026/01/01`, `today`', { ephemeral });
         }
 
         const parseTime = (input: string): [number, number] | null => {
@@ -35,7 +36,7 @@ export const reserveCommand = {
         const endTime = parseTime(endInput);
 
         if (!startTime || !endTime) {
-            return reply('時刻の形式が正しくありません。\n例: `10:00`, `10`');
+            return reply('時刻の形式が正しくありません。\n例: `10:00`, `10`', { ephemeral });
         }
 
         const [startH, startM] = startTime;
@@ -43,18 +44,18 @@ export const reserveCommand = {
 
         if (startH < 0 || startH > 23 || startM < 0 || startM > 59 ||
             endH < 0 || endH > 23 || endM < 0 || endM > 59) {
-            return reply('時刻の形式が正しくありません。\n例: `10:00`');
+            return reply('時刻の形式が正しくありません。\n例: `10:00`', { ephemeral });
         }
 
         const startAt = jstDateTime(date.year, date.month, date.day, startH, startM);
         const endAt = jstDateTime(date.year, date.month, date.day, endH, endM);
 
-        if (startAt < new Date()) return reply('過去の日時は予約できません。');
-        if (startAt >= endAt) return reply('終了時刻は開始時刻より後である必要があります。');
+        if (startAt < new Date()) return reply('過去の日時は予約できません。', { ephemeral });
+        if (startAt >= endAt) return reply('終了時刻は開始時刻より後である必要があります。', { ephemeral });
 
         const discordUserId = getUserId(interaction);
         if (!discordUserId) {
-            return reply('ユーザー情報を取得できませんでした。');
+            return reply('ユーザー情報を取得できませんでした。', { ephemeral });
         }
 
         try {
@@ -68,23 +69,23 @@ export const reserveCommand = {
             const dateStr = startAt.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short', timeZone: 'Asia/Tokyo' });
             const timeStr = `${startAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })} ~ ${endAt.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}`;
 
-            return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`);
+            return reply(`予約を作成しました！\n📅 **${dateStr} ${timeStr}**\n📝 ${res.purpose || 'なし'}`, { ephemeral });
         } catch (e: any) {
             console.error('予約作成エラー:', e);
             if (e instanceof ApiError && e.status === 422 && e.validationErrors.length > 0) {
                 const hasOverlap = e.validationErrors.some((msg: string) => msg.includes('既に予約が入っています'));
                 if (hasOverlap) {
-                    return await buildOverlapErrorResponse(env, startAt, endAt, e.validationErrors);
+                    return await buildOverlapErrorResponse(env, startAt, endAt, e.validationErrors, ephemeral);
                 }
                 const errorList = e.validationErrors.map((msg: string) => `・${msg}`).join('\n');
-                return reply(`予約を作成できませんでした。\n${errorList}`);
+                return reply(`予約を作成できませんでした。\n${errorList}`, { ephemeral });
             }
-            return reply('予約作成に失敗しました。時間をおいて再度お試しください。');
+            return reply('予約作成に失敗しました。時間をおいて再度お試しください。', { ephemeral });
         }
     },
 };
 
-async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: Date, errors: string[]): Promise<object> {
+async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: Date, errors: string[], ephemeral: boolean = false): Promise<object> {
     const jst = new Date(startAt.getTime() + 9 * 60 * 60 * 1000);
     const dayStart = jstDate(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate());
     const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000 - 1);
@@ -117,5 +118,5 @@ async function buildOverlapErrorResponse(env: CommandEnv, startAt: Date, endAt: 
         description += errors.map((msg: string) => `・${msg}`).join('\n');
     }
 
-    return replyEmbed('❌ 予約を作成できませんでした', description, 0xff3333);
+    return replyEmbed('❌ 予約を作成できませんでした', description, 0xff3333, { ephemeral });
 }

@@ -1,6 +1,7 @@
 import { verifyKey } from 'discord-interactions';
 import { InteractionType, InteractionResponseType } from 'discord-interactions';
 import { commands } from './commands/index.js';
+import { isEphemeral, EPHEMERAL_FLAG } from './commands/utils.js';
 
 export interface Env {
 	DISCORD_PUBLIC_KEY: string;
@@ -59,15 +60,19 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 		if (!command) {
 			return jsonResponse(200, {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-				data: { content: '不明なコマンドです。', flags: 64 },
+				data: { content: '不明なコマンドです。', flags: EPHEMERAL_FLAG },
 			});
 		}
 
+		const ephemeral = isEphemeral(interaction);
 		const commandPromise = command.execute(interaction, env).catch((error: unknown) => {
 			console.error('Command execution error:', error);
 			return {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-				data: { content: 'コマンドの実行中にエラーが発生しました。' },
+				data: {
+					content: 'コマンドの実行中にエラーが発生しました。',
+					...(ephemeral ? { flags: EPHEMERAL_FLAG } : {}),
+				},
 			};
 		});
 
@@ -82,12 +87,18 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 			ctx.waitUntil(
 				(async () => {
 					const response = await commandPromise as any;
-					await sendFollowup(env.DISCORD_CLIENT_ID, interaction.token, response.data || { content: 'コマンドを実行しました。' });
+					// PATCH時はflagsを除去（Discord仕様：初期レスポンスのflagsのみ有効）
+					const { flags: _flags, ...followupData } = response.data || {};
+					if (!followupData.content && !followupData.embeds) {
+						followupData.content = 'コマンドを実行しました。';
+					}
+					await sendFollowup(env.DISCORD_CLIENT_ID, interaction.token, followupData);
 				})()
 			);
 
 			return jsonResponse(200, {
 				type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+				...(ephemeral ? { data: { flags: EPHEMERAL_FLAG } } : {}),
 			});
 		}
 

@@ -1,6 +1,6 @@
 import { createApi } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, reply, replyEmbed } from './utils.js';
+import { getStringOption, reply, replyEmbed, isEphemeral } from './utils.js';
 
 export const statusCommand = {
     data: {
@@ -9,6 +9,7 @@ export const statusCommand = {
     },
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
+        const ephemeral = isEphemeral(interaction);
         const room = getStringOption(interaction, 'room');
 
         try {
@@ -16,18 +17,18 @@ export const statusCommand = {
             const rooms = await withTimeout(() => api.fetchKeys(), 10000);
 
             if (rooms.length === 0) {
-                return reply('部室情報が登録されていません。');
+                return reply('部室情報が登録されていません。', { ephemeral });
             }
 
             let targetRooms = rooms;
             if (room) {
                 const roomId = parseInt(room, 10);
                 if (isNaN(roomId)) {
-                    return reply('部室番号は数字で指定してください。省略すると全部室を表示します。');
+                    return reply('部室番号は数字で指定してください。省略すると全部室を表示します。', { ephemeral });
                 }
                 targetRooms = rooms.filter(r => r.room_id === roomId);
                 if (targetRooms.length === 0) {
-                    return reply(`ID ${roomId} の部室が見つかりません。`);
+                    return reply(`ID ${roomId} の部室が見つかりません。`, { ephemeral });
                 }
             }
 
@@ -51,10 +52,10 @@ export const statusCommand = {
                 description += section;
             }
 
-            return replyEmbed('🏠 部室状況', description);
+            return replyEmbed('🏠 部室状況', description, undefined, { ephemeral });
         } catch (error) {
             console.error(error);
-            return reply('部室状況の取得中にエラーが発生しました。');
+            return reply('部室状況の取得中にエラーが発生しました。', { ephemeral });
         }
     },
 };

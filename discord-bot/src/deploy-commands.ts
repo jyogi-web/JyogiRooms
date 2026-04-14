@@ -18,7 +18,10 @@ if (!clientId) {
 const commandDefinitions = [
     new SlashCommandBuilder()
         .setName('list')
-        .setDescription('今後の予約一覧を表示します'),
+        .setDescription('今後の予約一覧を表示します')
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
+        ),
 
     new SlashCommandBuilder()
         .setName('check')
@@ -32,6 +35,9 @@ const commandDefinitions = [
         )
         .addStringOption(option =>
             option.setName('date').setDescription('日付指定 (例: 11/23, 2025/01/01)').setRequired(false)
+        )
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
         ),
 
     new SlashCommandBuilder()
@@ -44,7 +50,10 @@ const commandDefinitions = [
         .addStringOption(option =>
             option.setName('end').setDescription('終了時刻 (例: 14:00, 14)').setRequired(true))
         .addStringOption(option =>
-            option.setName('purpose').setDescription('利用目的 (任意)').setRequired(false)),
+            option.setName('purpose').setDescription('利用目的 (任意)').setRequired(false))
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
+        ),
 
     new SlashCommandBuilder()
         .setName('key')
@@ -56,6 +65,9 @@ const commandDefinitions = [
                     { name: '2', value: '2' },
                     { name: '3', value: '3' }
                 )
+        )
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
         ),
 
     new SlashCommandBuilder()
@@ -87,6 +99,9 @@ const commandDefinitions = [
                     { name: '2', value: '2' },
                     { name: '3', value: '3' }
                 )
+        )
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
         ),
 
     new SlashCommandBuilder()
@@ -117,6 +132,9 @@ const commandDefinitions = [
                     { name: '2', value: '2' },
                     { name: '3', value: '3' }
                 )
+        )
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
         ),
 
     new SlashCommandBuilder()
@@ -132,6 +150,9 @@ const commandDefinitions = [
                     { name: '1年間', value: 'year' },
                     { name: '全期間', value: 'all' }
                 )
+        )
+        .addBooleanOption(option =>
+            option.setName('public').setDescription('チャンネル全体に表示する（falseにすると自分だけに表示）').setRequired(false)
         ),
 ];
 

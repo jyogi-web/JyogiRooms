@@ -3,6 +3,20 @@ import type { Interaction } from './types.js';
 
 export const STRING_TYPE = 3;
 export const INTEGER_TYPE = 4;
+export const BOOLEAN_TYPE = 5;
+export const EPHEMERAL_FLAG = 64;
+
+export function getBooleanOption(interaction: Interaction, name: string): boolean | null {
+    const options = interaction.data.options;
+    if (!options) return null;
+    const opt = options.find(o => o.name === name && o.type === BOOLEAN_TYPE);
+    return (opt?.value as boolean) ?? null;
+}
+
+// public=false のときのみ ephemeral（デフォルト/未指定は全員表示）
+export function isEphemeral(interaction: Interaction): boolean {
+    return getBooleanOption(interaction, 'public') === false;
+}
 
 export function getStringOption(interaction: Interaction, name: string): string | null {
     const options = interaction.data.options;
@@ -79,14 +93,17 @@ export function parseDateInput(input: string): { year: number; month: number; da
     return null;
 }
 
-export function reply(content: string) {
+export function reply(content: string, options?: { ephemeral?: boolean }) {
     return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content },
+        data: {
+            content,
+            ...(options?.ephemeral ? { flags: EPHEMERAL_FLAG } : {}),
+        },
     };
 }
 
-export function replyEmbed(title: string, description: string, color: number = 0x0099ff) {
+export function replyEmbed(title: string, description: string, color: number = 0x0099ff, options?: { ephemeral?: boolean }) {
     return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -96,6 +113,7 @@ export function replyEmbed(title: string, description: string, color: number = 0
                 color,
                 timestamp: new Date().toISOString(),
             }],
+            ...(options?.ephemeral ? { flags: EPHEMERAL_FLAG } : {}),
         },
     };
 }
