@@ -1,7 +1,6 @@
 import { verifyKey } from 'discord-interactions';
 import { InteractionType, InteractionResponseType } from 'discord-interactions';
 import { commands } from './commands/index.js';
-import { isEphemeral, EPHEMERAL_FLAG } from './commands/utils.js';
 
 export interface Env {
 	DISCORD_PUBLIC_KEY: string;
@@ -12,6 +11,20 @@ export interface Env {
 }
 
 const DIRECT_RESPONSE_TIMEOUT_MS = 2500;
+const BOOLEAN_TYPE = 5;
+const EPHEMERAL_FLAG = 64;
+
+// public=false のときのみ ephemeral（デフォルト/未指定は全員表示）
+function resolveEphemeral(interaction: any): boolean {
+	const opt = interaction.data?.options?.find((o: any) => o.name === 'public' && o.type === BOOLEAN_TYPE);
+	return (opt?.value as boolean | undefined) === false;
+}
+
+// コマンドのレスポンスに ephemeral フラグを付与する
+function applyEphemeral(response: any): any {
+	if (!response?.data) return response;
+	return { ...response, data: { ...response.data, flags: EPHEMERAL_FLAG } };
+}
 
 function jsonResponse(status: number, data: object): Response {
 	return new Response(JSON.stringify(data), {
@@ -65,15 +78,13 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 			});
 		}
 
-		const ephemeral = isEphemeral(interaction);
+		const ephemeral = resolveEphemeral(interaction);
+
 		const commandPromise = command.execute(interaction, env).catch((error: unknown) => {
 			console.error('Command execution error:', error);
 			return {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-				data: {
-					content: 'コマンドの実行中にエラーが発生しました。',
-					...(ephemeral ? { flags: EPHEMERAL_FLAG } : {}),
-				},
+				data: { content: 'コマンドの実行中にエラーが発生しました。' },
 			};
 		});
 
@@ -103,7 +114,8 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 			});
 		}
 
-		return jsonResponse(200, result);
+		// public=false なら flags を付与して返す
+		return jsonResponse(200, ephemeral ? applyEphemeral(result) : result);
 	}
 
 	return new Response('Unknown interaction type', { status: 400 });

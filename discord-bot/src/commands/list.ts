@@ -1,6 +1,6 @@
 import { createApi } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { reply, replyEmbed, isEphemeral } from './utils.js';
+import { reply, replyEmbed } from './utils.js';
 
 export const listCommand = {
     data: {
@@ -8,8 +8,7 @@ export const listCommand = {
         description: '今後の予約一覧を表示します',
     },
 
-    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
-        const ephemeral = isEphemeral(interaction);
+    async execute(_interaction: Interaction, env: CommandEnv): Promise<object> {
         try {
             const api = createApi(env);
             const now = new Date();
@@ -19,7 +18,7 @@ export const listCommand = {
             const reservations = await api.fetchReservations(now.toISOString(), endDate.toISOString());
 
             if (reservations.length === 0) {
-                return reply('今後の予約はありません。', { ephemeral });
+                return reply('今後の予約はありません。');
             }
 
             const MAX_ITEMS = 10;
@@ -49,10 +48,10 @@ export const listCommand = {
             }
 
             if (omittedCount > 0) description += `...省略: 他 ${omittedCount} 件`;
-            return replyEmbed('📅 今後の予約一覧', description, undefined, { ephemeral });
+            return replyEmbed('📅 今後の予約一覧', description);
         } catch (error) {
             console.error(error);
-            return reply('予約情報の取得中にエラーが発生しました。', { ephemeral });
+            return reply('予約情報の取得中にエラーが発生しました。');
         }
     },
 };

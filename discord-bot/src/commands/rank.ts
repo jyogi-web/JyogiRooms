@@ -2,7 +2,7 @@ import { createApi } from '../api.js';
 import type { RankingEntry } from '../api.js';
 import { PERIOD_LABELS } from '../constants.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, reply, replyEmbed, isEphemeral } from './utils.js';
+import { getStringOption, reply, replyEmbed } from './utils.js';
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
@@ -27,7 +27,6 @@ export const rankCommand = {
     },
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
-        const ephemeral = isEphemeral(interaction);
         const type = getStringOption(interaction, 'type') ?? 'visits';
         const period = getStringOption(interaction, 'period') ?? 'all';
         const room = getStringOption(interaction, 'room');
@@ -37,7 +36,7 @@ export const rankCommand = {
             const data = await api.fetchRanking(type, period, room ?? 'all');
 
             if (data.ranking.length === 0) {
-                return reply('該当期間のデータがありません。', { ephemeral });
+                return reply('該当期間のデータがありません。');
             }
 
             const typeLabel = type === 'visits' ? '訪問日数' : '滞在時間';
@@ -54,10 +53,10 @@ export const rankCommand = {
                 return `${rankEmoji(rank)} ${name} — ${value}`;
             });
 
-            return replyEmbed(title, lines.join('\n'), undefined, { ephemeral });
+            return replyEmbed(title, lines.join('\n'));
         } catch (error) {
             console.error(error);
-            return reply('ランキングの取得中にエラーが発生しました。', { ephemeral });
+            return reply('ランキングの取得中にエラーが発生しました。');
         }
     },
 };

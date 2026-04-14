@@ -1,7 +1,7 @@
 import { createApi } from '../api.js';
 import { PERIOD_LABELS } from '../constants.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, getUserId, reply, replyEmbed, isEphemeral } from './utils.js';
+import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
@@ -19,10 +19,9 @@ export const meCommand = {
     },
 
     async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
-        const ephemeral = isEphemeral(interaction);
         const discordUserId = getUserId(interaction);
         if (!discordUserId) {
-            return reply('ユーザー情報を取得できませんでした。', { ephemeral });
+            return reply('ユーザー情報を取得できませんでした。');
         }
 
         const period = getStringOption(interaction, 'period') ?? 'all';
@@ -62,10 +61,10 @@ export const meCommand = {
                 lines.push('');
             }
 
-            return replyEmbed(title, lines.join('\n'), undefined, { ephemeral });
+            return replyEmbed(title, lines.join('\n'));
         } catch (error) {
             console.error(error);
-            return reply('統計情報の取得中にエラーが発生しました。', { ephemeral });
+            return reply('統計情報の取得中にエラーが発生しました。');
         }
     },
 };
