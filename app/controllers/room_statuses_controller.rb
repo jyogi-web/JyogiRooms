@@ -3,7 +3,8 @@
 class RoomStatusesController < ApplicationController
   include PeriodFilterable
 
-  before_action :set_room, only: %i[exit_room close_room]
+  before_action :set_room, only: %i[exit_room close_room force_exit_user]
+  before_action :require_admin!, only: %i[force_exit_user]
 
   # GET /room_statuses
   def index
@@ -82,6 +83,17 @@ class RoomStatusesController < ApplicationController
     redirect_to room_statuses_path, alert: e.message
   end
 
+  # POST /room_statuses/:id/force_exit_user
+  def force_exit_user
+    user = User.find_by(id: params[:user_id])
+    return redirect_to(room_statuses_path, alert: "ユーザーが見つかりません") unless user
+
+    RoomEntryService.exit(room: @room, user: user)
+    redirect_to room_statuses_path, notice: "#{user.display_name}を#{@room.name}から退室させました"
+  rescue RoomEntryService::EntryError => e
+    redirect_to room_statuses_path, alert: e.message
+  end
+
   private
 
   def set_room
@@ -92,5 +104,11 @@ class RoomStatusesController < ApplicationController
     return true if effective_admin?
 
     current_user.keys.any? { |key| key.room_id == room.id }
+  end
+
+  def require_admin!
+    return if effective_admin?
+
+    redirect_to room_statuses_path, alert: "管理者のみ実行できます"
   end
 end

@@ -57,6 +57,11 @@
                   <% if occupant[:user].id == current_user.id %>
                     <span class="text-xs text-blue-600 font-medium">あなた</span>
                   <% end %>
+                  <% if effective_admin? %>
+                    <%= button_to "強制退室", force_exit_user_room_status_path(data[:room], user_id: occupant[:user].id),
+                          class: "px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium rounded transition-colors",
+                          form: { onsubmit: "return confirm('#{j(occupant[:user].display_name)}を#{j(data[:room].name)}から退室させますか？')" } %>
+                  <% end %>
                 </div>
               <% end %>
             </div>
