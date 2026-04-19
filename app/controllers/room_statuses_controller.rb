@@ -11,13 +11,13 @@ class RoomStatusesController < ApplicationController
     @rooms = Room.includes(:room_status, keys: :user).order(room_number: :desc)
 
     all_statuses = @rooms.map(&:room_status).compact
-    occupant_user_ids = all_statuses.flat_map { |s| s.occupants.map { |o| o["user_id"] } }.uniq
+    occupant_user_ids = all_statuses.flat_map { |s| s.normalized_occupants.map { |o| o["user_id"] } }.uniq
     opener_user_ids = all_statuses.filter_map(&:opened_by_id).uniq
     users_by_id = User.where(id: occupant_user_ids + opener_user_ids).index_by(&:id)
 
     @room_data = @rooms.map do |room|
       status = room.room_status
-      occupants = status.occupants.filter_map do |o|
+      occupants = status.normalized_occupants.filter_map do |o|
         user = users_by_id[o["user_id"]]
         next unless user
         { user: user, entered_at: Time.zone.parse(o["entered_at"]) }
