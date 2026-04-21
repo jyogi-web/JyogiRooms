@@ -219,12 +219,14 @@
             </span>
             <%= render(UserAvatarComponent.new(user: log[:user], size: :small)) %>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-800 truncate">
-                <%= log[:user].display_name %>
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm font-medium text-gray-800 truncate"><%= log[:user].display_name %></p>
                 <% unless is_enter %>
-                  <%= exit_source_badge(log[:source], extra_classes: "ml-2 align-middle text-[11px]") %>
+                  <div class="shrink-0">
+                    <%= exit_source_badge(log[:source], extra_classes: "text-[11px]") %>
+                  </div>
                 <% end %>
-              </p>
+              </div>
               <p class="text-xs text-gray-500">
                 <span class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 font-medium rounded"><%= log[:room].name %></span>
                                 <%= time.strftime("%m/%d %H:%M") %>
