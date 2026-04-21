@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class RoomStatusesController < ApplicationController
-  include PeriodFilterable
-
   before_action :set_room, only: %i[exit_room close_room force_exit_user]
   before_action :require_admin!, only: %i[force_exit_user]
 
@@ -39,7 +37,7 @@ class RoomStatusesController < ApplicationController
   def logs
     @rooms = Room.order(room_number: :desc)
     @room_param = params[:room] || "all"
-    @period = PeriodFilterable::VALID_PERIODS.include?(params[:period]) ? params[:period] : "all"
+    @date_param = parse_logs_date(params[:date])
     @user_id_param = params[:user_id]
 
     visits = RoomVisit.includes(:user, :room).order(entered_at: :desc)
@@ -47,8 +45,8 @@ class RoomStatusesController < ApplicationController
     visits = visits.where(room_id: @room_param) if @room_param != "all"
     visits = visits.where(user_id: @user_id_param) if @user_id_param.present?
 
-    range = period_date_range(@period)
-    visits = visits.where(entered_at: range) if range
+    day_range = @date_param.in_time_zone("Asia/Tokyo").all_day
+    visits = visits.where(entered_at: day_range)
 
     @visits = visits.limit(100)
 
@@ -116,5 +114,13 @@ class RoomStatusesController < ApplicationController
     return if effective_admin?
 
     redirect_to room_statuses_path, alert: "管理者のみ実行できます"
+  end
+
+  def parse_logs_date(date_param)
+    return Time.zone.today if date_param.blank?
+
+    Date.iso8601(date_param)
+  rescue ArgumentError
+    Time.zone.today
   end
 end
