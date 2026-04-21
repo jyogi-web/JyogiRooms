@@ -48,7 +48,7 @@ class RoomStatusesController < ApplicationController
     day_range = @date_param.in_time_zone("Asia/Tokyo").all_day
     visits = visits.where(entered_at: day_range)
 
-    @visits = visits.limit(100)
+    @visits = visits
 
     # 入室・退室を個別のログエントリに分解し、時刻降順でソート
     @logs = @visits.flat_map { |visit|
