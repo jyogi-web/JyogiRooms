@@ -54,7 +54,7 @@ module Api
 
       def request_exit_source
         source = params[:source].presence
-        %w[nfc web forced room_close].include?(source) ? source : "web"
+        %w[nfc web].include?(source) ? source : "web"
       end
 
       def entry_json(action, visit, user)
