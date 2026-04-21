@@ -21,6 +21,7 @@ class DiscordNotifier
   ROOM_LABELS = {
     "room_entered" => { title: "📱 入室しました", color: 0x00cc66 },
     "room_exited" => { title: "📱 退室しました", color: 0xff9900 },
+    "room_forced_exited" => { title: "⛔ 強制退室されました", color: 0xff3333 },
     "room_opened" => { title: "🔓 部室が開きました", color: 0x0099ff },
     "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
   }.freeze
@@ -198,7 +199,7 @@ class DiscordNotifier
 
   def self.send_room_notification(type, data)
     # 入退室は専用チャンネル、開閉は通常チャンネル
-    target = %w[room_entered room_exited].include?(type) ? entry_channel_id : channel_id
+    target = %w[room_entered room_exited room_forced_exited].include?(type) ? entry_channel_id : channel_id
 
     # 開閉通知はカスタム絵文字で送信
     if %w[room_opened room_closed].include?(type)
@@ -209,10 +210,30 @@ class DiscordNotifier
       label = ROOM_LABELS[type] || { title: "🚪 部室通知", color: 0x0099ff }
       room_name = "#{data[:room_name]}（#{data[:room_number]}）"
       user = format_user_mention(data[:user_discord_id], data[:user_display_name])
+      exited_by = format_user_mention(data[:exited_by_discord_id], data[:exited_by_display_name])
+      source_label = case data[:source]
+      when "nfc"
+                       "NFCタッチ"
+      when "web"
+                       "Webアプリ"
+      when "forced"
+                       "管理者による強制退室"
+      when "room_close"
+                       "閉室時の一斉退室"
+      else
+                       nil
+      end
+
+      description = "🚪 #{room_name}\n#{user}"
+      if %w[room_exited room_forced_exited].include?(type)
+        description += "\n👤 退室処理: #{exited_by}"
+        description += "\n📝 方法: #{source_label}" if source_label
+      end
+
       post_message({
         embeds: [ {
           title: label[:title],
-          description: "🚪 #{room_name}\n#{user}",
+          description: description,
           color: label[:color],
           timestamp: Time.current.iso8601
         } ]

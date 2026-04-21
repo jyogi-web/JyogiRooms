@@ -20,7 +20,7 @@ module Api
 
       # POST /api/rooms/:room_id/exit
       def exit
-        visit = RoomEntryService.exit(room: @room, user: @user)
+        visit = RoomEntryService.exit(room: @room, user: @user, source: request_exit_source, exited_by: @user)
 
         render json: entry_json("exit", visit, @user), status: :ok
       rescue RoomEntryService::EntryError => e
@@ -50,6 +50,11 @@ module Api
       def request_source
         source = params[:source].presence
         ALLOWED_SOURCES.include?(source) ? source : "discord"
+      end
+
+      def request_exit_source
+        source = params[:source].presence
+        %w[nfc web forced room_close].include?(source) ? source : "web"
       end
 
       def entry_json(action, visit, user)

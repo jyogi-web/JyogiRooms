@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -132,7 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_000001) do
     t.datetime "entered_at", null: false
     t.datetime "exited_at"
     t.bigint "room_id", null: false
-    t.string "source", default: "nfc", null: false
+    t.string "source", default: "web", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["room_id", "exited_at"], name: "index_room_visits_on_room_id_and_exited_at"

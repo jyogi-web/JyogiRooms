@@ -55,8 +55,8 @@ class RoomStatusesController < ApplicationController
     # 入室・退室を個別のログエントリに分解し、時刻降順でソート
     @logs = @visits.flat_map { |visit|
       entries = []
-      entries << { type: :enter, user: visit.user, room: visit.room, at: visit.entered_at }
-      entries << { type: :exit, user: visit.user, room: visit.room, at: visit.exited_at } if visit.exited_at
+      entries << { type: :enter, user: visit.user, room: visit.room, at: visit.entered_at, source: nil }
+      entries << { type: :exit, user: visit.user, room: visit.room, at: visit.exited_at, source: visit.source } if visit.exited_at
       entries
     }.sort_by { |e| e[:at] }.reverse
 
@@ -65,7 +65,7 @@ class RoomStatusesController < ApplicationController
 
   # POST /room_statuses/:id/exit_room
   def exit_room
-    RoomEntryService.exit(room: @room, user: current_user)
+    RoomEntryService.exit(room: @room, user: current_user, source: "web", exited_by: current_user)
     redirect_to room_statuses_path, notice: "#{@room.name}から退室しました"
   rescue RoomEntryService::EntryError => e
     redirect_to room_statuses_path, alert: e.message
@@ -88,7 +88,13 @@ class RoomStatusesController < ApplicationController
     user = User.find_by(id: params[:user_id])
     return redirect_to(room_statuses_path, alert: "ユーザーが見つかりません") unless user
 
-    RoomEntryService.exit(room: @room, user: user)
+    RoomEntryService.exit(
+      room: @room,
+      user: user,
+      source: "forced",
+      exited_by: current_user,
+      notification_type: "room_forced_exited"
+    )
     redirect_to room_statuses_path, notice: "#{user.display_name}を#{@room.name}から退室させました"
   rescue RoomEntryService::EntryError => e
     redirect_to room_statuses_path, alert: e.message

@@ -216,7 +216,24 @@
             </span>
             <%= render(UserAvatarComponent.new(user: log[:user], size: :small)) %>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-800 truncate"><%= log[:user].display_name %></p>
+              <p class="text-sm font-medium text-gray-800 truncate">
+                <%= log[:user].display_name %>
+                <% unless is_enter %>
+                  <% exit_source_label = case log[:source]
+                                         when "nfc"
+                                           "NFCタッチ"
+                                         when "web"
+                                           "Webアプリ"
+                                         when "forced"
+                                           "強制退室"
+                                         when "room_close"
+                                           "閉室一斉退室"
+                                         else
+                                           "不明"
+                                         end %>
+                  <span class="ml-2 inline-block align-middle px-1.5 py-0.5 bg-red-50 text-red-700 text-[11px] font-medium rounded"><%= exit_source_label %></span>
+                <% end %>
+              </p>
               <p class="text-xs text-gray-500">
                 <span class="inline-block px-1.5 py-0.5 bg-gray-100 text-gray-700 font-medium rounded"><%= log[:room].name %></span>
                                 <%= time.strftime("%m/%d %H:%M") %>
