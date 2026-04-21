@@ -46,15 +46,19 @@ class RoomStatusesController < ApplicationController
     visits = visits.where(user_id: @user_id_param) if @user_id_param.present?
 
     day_range = @date_param.in_time_zone("Asia/Tokyo").all_day
-    visits = visits.where(entered_at: day_range)
+    visits = visits.where(entered_at: day_range).or(visits.where(exited_at: day_range))
 
     @visits = visits
 
     # 入室・退室を個別のログエントリに分解し、時刻降順でソート
     @logs = @visits.flat_map { |visit|
       entries = []
-      entries << { type: :enter, user: visit.user, room: visit.room, at: visit.entered_at, source: nil }
-      entries << { type: :exit, user: visit.user, room: visit.room, at: visit.exited_at, source: visit.source } if visit.exited_at
+      if day_range.cover?(visit.entered_at.in_time_zone("Asia/Tokyo"))
+        entries << { type: :enter, user: visit.user, room: visit.room, at: visit.entered_at, source: nil }
+      end
+      if visit.exited_at && day_range.cover?(visit.exited_at.in_time_zone("Asia/Tokyo"))
+        entries << { type: :exit, user: visit.user, room: visit.room, at: visit.exited_at, source: visit.source }
+      end
       entries
     }.sort_by { |e| e[:at] }.reverse
 
