@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Admin::AppUpdatesController < Admin::BaseController
+  before_action :require_developer_admin!
   before_action :set_app_update, only: %i[edit update destroy]
 
   def index

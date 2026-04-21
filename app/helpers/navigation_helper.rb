@@ -7,14 +7,14 @@ module NavigationHelper
     ]
 
     # 鍵持ちまたは管理者のみ鍵管理を表示
-    if effective_admin? || current_user&.keys&.exists?
+    if effective_admin_or_manager? || current_user&.keys&.exists?
       items << { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) }
     end
 
     items << { path: stats_me_path, icon: :chart, label: "統計", active: controller_name == "stats" }
 
     # 管理者のみ管理画面へのリンクを表示
-    if effective_admin?
+    if effective_admin_or_manager?
       items << { path: admin_roles_path, icon: :shield, label: "管理画面", active: controller_path.start_with?("admin/") }
     end
 
@@ -50,6 +50,9 @@ module NavigationHelper
     if user.admin?
       label = "admin"
       badge_class = "bg-red-100 text-red-700"
+    elsif user.manager?
+      label = "manager"
+      badge_class = "bg-amber-100 text-amber-700"
     elsif user.role
       label = user.role.name
       badge_class = "bg-blue-100 text-blue-700"

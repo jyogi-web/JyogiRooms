@@ -109,13 +109,13 @@ class RoomStatusesController < ApplicationController
   end
 
   def can_close?(room)
-    return true if effective_admin?
+    return true if effective_admin_or_manager?
 
     current_user.keys.any? { |key| key.room_id == room.id }
   end
 
   def require_admin!
-    return if effective_admin?
+    return if effective_admin_or_manager?
 
     redirect_to room_statuses_path, alert: "管理者のみ実行できます"
   end

@@ -47,7 +47,7 @@ module Api
       end
 
       def authorize_key_holder!
-        return if @user&.admin?
+        return if @user&.admin_or_manager?
         return if Key.exists?(room: @room, user: @user)
 
         render json: { error: "この部室の鍵持ちまたは管理者のみ実行できます" }, status: :forbidden
