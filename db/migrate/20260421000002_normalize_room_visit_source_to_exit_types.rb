@@ -13,11 +13,5 @@ class NormalizeRoomVisitSourceToExitTypes < ActiveRecord::Migration[8.1]
 
   def down
     change_column_default :room_visits, :source, from: "web", to: "nfc"
-
-    execute <<~SQL
-      UPDATE room_visits
-      SET source = 'discord'
-      WHERE source = 'web' AND exited_at IS NULL
-    SQL
   end
 end

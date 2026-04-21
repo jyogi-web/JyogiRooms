@@ -216,18 +216,19 @@ class DiscordNotifier
                        "NFCタッチ"
       when "web"
                        "Webアプリ"
-      when "forced"
-                       "管理者による強制退室"
       when "room_close"
                        "閉室時の一斉退室"
+      when "forced"
+                       "管理者による強制退室"
       else
-                       nil
+                       "不明"
       end
 
-      description = "🚪 #{room_name}\n#{user}"
-      if %w[room_exited room_forced_exited].include?(type)
-        description += "\n👤 退室処理: #{exited_by}"
-        description += "\n📝 方法: #{source_label}" if source_label
+      description = "🚪 #{room_name}\n👤 #{user}"
+      if type == "room_forced_exited"
+        description += "\n⏏️ #{exited_by}による強制退室"
+      elsif type == "room_exited"
+        description += "\n⏏️ #{source_label}"
       end
 
       post_message({
