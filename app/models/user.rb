@@ -63,10 +63,14 @@ class User < ApplicationRecord
     role&.name == Role::ADMIN
   end
 
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # 例: room_statuses/index.html.erb の occupants ループ
   def manager?
     role&.name == Role::MANAGER
   end
 
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # 例: room_statuses/index.html.erb の occupants ループ
   def admin_or_manager?
     admin? || manager?
   end

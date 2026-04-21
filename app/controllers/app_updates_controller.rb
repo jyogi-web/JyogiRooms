@@ -12,6 +12,6 @@ class AppUpdatesController < ApplicationController
   def forbid_manager!
     return unless current_user&.manager?
 
-    redirect_to root_path, alert: "managerはアップデート情報を利用できません"
+    redirect_to root_path, alert: "管理者はアップデート情報を利用できません"
   end
 end

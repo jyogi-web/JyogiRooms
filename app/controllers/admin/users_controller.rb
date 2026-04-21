@@ -7,10 +7,10 @@ class Admin::UsersController < Admin::BaseController
   def update
     @user = User.includes(:role, :access_tokens, :reservations, :keys, :nfc_card).find(params[:id])
     if current_user&.manager? && @user.admin?
-      return redirect_to admin_user_path(@user), alert: "managerはadminユーザーのロールを変更できません"
+      return redirect_to admin_user_path(@user), alert: "管理者は開発者ユーザーのロールを変更できません"
     end
     if current_user&.manager? && assigning_admin_role?
-      return redirect_to admin_user_path(@user), alert: "managerはadminロールを付与できません"
+      return redirect_to admin_user_path(@user), alert: "管理者は開発者ロールを付与できません"
     end
 
     if @user.update(user_params)

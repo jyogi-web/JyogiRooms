@@ -6,14 +6,14 @@ module NavigationHelper
       { path: reservations_path, icon: :calendar, label: "部室予約", active: current_page?(reservations_path) }
     ]
 
-    # 鍵持ちまたは管理者のみ鍵管理を表示
+    # 鍵持ちまたは開発者/管理者のみ鍵管理を表示
     if effective_admin_or_manager? || current_user&.keys&.exists?
       items << { path: keys_path, icon: :key, label: "鍵管理", active: current_page?(keys_path) }
     end
 
     items << { path: stats_me_path, icon: :chart, label: "統計", active: controller_name == "stats" }
 
-    # 管理者のみ管理画面へのリンクを表示
+    # 開発者または管理者のみ管理画面へのリンクを表示
     if effective_admin_or_manager?
       items << { path: admin_roles_path, icon: :shield, label: "管理画面", active: controller_path.start_with?("admin/") }
     end
@@ -48,10 +48,10 @@ module NavigationHelper
   # @return [ActiveSupport::SafeBuffer] HTML バッジ
   def user_role_badge(user, size = :base)
     if user.admin?
-      label = "admin"
+      label = "開発者"
       badge_class = "bg-red-100 text-red-700"
     elsif user.manager?
-      label = "manager"
+      label = "管理者"
       badge_class = "bg-amber-100 text-amber-700"
     elsif user.role
       label = user.role.name
