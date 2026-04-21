@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     member do
       post :exit_room
       post :close_room
+      post :force_exit_user
     end
     collection do
       get :logs

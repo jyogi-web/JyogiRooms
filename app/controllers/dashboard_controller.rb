@@ -12,7 +12,7 @@ class DashboardController < ApplicationController
 
     @rooms = @rooms.includes(:room_status)
     all_statuses = @rooms.map(&:room_status).compact
-    occupant_user_ids = all_statuses.flat_map { |s| s.occupants.first(5).map { |o| o["user_id"] } }.uniq
+    occupant_user_ids = all_statuses.flat_map { |s| s.normalized_occupants.first(5).map { |o| o["user_id"] } }.uniq
     users_by_id = User.where(id: occupant_user_ids).index_by(&:id)
 
     @room_statuses = @rooms.map do |room|
@@ -21,7 +21,7 @@ class DashboardController < ApplicationController
         room: room,
         is_open: status.is_open,
         occupant_count: status.occupant_count,
-        occupants: status.occupants.first(5).filter_map { |o| users_by_id[o["user_id"]] }
+        occupants: status.normalized_occupants.first(5).filter_map { |o| users_by_id[o["user_id"]] }
       }
     end
   end

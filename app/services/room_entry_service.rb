@@ -6,6 +6,8 @@
 class RoomEntryService
   class EntryError < StandardError; end
 
+  EXIT_SOURCES = %w[nfc web forced room_close].freeze
+
   # 入室する
   #
   # @param room [Room]
@@ -33,7 +35,7 @@ class RoomEntryService
       if current_visit
         raise EntryError, "既にこの部室に入室中です" if current_visit.room_id == room.id
 
-        current_visit.update!(exited_at: now)
+        current_visit.update!(exited_at: now, source: normalize_exit_source(source))
         auto_exited_room = locked_rooms[src_room_id]
 
         # その部室が空になったら閉室
@@ -55,7 +57,7 @@ class RoomEntryService
         auto_opened = true
       end
 
-      visit = RoomVisit.create!(room: room, user: user, entered_at: now, source: source)
+      visit = RoomVisit.create!(room: room, user: user, entered_at: now, source: normalize_exit_source(source))
       add_occupant_to_status(room, user, now)
 
       # 自動開室した場合は is_open も更新（入室者追加と同時に反映）
@@ -68,7 +70,7 @@ class RoomEntryService
 
     # トランザクション成功後に通知
     if auto_exited_room
-      DiscordNotifier.notify(type: "room_exited", data: room_entry_data(auto_exited_room, user))
+      DiscordNotifier.notify(type: "room_exited", data: room_entry_data(auto_exited_room, user, exited_by: user, source: normalize_exit_source(source)))
       DiscordNotifier.notify(type: "room_closed", data: room_entry_data(auto_exited_room, user)) if auto_closed_previous_room
     end
     DiscordNotifier.notify(type: "room_opened", data: room_entry_data(room, user)) if auto_opened
@@ -81,9 +83,14 @@ class RoomEntryService
   #
   # @param room [Room]
   # @param user [User]
+  # @param source [String] "nfc", "web", "forced", "room_close"
+  # @param exited_by [User, nil] 退室処理を実行したユーザー
+  # @param notification_type [String] "room_exited", "room_forced_exited"
   # @return [RoomVisit]
-  def self.exit(room:, user:)
+  def self.exit(room:, user:, source: "web", exited_by: nil, notification_type: "room_exited")
     auto_closed = false
+    exit_source = normalize_exit_source(source)
+    actor = exited_by || user
 
     visit = ActiveRecord::Base.transaction do
       # 行ロックで同一ユーザー・同一部室の同時リクエストをシリアライズ
@@ -95,7 +102,7 @@ class RoomEntryService
       current_visit = RoomVisit.active.for_room(room).for_user(user).first
       raise EntryError, "この部室に入室していません" unless current_visit
 
-      current_visit.update!(exited_at: now)
+      current_visit.update!(exited_at: now, source: exit_source)
 
       # 入室者が0人になったら閉室
       if RoomVisit.active.for_room(room).none?
@@ -113,8 +120,10 @@ class RoomEntryService
     end
 
     # トランザクション成功後に通知
-    DiscordNotifier.notify(type: "room_exited", data: room_entry_data(room, user))
+    DiscordNotifier.notify(type: notification_type, data: room_entry_data(room, user, exited_by: actor, source: exit_source))
     DiscordNotifier.notify(type: "room_closed", data: room_entry_data(room, user)) if auto_closed
+
+    Rails.logger.info("Room exit: room_id=#{room.id} user_id=#{user.id} source=#{exit_source} actor_id=#{actor.id}")
 
     visit
   end
@@ -128,7 +137,7 @@ class RoomEntryService
   def self.toggle(room:, user:, source: "nfc")
     current_visit = RoomVisit.active.for_room(room).for_user(user).first
     if current_visit
-      visit = self.exit(room: room, user: user)
+      visit = self.exit(room: room, user: user, source: source, exited_by: user)
       { action: "exit", visit: visit }
     else
       visit = enter(room: room, user: user, source: source)
@@ -136,13 +145,22 @@ class RoomEntryService
     end
   end
 
-  def self.room_entry_data(room, user)
+  def self.room_entry_data(room, user, exited_by: nil, source: nil)
     {
       room_name: room.name,
       room_number: room.room_number,
       user_display_name: user.display_name,
-      user_discord_id: user.discord_id
+      user_discord_id: user.discord_id,
+      exited_by_display_name: exited_by&.display_name,
+      exited_by_discord_id: exited_by&.discord_id,
+      source: source
     }
+  end
+
+  def self.normalize_exit_source(source)
+    normalized = source.to_s
+    normalized = "web" if normalized == "discord"
+    EXIT_SOURCES.include?(normalized) ? normalized : "web"
   end
 
   def self.add_occupant_to_status(room, user, entered_at)
@@ -158,5 +176,5 @@ class RoomEntryService
     status.update!(occupants: new_occupants, occupant_count: new_occupants.size)
   end
 
-  private_class_method :room_entry_data, :add_occupant_to_status, :remove_occupant_from_status
+  private_class_method :room_entry_data, :normalize_exit_source, :add_occupant_to_status, :remove_occupant_from_status
 end
