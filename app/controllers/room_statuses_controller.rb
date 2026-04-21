@@ -2,7 +2,7 @@
 
 class RoomStatusesController < ApplicationController
   before_action :set_room, only: %i[exit_room close_room force_exit_user]
-  before_action :require_admin!, only: %i[force_exit_user]
+  before_action :require_admin_or_manager!, only: %i[force_exit_user]
 
   # GET /room_statuses
   def index
@@ -109,15 +109,15 @@ class RoomStatusesController < ApplicationController
   end
 
   def can_close?(room)
-    return true if effective_admin?
+    return true if effective_admin_or_manager?
 
     current_user.keys.any? { |key| key.room_id == room.id }
   end
 
-  def require_admin!
-    return if effective_admin?
+  def require_admin_or_manager!
+    return if effective_admin_or_manager?
 
-    redirect_to room_statuses_path, alert: "管理者のみ実行できます"
+    redirect_to room_statuses_path, alert: "開発者または管理者のみ実行できます"
   end
 
   def parse_logs_date(date_param)
