@@ -2,6 +2,7 @@ puts "Creating master data..."
 
 # Roles
 Role.find_or_create_by!(name: "admin")
+Role.find_or_create_by!(name: "manager")
 Role.find_or_create_by!(name: "member")
 
 # Rooms and Keys

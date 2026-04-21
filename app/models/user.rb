@@ -63,6 +63,14 @@ class User < ApplicationRecord
     role&.name == Role::ADMIN
   end
 
+  def manager?
+    role&.name == Role::MANAGER
+  end
+
+  def admin_or_manager?
+    admin? || manager?
+  end
+
   private
 
   # 新規ユーザーにデフォルトロール（member）を割り当てる
