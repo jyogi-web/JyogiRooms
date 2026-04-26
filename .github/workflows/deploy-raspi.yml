@@ -2,7 +2,7 @@ name: Deploy to Raspberry Pi
 
 on:
   push:
-    branches: [develop,main,fix_me_exit_close_command]
+    branches: [develop,main]
     paths-ignore:
       - 'discord-bot/**'
 
