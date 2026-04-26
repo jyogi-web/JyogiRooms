@@ -53,73 +53,75 @@ module Api
       }
     end
 
-    # GET /api/stats/me
+    # GET /api/stats/me?discord_user_id=xxx&room=all
     def me
-      user, period, base_scope = load_user_and_scope
+      user, room, base_scope = load_user_and_scope
       return if performed?
 
-      # 全部室合算
-      total_visit_days = base_scope
+      # 全体または指定部室の統計
+      visit_days = base_scope
         .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
-      total_duration = base_scope
+      duration = base_scope
         .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))").to_i
-
-      # 部室ごと
-      rooms = Room.order(:id)
-      per_room = rooms.map do |room|
-        room_scope = base_scope.where(room: room)
-        visit_days = room_scope
-          .count("DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
-        duration = room_scope
-          .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))").to_i
-
-        {
-          room_id: room.id,
-          room_name: room.name,
-          visit_days: visit_days,
-          total_seconds: duration
-        }
-      end
-
-      # ランキング順位（ユーザーが選択した期間と同じ範囲で算出）
-      rank_range = period_date_range(period)
-      rank_scope = rank_range ? RoomVisit.where(entered_at: rank_range) : RoomVisit.all
-      all_visit_counts = rank_scope
-        .group(:user_id)
-        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
-        .order("visit_count DESC, user_id ASC")
-      total_ranked_users = all_visit_counts.length
-
-      visit_rank = find_user_rank(all_visit_counts, user.id) { |r| r.visit_count.to_i }
-
-      # 滞在時間ランキング順位
-      all_durations = rank_scope
-        .group(:user_id)
-        .select("user_id, SUM(EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))) AS total_seconds")
-        .order("total_seconds DESC, user_id ASC")
-
-      duration_rank = find_user_rank(all_durations, user.id) { |r| r.total_seconds.to_i }
 
       render json: {
         user: { id: user.id, display_name: user.display_name, discord_id: user.discord_id },
-        period: period,
-        total: { visit_days: total_visit_days, total_seconds: total_duration },
-        rooms: per_room,
-        rank: {
-          visit: { position: visit_rank, total_users: total_ranked_users },
-          duration: { position: duration_rank, total_users: all_durations.length },
-          period: period
-        }
+        room: room,
+        total: { visit_days: visit_days, total_seconds: duration },
+        rank: build_rank(user.id, room)
       }
     end
 
     private
 
-    def load_user_and_scope
+def load_user_and_scope
       unless params[:discord_user_id].present?
         render json: { error: "discord_user_id is required." }, status: :bad_request
         return []
       end
+
+      user = User.find_by(discord_id: params[:discord_user_id])
+      unless user
+        render json: { error: "User not found." }, status: :not_found
+        return []
+      end
+
+      room_param = params[:room].presence || "all"
+      scope = RoomVisit.where(user: user)
+      if room_param != "all"
+        room = Room.find_by(id: room_param)
+        unless room
+          render json: { error: "Room not found." }, status: :not_found
+          return []
+        end
+        scope = scope.where(room: room)
+      end
+
+      [ user, room_param, scope ]
+    end
+
+    def build_rank(user_id, room_param)
+      scope = room_param == "all" ? RoomVisit.all : RoomVisit.where(room_id: room_param)
+
+      all_visit_counts = scope
+        .group(:user_id)
+        .select("user_id, COUNT(DISTINCT DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')) AS visit_count")
+        .order("visit_count DESC, user_id ASC")
+
+      visit_rank = find_user_rank(all_visit_counts, user_id) { |r| r.visit_count.to_i }
+
+      all_durations = scope
+        .group(:user_id)
+        .select("user_id, SUM(EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))) AS total_seconds")
+        .order("total_seconds DESC, user_id ASC")
+
+      duration_rank = find_user_rank(all_durations, user_id) { |r| r.total_seconds.to_i }
+
+      {
+        visit: { position: visit_rank, total_users: all_visit_counts.length },
+        duration: { position: duration_rank, total_users: all_durations.length }
+      }
+    end
 
       user = User.find_by(discord_id: params[:discord_user_id])
       unless user

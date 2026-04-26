@@ -122,15 +122,12 @@ const commandDefinitions = [
     new SlashCommandBuilder()
         .setName('me')
         .setDescription('自分の部室利用統計を表示します')
-        .addStringOption(option =>
-            option.setName('period').setDescription('期間').setRequired(false)
+        .addIntegerOption(option =>
+            option.setName('room').setDescription('部室番号（省略時は全部室を表示）').setRequired(false)
                 .addChoices(
-                    { name: '今日', value: 'today' },
-                    { name: '今週', value: 'week' },
-                    { name: '今月', value: 'month' },
-                    { name: '半年間', value: 'half_year' },
-                    { name: '1年間', value: 'year' },
-                    { name: '全期間', value: 'all' }
+                    { name: '1', value: 1 },
+                    { name: '2', value: 2 },
+                    { name: '3', value: 3 }
                 )
         ),
 ];
