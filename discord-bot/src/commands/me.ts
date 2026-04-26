@@ -30,7 +30,7 @@ export const meCommand = {
             const api = createApi(env);
             const data = await api.fetchMyStats(discordUserId, room);
 
-            const roomLabel = room === 'all' ? '全体' : `第${room}部室`;
+            const roomLabel = room === 'all' ? '全体' : `🚪 第${room}部室`;
             const title = `📊 ${data.user.display_name} の部室利用統計（${roomLabel}）`;
 
             const lines: string[] = [];
