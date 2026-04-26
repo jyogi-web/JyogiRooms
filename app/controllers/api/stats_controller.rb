@@ -123,25 +123,6 @@ def load_user_and_scope
       }
     end
 
-      user = User.find_by(discord_id: params[:discord_user_id])
-      unless user
-        render json: { error: "User not found." }, status: :not_found
-        return []
-      end
-
-      period = params[:period].presence || "all"
-      unless VALID_PERIODS.include?(period)
-        render json: { error: "Invalid period. Use 'today', 'week', 'month', 'half_year', 'year', or 'all'." }, status: :bad_request
-        return []
-      end
-
-      date_range = period_date_range(period)
-      scope = RoomVisit.where(user: user)
-      scope = scope.where(entered_at: date_range) if date_range
-
-      [ user, period, scope ]
-    end
-
     def visit_ranking(scope, _room)
       # 訪問回数: 1日1カウント（同日複数入室でも1）
       # room=all の場合は部室横断で日付DISTINCT、部室指定時はscopeで既に絞り込み済み
