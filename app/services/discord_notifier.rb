@@ -19,9 +19,8 @@ class DiscordNotifier
   }.freeze
 
   ROOM_LABELS = {
-    "room_entered" => { title: "📱 入室しました", color: 0x00cc66 },
-    "room_exited" => { title: "📱 退室しました", color: 0xff9900 },
-    "room_forced_exited" => { title: "⛔ 代理退室されました", color: 0xff3333 },
+    "room_entered" => { title: "🟢 入室しました", color: 0x00cc66 },
+    "room_exited" => { title: "🟠 退室しました", color: 0xff9900 },
     "room_opened" => { title: "🔓 部室が開きました", color: 0x0099ff },
     "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
   }.freeze
@@ -199,7 +198,7 @@ class DiscordNotifier
 
   def self.send_room_notification(type, data)
     # 入退室は専用チャンネル、開閉は通常チャンネル
-    target = %w[room_entered room_exited room_forced_exited].include?(type) ? entry_channel_id : channel_id
+    target = %w[room_entered room_exited].include?(type) ? entry_channel_id : channel_id
 
     # 開閉通知はカスタム絵文字で送信
     if %w[room_opened room_closed].include?(type)
@@ -226,12 +225,10 @@ class DiscordNotifier
                         "不明"
        end
 
-       description = "🚪 #{room_name}\n👤 #{user}"
-       if type == "room_forced_exited"
-         description += "\n⏏️ #{exited_by}による代理退室"
-      elsif type == "room_exited"
-        description += "\n⏏️ #{source_label}"
-      end
+description = "🚪 #{room_name}\n👤 #{user}"
+       if type == "room_exited"
+         description += "\n⏏️ #{source_label}"
+       end
 
       post_message({
         embeds: [ {
