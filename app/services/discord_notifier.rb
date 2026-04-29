@@ -212,23 +212,21 @@ class DiscordNotifier
       exited_by = format_user_mention(data[:exited_by_discord_id], data[:exited_by_display_name])
       source_label = case data[:source]
       when "nfc"
-                       "NFCタッチ"
+        "NFCタッチ"
       when "web"
-                       "Webアプリ"
+        "Webアプリ"
       when "room_close"
-                       "閉室時の一斉退室"
+        "閉室時の一斉退室"
       when "forced"
-"管理者による代理退室"
-       when "forced"
-                        "管理者による代理退室"
-       else
-                        "不明"
-       end
+        "#{exited_by}による代理退室"
+      else
+        "不明"
+      end
 
-description = "🚪 #{room_name}\n👤 #{user}"
-       if type == "room_exited"
-         description += "\n⏏️ #{source_label}"
-       end
+      description = "🚪 #{room_name}\n👤 #{user}"
+      if type == "room_exited" && source_label.present?
+        description += "\n⏏️ #{source_label}"
+      end
 
       post_message({
         embeds: [ {
