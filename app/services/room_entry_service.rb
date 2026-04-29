@@ -85,7 +85,7 @@ class RoomEntryService
   # @param user [User]
   # @param source [String] "nfc", "web", "forced", "room_close"
   # @param exited_by [User, nil] 退室処理を実行したユーザー
-  # @param notification_type [String] "room_exited", "room_forced_exited"
+  # @param notification_type [String] "room_exited"
   # @return [RoomVisit]
   def self.exit(room:, user:, source: "web", exited_by: nil, notification_type: "room_exited")
     auto_closed = false

@@ -95,7 +95,7 @@ class RoomStatusesController < ApplicationController
       user: user,
       source: "forced",
       exited_by: current_user,
-      notification_type: "room_forced_exited"
+      notification_type: "room_exited"
     )
     redirect_to room_statuses_path, notice: "#{user.display_name}を#{@room.name}から退室させました"
   rescue RoomEntryService::EntryError => e
