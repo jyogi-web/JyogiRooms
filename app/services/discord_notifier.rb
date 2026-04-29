@@ -21,7 +21,7 @@ class DiscordNotifier
   ROOM_LABELS = {
     "room_entered" => { title: "📱 入室しました", color: 0x00cc66 },
     "room_exited" => { title: "📱 退室しました", color: 0xff9900 },
-    "room_forced_exited" => { title: "⛔ 強制退室されました", color: 0xff3333 },
+    "room_forced_exited" => { title: "⛔ 代理退室されました", color: 0xff3333 },
     "room_opened" => { title: "🔓 部室が開きました", color: 0x0099ff },
     "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
   }.freeze
@@ -219,14 +219,16 @@ class DiscordNotifier
       when "room_close"
                        "閉室時の一斉退室"
       when "forced"
-                       "管理者による強制退室"
-      else
-                       "不明"
-      end
+"管理者による代理退室"
+       when "forced"
+                        "管理者による代理退室"
+       else
+                        "不明"
+       end
 
-      description = "🚪 #{room_name}\n👤 #{user}"
-      if type == "room_forced_exited"
-        description += "\n⏏️ #{exited_by}による強制退室"
+       description = "🚪 #{room_name}\n👤 #{user}"
+       if type == "room_forced_exited"
+         description += "\n⏏️ #{exited_by}による代理退室"
       elsif type == "room_exited"
         description += "\n⏏️ #{source_label}"
       end

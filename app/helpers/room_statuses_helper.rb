@@ -8,7 +8,7 @@ module RoomStatusesHelper
     when "web"
       "Web"
     when "forced"
-      "強制退室"
+      "代理退室"
     when "room_close"
       "一斉退室"
     else
