@@ -49,6 +49,54 @@
         }
       }
     },
+    "clang@latest": {
+      "last_modified": "2026-05-21T08:15:18Z",
+      "resolved": "github:NixOS/nixpkgs/4a29d733e8a7d5b824c3d8c958a946a9867b3eb2#clang",
+      "source": "devbox-search",
+      "version": "21.1.8",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l32bv33wqwkj2l1y8dp5x6h9r3q9im77-clang-wrapper-21.1.8",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/l32bv33wqwkj2l1y8dp5x6h9r3q9im77-clang-wrapper-21.1.8"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/h6vk77gc3300z162ywhcz8asjckrgmr3-clang-wrapper-21.1.8",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/h6vk77gc3300z162ywhcz8asjckrgmr3-clang-wrapper-21.1.8"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rp3shfv6zk8m02lf4xm5nbkiyb586pv4-clang-wrapper-21.1.8",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/rp3shfv6zk8m02lf4xm5nbkiyb586pv4-clang-wrapper-21.1.8"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/874j5xydsj6nr6i1zdrjvhln5gmxvvrr-clang-wrapper-21.1.8",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/874j5xydsj6nr6i1zdrjvhln5gmxvvrr-clang-wrapper-21.1.8"
+        }
+      }
+    },
     "git@latest": {
       "last_modified": "2025-12-31T03:27:36Z",
       "resolved": "github:NixOS/nixpkgs/f665af0cdb70ed27e1bd8f9fdfecaf451260fc55#git",

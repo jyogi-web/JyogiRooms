@@ -9,6 +9,7 @@
     "pkg-config@latest",
     "libyaml.dev",
     "git@latest",
+    "clang@latest",
     "gnumake@latest"
   ],
   "shell": {
