@@ -8,7 +8,8 @@
     "postgresql@17",
     "pkg-config@latest",
     "libyaml.dev",
-    "git@latest"
+    "git@latest",
+    "gnumake@latest"
   ],
   "shell": {
     "init_hook": [
