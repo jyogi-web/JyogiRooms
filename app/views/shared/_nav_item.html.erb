@@ -10,12 +10,12 @@
 %>
 
 <% if mode == :desktop %>
-  <%= link_to item[:path], class: "#{base_desktop} #{style_desktop}" do %>
+  <%= link_to item[:path], class: "#{base_desktop} #{style_desktop}", data: { turbo: true } do %>
     <%= nav_icon(item[:icon], "w-5 h-5 #{icon_desktop}") %>
     <span class="font-medium"><%= item[:label] %></span>
   <% end %>
 <% else %>
-  <%= link_to item[:path], class: "#{base_mobile} #{style_mobile}" do %>
+  <%= link_to item[:path], class: "#{base_mobile} #{style_mobile}", data: { turbo: true } do %>
     <%= nav_icon(item[:icon], "w-6 h-6 #{icon_mobile}") %>
     <span class="text-[10px] mt-1 font-medium"><%= item[:label] %></span>
   <% end %>
