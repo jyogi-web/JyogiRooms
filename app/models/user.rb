@@ -75,6 +75,10 @@ class User < ApplicationRecord
     admin? || manager?
   end
 
+  def observer?
+    role&.name == Role::OBSERVER
+  end
+
   private
 
   # 新規ユーザーにデフォルトロール（member）を割り当てる

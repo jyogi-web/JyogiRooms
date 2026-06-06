@@ -4,6 +4,7 @@ puts "Creating master data..."
 Role.find_or_create_by!(name: "admin")
 Role.find_or_create_by!(name: "manager")
 Role.find_or_create_by!(name: "member")
+Role.find_or_create_by!(name: "observer")
 
 # Rooms and Keys
 rooms_data = [
