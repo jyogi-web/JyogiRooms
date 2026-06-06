@@ -2,7 +2,7 @@
 
 class RoomStatusesController < ApplicationController
   before_action :set_room, only: %i[exit_room close_room force_exit_user]
-  before_action :require_admin_or_manager!, only: %i[force_exit_user]
+  before_action :require_force_exit_permission!, only: %i[force_exit_user]
 
   # GET /room_statuses
   def index
@@ -118,6 +118,12 @@ class RoomStatusesController < ApplicationController
     return if effective_admin_or_manager?
 
     redirect_to room_statuses_path, alert: "開発者または管理者のみ実行できます"
+  end
+
+  def require_force_exit_permission!
+    return if effective_admin_or_manager? || current_user&.observer?
+
+    redirect_to room_statuses_path, alert: "代理退室の権限がありません"
   end
 
   def parse_logs_date(date_param)

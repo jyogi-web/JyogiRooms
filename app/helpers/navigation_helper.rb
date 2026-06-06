@@ -53,6 +53,9 @@ module NavigationHelper
     elsif user.manager?
       label = "管理者"
       badge_class = "bg-amber-100 text-amber-700"
+    elsif user.observer?
+      label = "監視者"
+      badge_class = "bg-purple-100 text-purple-700"
     elsif user.role
       label = user.role.name
       badge_class = "bg-blue-100 text-blue-700"
