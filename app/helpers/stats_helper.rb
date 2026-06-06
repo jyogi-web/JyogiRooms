@@ -63,4 +63,12 @@ module StatsHelper
     else "bg-gray-100"
     end
   end
+
+  def heatmap_tooltip_content(day_data)
+    lines = [day_data[:date].strftime('%Y/%m/%d'), "合計: #{format_duration(day_data[:seconds])}"]
+    day_data[:room_durations].each do |rd|
+      lines << "#{rd[:room_name]}: #{format_duration(rd[:seconds])}"
+    end
+    lines.join("\n")
+  end
 end

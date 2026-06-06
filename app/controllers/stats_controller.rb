@@ -111,16 +111,32 @@ class StatsController < ApplicationController
 
     duration_by_date = daily_duration.transform_keys { |k| k.is_a?(Date) ? k : Date.parse(k) }
 
+    daily_room_duration = scope
+      .group("DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')", :room_id)
+      .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))")
+
+    rooms_by_id = Room.order(:id).index_by(&:id)
+
+    room_duration_by_date = {}
+    daily_room_duration.each do |(date_str, room_id), seconds|
+      date = date_str.is_a?(Date) ? date_str : Date.parse(date_str)
+      room = rooms_by_id[room_id]
+      next unless room
+      room_duration_by_date[date] ||= []
+      room_duration_by_date[date] << { room_name: room.name, seconds: seconds.to_i }
+    end
+
     max_duration = duration_by_date.values.max || 1
 
     days = (start_date..end_date).map do |date|
-      seconds = duration_by_date[date] || 0
+      seconds = (duration_by_date[date] || 0).to_i
       level = if seconds == 0
         0
       else
         [(seconds.to_f / max_duration * 4).ceil, 4].min
       end
-      { date: date, seconds: seconds, level: level }
+      room_durations = room_duration_by_date[date] || []
+      { date: date, seconds: seconds, level: level, room_durations: room_durations }
     end
 
     { days: days, start_date: start_date, end_date: end_date }
