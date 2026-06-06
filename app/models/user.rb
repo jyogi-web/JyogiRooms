@@ -75,6 +75,8 @@ class User < ApplicationRecord
     admin? || manager?
   end
 
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # 例: room_statuses/index.html.erb の occupants ループ
   def observer?
     role&.name == Role::OBSERVER
   end
