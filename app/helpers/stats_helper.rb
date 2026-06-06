@@ -52,4 +52,15 @@ module StatsHelper
     else rank.to_s
     end
   end
+
+  def heatmap_color(level)
+    case level
+    when 0 then "bg-gray-100"
+    when 1 then "bg-green-200"
+    when 2 then "bg-green-400"
+    when 3 then "bg-green-600"
+    when 4 then "bg-green-800"
+    else "bg-gray-100"
+    end
+  end
 end

@@ -56,6 +56,8 @@ class StatsController < ApplicationController
         total_seconds: (duration_by_room[room.id] || 0).to_i
       }
     end
+
+    @heatmap_data = build_heatmap_data(base_scope)
   end
 
   private
@@ -97,5 +99,30 @@ class StatsController < ApplicationController
       prev_value = value
     end
     entries
+  end
+
+  def build_heatmap_data(scope)
+    end_date = Date.current
+    start_date = 52.weeks.ago(end_date).beginning_of_week(:sunday)
+
+    daily_duration = scope
+      .group("DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
+      .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))")
+
+    duration_by_date = daily_duration.transform_keys { |k| k.is_a?(Date) ? k : Date.parse(k) }
+
+    max_duration = duration_by_date.values.max || 1
+
+    days = (start_date..end_date).map do |date|
+      seconds = duration_by_date[date] || 0
+      level = if seconds == 0
+        0
+      else
+        [(seconds.to_f / max_duration * 4).ceil, 4].min
+      end
+      { date: date, seconds: seconds, level: level }
+    end
+
+    { days: days, start_date: start_date, end_date: end_date }
   end
 end
