@@ -86,6 +86,7 @@
         <% weeks.each do |week_days| %>
           <div class="flex flex-col gap-0.5">
             <% week_days.each do |day_data, _| %>
+              <% next unless day_data[:in_period] %>
               <% tooltip_content = heatmap_tooltip_content(day_data) %>
               <div
                 class="heatmap-cell relative w-3 h-3 rounded-sm <%= heatmap_color(day_data[:level]) %> cursor-pointer"

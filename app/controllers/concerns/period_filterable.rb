@@ -11,9 +11,9 @@ module PeriodFilterable
     now = Time.current.in_time_zone("Asia/Tokyo")
     case period
     when "week"
-      now.beginning_of_week(:monday)..now
+      1.week.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
     when "month"
-      now.beginning_of_month..now
+      1.month.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
     when "half_year"
       6.months.ago.in_time_zone("Asia/Tokyo").beginning_of_day..now
     when "year"

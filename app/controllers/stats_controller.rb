@@ -66,9 +66,9 @@ class StatsController < ApplicationController
     end_date = Date.current
     case period
     when "week"
-      end_date.beginning_of_week(:sunday)
+      6.days.ago(end_date)
     when "month"
-      end_date.beginning_of_month.beginning_of_week(:sunday)
+      1.month.ago(end_date)
     when "half_year"
       26.weeks.ago(end_date).beginning_of_week(:sunday)
     when "year"
@@ -123,6 +123,10 @@ class StatsController < ApplicationController
     end_date = Date.current
     start_date = heatmap_start_date(period)
 
+    # カレンダーの表示範囲（週の区切りに合わせる）
+    display_start_date = start_date.beginning_of_week(:sunday)
+    display_end_date = end_date.end_of_week(:sunday)
+
     daily_duration = scope
       .group("DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
       .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))")
@@ -146,17 +150,18 @@ class StatsController < ApplicationController
 
     max_duration = duration_by_date.values.max || 1
 
-    days = (start_date..end_date).map do |date|
-      seconds = (duration_by_date[date] || 0).to_i
-      level = if seconds == 0
+    days = (display_start_date..display_end_date).map do |date|
+      in_period = date >= start_date && date <= end_date
+      seconds = in_period ? (duration_by_date[date] || 0).to_i : 0
+      level = if !in_period || seconds == 0
         0
       else
         [(seconds.to_f / max_duration * 4).ceil, 4].min
       end
-      room_durations = room_duration_by_date[date] || []
-      { date: date, seconds: seconds, level: level, room_durations: room_durations }
+      room_durations = in_period ? (room_duration_by_date[date] || []) : []
+      { date: date, seconds: seconds, level: level, room_durations: room_durations, in_period: in_period }
     end
 
-    { days: days, start_date: start_date, end_date: end_date }
+    { days: days, start_date: display_start_date, end_date: display_end_date }
   end
 end
