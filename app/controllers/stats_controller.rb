@@ -57,10 +57,30 @@ class StatsController < ApplicationController
       }
     end
 
-    @heatmap_data = build_heatmap_data(base_scope)
+    @heatmap_data = build_heatmap_data(base_scope, @period)
   end
 
   private
+
+  def heatmap_start_date(period)
+    end_date = Date.current
+    case period
+    when "today"
+      end_date.beginning_of_week(:sunday)
+    when "week"
+      end_date.beginning_of_week(:sunday)
+    when "month"
+      end_date.beginning_of_month.beginning_of_week(:sunday)
+    when "half_year"
+      26.weeks.ago(end_date).beginning_of_week(:sunday)
+    when "year"
+      52.weeks.ago(end_date).beginning_of_week(:sunday)
+    when "all"
+      52.weeks.ago(end_date).beginning_of_week(:sunday)
+    else
+      52.weeks.ago(end_date).beginning_of_week(:sunday)
+    end
+  end
 
   def valid_period(param)
     value = param.presence
@@ -101,9 +121,9 @@ class StatsController < ApplicationController
     entries
   end
 
-  def build_heatmap_data(scope)
+  def build_heatmap_data(scope, period)
     end_date = Date.current
-    start_date = 52.weeks.ago(end_date).beginning_of_week(:sunday)
+    start_date = heatmap_start_date(period)
 
     daily_duration = scope
       .group("DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")

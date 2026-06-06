@@ -71,4 +71,16 @@ module StatsHelper
     end
     lines.join("\n")
   end
+
+  def heatmap_period_label(period)
+    case period
+    when "today"     then "今日"
+    when "week"      then "今週"
+    when "month"     then "今月"
+    when "half_year" then "半年間"
+    when "year"      then "1年間"
+    when "all"       then "1年間"
+    else "1年間"
+    end
+  end
 end
