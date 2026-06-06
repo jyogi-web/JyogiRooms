@@ -72,13 +72,9 @@ module StatsHelper
   end
 
   def heatmap_period_label(period)
-    case period
-    when "week"      then "1週間"
-    when "month"     then "1ヶ月"
-    when "half_year" then "半年間"
-    when "year"      then "1年間"
-    when "all"       then "1年間"
-    else "1年間"
-    end
+    # ヒートマップでは「全期間」も「1年間」として表示（過去1年分のデータのみ表示するため）
+    return "1年間" if period == "all"
+
+    period_label(period)
   end
 end

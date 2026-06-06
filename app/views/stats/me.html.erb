@@ -1,5 +1,5 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
-  <div id="heatmap-tooltip" class="hidden fixed px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg whitespace-pre-line z-[9999] pointer-events-none"></div>
+  <div id="heatmap-tooltip" class="hidden fixed px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg whitespace-pre-line z-50 pointer-events-none"></div>
 
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold text-gray-800">📊 利用統計</h1>
@@ -127,8 +127,7 @@
     let justHoverShown = false;
 
     const showTooltip = (cell) => {
-      const content = cell.dataset.tooltip.replace(/\n/g, "<br>");
-      tooltip.innerHTML = content;
+      tooltip.textContent = cell.dataset.tooltip;
       tooltip.classList.remove("hidden");
 
       const rect = cell.getBoundingClientRect();
