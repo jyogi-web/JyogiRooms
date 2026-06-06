@@ -111,6 +111,13 @@
 
 <script>
   (function() {
+    // ヒートマップを一番右端（直近）にスクロール
+    const heatmapContainer = document.querySelector(".overflow-x-auto");
+    if (heatmapContainer) {
+      heatmapContainer.scrollLeft = heatmapContainer.scrollWidth;
+    }
+
+    // ツールチップ処理
     const tooltip = document.getElementById("heatmap-tooltip");
     if (!tooltip) return;
 
