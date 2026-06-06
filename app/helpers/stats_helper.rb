@@ -26,7 +26,6 @@ module StatsHelper
   end
 
   PERIOD_OPTIONS = [
-    { value: "today", label: "今日" },
     { value: "week", label: "今週" },
     { value: "month", label: "今月" },
     { value: "half_year", label: "半年間" },
@@ -74,7 +73,6 @@ module StatsHelper
 
   def heatmap_period_label(period)
     case period
-    when "today"     then "今日"
     when "week"      then "今週"
     when "month"     then "今月"
     when "half_year" then "半年間"

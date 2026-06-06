@@ -65,8 +65,6 @@ class StatsController < ApplicationController
   def heatmap_start_date(period)
     end_date = Date.current
     case period
-    when "today"
-      end_date.beginning_of_week(:sunday)
     when "week"
       end_date.beginning_of_week(:sunday)
     when "month"
