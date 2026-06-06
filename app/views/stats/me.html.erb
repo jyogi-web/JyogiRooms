@@ -1,4 +1,6 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
+  <div id="heatmap-tooltip" class="hidden fixed px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg whitespace-pre-line z-50 pointer-events-none"></div>
+
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold text-gray-800">📊 利用統計</h1>
     <%= link_to stats_ranking_path, class: "btn btn-secondary text-sm" do %>
@@ -41,6 +43,53 @@
     </div>
   </div>
 
+  <!-- 訪問ヒートマップ -->
+  <div class="card p-5">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">
+      訪問カレンダー
+      <span class="text-sm font-normal text-gray-500">（<%= heatmap_period_label(@period) %>）</span>
+    </h2>
+    <div class="overflow-x-auto">
+      <div class="inline-flex gap-0.5">
+        <%# 曜日ラベル %>
+        <div class="sticky left-0 z-10 flex flex-col gap-0.5 mr-1 text-xs text-gray-500 bg-white">
+          <div class="h-3"></div>
+          <div class="h-3 leading-3">月</div>
+          <div class="h-3"></div>
+          <div class="h-3 leading-3">水</div>
+          <div class="h-3"></div>
+          <div class="h-3 leading-3">金</div>
+          <div class="h-3"></div>
+        </div>
+        <%# グリッド %>
+        <% start_date = @heatmap_data[:start_date] %>
+        <% weeks = @heatmap_data[:days].each_with_index.group_by { |_, i| i / 7 }.values %>
+        <% weeks.each do |week_days| %>
+          <div class="flex flex-col gap-0.5">
+            <% week_days.each do |day_data, _| %>
+              <% next unless day_data[:in_period] %>
+              <% tooltip_content = heatmap_tooltip_content(day_data) %>
+              <div
+                class="heatmap-cell relative w-3 h-3 rounded-sm <%= heatmap_color(day_data[:level]) %> cursor-pointer"
+                data-tooltip="<%= tooltip_content %>"
+              ></div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <%# 凡例 %>
+    <div class="flex items-center gap-2 mt-4 text-xs text-gray-500">
+      <span>少ない</span>
+      <div class="w-3 h-3 rounded-sm bg-gray-100"></div>
+      <div class="w-3 h-3 rounded-sm bg-green-200"></div>
+      <div class="w-3 h-3 rounded-sm bg-green-400"></div>
+      <div class="w-3 h-3 rounded-sm bg-green-600"></div>
+      <div class="w-3 h-3 rounded-sm bg-green-800"></div>
+      <span>多い</span>
+    </div>
+  </div>
+
   <!-- 部室ごと -->
   <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
     <% @per_room.each do |data| %>
@@ -60,3 +109,76 @@
     <% end %>
   </div>
 </div>
+
+<script>
+  (function() {
+    // ヒートマップを一番右端（直近）にスクロール
+    const heatmapContainer = document.querySelector(".overflow-x-auto");
+    if (heatmapContainer) {
+      heatmapContainer.scrollLeft = heatmapContainer.scrollWidth;
+    }
+
+    // ツールチップ処理
+    const tooltip = document.getElementById("heatmap-tooltip");
+    if (!tooltip) return;
+
+    const cells = document.querySelectorAll(".heatmap-cell");
+    let activeCell = null;
+    let justHoverShown = false;
+
+    const showTooltip = (cell) => {
+      tooltip.textContent = cell.dataset.tooltip;
+      tooltip.classList.remove("hidden");
+
+      const rect = cell.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+
+      let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+      let top = rect.top - tooltipRect.height - 8;
+
+      if (left < 8) left = 8;
+      if (left + tooltipRect.width > window.innerWidth - 8) {
+        left = window.innerWidth - tooltipRect.width - 8;
+      }
+      if (top < 8) {
+        top = rect.bottom + 8;
+      }
+
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+      activeCell = cell;
+    };
+
+    const hideTooltip = () => {
+      tooltip.classList.add("hidden");
+      activeCell = null;
+    };
+
+    cells.forEach((cell) => {
+      cell.addEventListener("mouseenter", () => {
+        showTooltip(cell);
+        justHoverShown = true;
+      });
+      cell.addEventListener("mouseleave", () => {
+        justHoverShown = false;
+        if (activeCell === cell) hideTooltip();
+      });
+      cell.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (justHoverShown) {
+          justHoverShown = false;
+          return;
+        }
+        if (activeCell === cell) {
+          hideTooltip();
+        } else {
+          showTooltip(cell);
+        }
+      });
+    });
+
+    document.addEventListener("click", () => {
+      if (activeCell) hideTooltip();
+    });
+  })();
+</script>

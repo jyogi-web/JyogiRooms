@@ -56,9 +56,29 @@ class StatsController < ApplicationController
         total_seconds: (duration_by_room[room.id] || 0).to_i
       }
     end
+
+    @heatmap_data = build_heatmap_data(base_scope, @period)
   end
 
   private
+
+  def heatmap_start_date(period)
+    end_date = Date.current
+    case period
+    when "week"
+      6.days.ago(end_date)
+    when "month"
+      1.month.ago(end_date)
+    when "half_year"
+      26.weeks.ago(end_date).beginning_of_week(:sunday)
+    when "year"
+      52.weeks.ago(end_date).beginning_of_week(:sunday)
+    when "all"
+      52.weeks.ago(end_date).beginning_of_week(:sunday)
+    else
+      52.weeks.ago(end_date).beginning_of_week(:sunday)
+    end
+  end
 
   def valid_period(param)
     value = param.presence
@@ -97,5 +117,51 @@ class StatsController < ApplicationController
       prev_value = value
     end
     entries
+  end
+
+  def build_heatmap_data(scope, period)
+    end_date = Date.current
+    start_date = heatmap_start_date(period)
+
+    # カレンダーの表示範囲（週の区切りに合わせる）
+    display_start_date = start_date.beginning_of_week(:sunday)
+    display_end_date = end_date.end_of_week(:sunday)
+
+    daily_duration = scope
+      .group("DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')")
+      .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))")
+
+    duration_by_date = daily_duration.transform_keys { |k| k.is_a?(Date) ? k : Date.parse(k) }
+
+    daily_room_duration = scope
+      .group("DATE(entered_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Tokyo')", :room_id)
+      .sum("EXTRACT(EPOCH FROM (COALESCE(exited_at, NOW()) - entered_at))")
+
+    rooms_by_id = Room.order(:id).index_by(&:id)
+
+    room_duration_by_date = {}
+    daily_room_duration.each do |(date_str, room_id), seconds|
+      date = date_str.is_a?(Date) ? date_str : Date.parse(date_str)
+      room = rooms_by_id[room_id]
+      next unless room
+      room_duration_by_date[date] ||= []
+      room_duration_by_date[date] << { room_name: room.name, seconds: seconds.to_i }
+    end
+
+    max_duration = duration_by_date.values.max || 1
+
+    days = (display_start_date..display_end_date).map do |date|
+      in_period = date >= start_date && date <= end_date
+      seconds = in_period ? (duration_by_date[date] || 0).to_i : 0
+      level = if !in_period || seconds == 0
+        0
+      else
+        [ (seconds.to_f / max_duration * 4).ceil, 4 ].min
+      end
+      room_durations = in_period ? (room_duration_by_date[date] || []) : []
+      { date: date, seconds: seconds, level: level, room_durations: room_durations, in_period: in_period }
+    end
+
+    { days: days, start_date: display_start_date, end_date: display_end_date }
   end
 end
