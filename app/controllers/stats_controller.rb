@@ -156,7 +156,7 @@ class StatsController < ApplicationController
       level = if !in_period || seconds == 0
         0
       else
-        [(seconds.to_f / max_duration * 4).ceil, 4].min
+        [ (seconds.to_f / max_duration * 4).ceil, 4 ].min
       end
       room_durations = in_period ? (room_duration_by_date[date] || []) : []
       { date: date, seconds: seconds, level: level, room_durations: room_durations, in_period: in_period }
