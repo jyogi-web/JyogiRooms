@@ -43,25 +43,6 @@
     </div>
   </div>
 
-  <!-- 部室ごと -->
-  <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-    <% @per_room.each do |data| %>
-      <div class="card p-5">
-        <h3 class="text-base font-bold text-gray-800 mb-3"><%= data[:room].name %></h3>
-        <div class="space-y-2">
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600">訪問日数</span>
-            <span class="text-sm font-semibold text-gray-800"><%= data[:visit_days] %>日</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600">滞在時間</span>
-            <span class="text-sm font-semibold text-gray-800"><%= format_duration(data[:total_seconds]) %></span>
-          </div>
-        </div>
-      </div>
-    <% end %>
-  </div>
-
   <!-- 訪問ヒートマップ -->
   <div class="card p-5">
     <h2 class="text-lg font-bold text-gray-800 mb-4">
@@ -107,6 +88,25 @@
       <div class="w-3 h-3 rounded-sm bg-green-800"></div>
       <span>多い</span>
     </div>
+  </div>
+
+  <!-- 部室ごと -->
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+    <% @per_room.each do |data| %>
+      <div class="card p-5">
+        <h3 class="text-base font-bold text-gray-800 mb-3"><%= data[:room].name %></h3>
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">訪問日数</span>
+            <span class="text-sm font-semibold text-gray-800"><%= data[:visit_days] %>日</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">滞在時間</span>
+            <span class="text-sm font-semibold text-gray-800"><%= format_duration(data[:total_seconds]) %></span>
+          </div>
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>
 
