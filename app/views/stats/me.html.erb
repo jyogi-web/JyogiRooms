@@ -124,6 +124,7 @@
 
     const cells = document.querySelectorAll(".heatmap-cell");
     let activeCell = null;
+    let justHoverShown = false;
 
     const showTooltip = (cell) => {
       const content = cell.dataset.tooltip.replace(/\n/g, "<br>");
@@ -155,12 +156,20 @@
     };
 
     cells.forEach((cell) => {
-      cell.addEventListener("mouseenter", () => showTooltip(cell));
+      cell.addEventListener("mouseenter", () => {
+        showTooltip(cell);
+        justHoverShown = true;
+      });
       cell.addEventListener("mouseleave", () => {
+        justHoverShown = false;
         if (activeCell === cell) hideTooltip();
       });
       cell.addEventListener("click", (e) => {
         e.stopPropagation();
+        if (justHoverShown) {
+          justHoverShown = false;
+          return;
+        }
         if (activeCell === cell) {
           hideTooltip();
         } else {
