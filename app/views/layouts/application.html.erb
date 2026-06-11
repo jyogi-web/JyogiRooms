@@ -201,7 +201,7 @@
     <!-- Loading Overlay -->
     <div id="page-loading" class="fixed inset-0 bg-black/20 z-[100] hidden items-center justify-center">
       <div class="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center gap-3">
-        <img src="<%= asset_path('bunny_loading.gif') %>" alt="読み込み中..." class="h-16 w-16" />
+        <img id="loading-gif" src="<%= asset_path('bunny_loading.gif') %>" alt="読み込み中..." class="h-16 w-16" />
         <span class="text-sm font-medium text-gray-600">読み込み中...</span>
       </div>
     </div>
@@ -210,7 +210,11 @@
       (function() {
         var loading = document.getElementById("page-loading");
 
+        var gif = document.getElementById("loading-gif");
+        var gifSrc = gif.src;
+
         function showLoading() {
+          gif.src = gifSrc;
           loading.classList.remove("hidden");
           loading.classList.add("flex");
         }
