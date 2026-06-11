@@ -201,7 +201,7 @@
     <!-- Loading Overlay -->
     <div id="page-loading" class="fixed inset-0 bg-black/20 z-[100] flex items-center justify-center" style="visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s">
       <div class="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center gap-3">
-        <img src="<%= asset_path('bunny_loading_small.gif') %>" alt="読み込み中..." class="h-16 w-16" />
+        <video src="<%= asset_path('bunny_loading.mp4') %>" autoplay loop muted playsinline class="h-16 w-16"></video>
         <span class="text-sm font-medium text-gray-600">読み込み中...</span>
       </div>
     </div>
