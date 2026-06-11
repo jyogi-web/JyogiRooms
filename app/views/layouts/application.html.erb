@@ -199,9 +199,9 @@
     <% end %>
 
     <!-- Loading Overlay -->
-    <div id="page-loading" class="fixed inset-0 bg-black/20 z-[100] hidden items-center justify-center">
+    <div id="page-loading" class="fixed inset-0 bg-black/20 z-[100] flex items-center justify-center" style="visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s">
       <div class="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center gap-3">
-        <img id="loading-gif" src="<%= asset_path('bunny_loading.gif') %>" alt="読み込み中..." class="h-16 w-16" />
+        <img src="<%= asset_path('bunny_loading.gif') %>" alt="読み込み中..." class="h-16 w-16" />
         <span class="text-sm font-medium text-gray-600">読み込み中...</span>
       </div>
     </div>
@@ -210,18 +210,16 @@
       (function() {
         var loading = document.getElementById("page-loading");
 
-        var gif = document.getElementById("loading-gif");
-        var gifSrc = gif.src;
-
         function showLoading() {
-          gif.src = gifSrc;
-          loading.classList.remove("hidden");
-          loading.classList.add("flex");
+          loading.style.visibility = "visible";
+          loading.style.opacity = "1";
+          loading.style.pointerEvents = "auto";
         }
 
         function hideLoading() {
-          loading.classList.add("hidden");
-          loading.classList.remove("flex");
+          loading.style.visibility = "hidden";
+          loading.style.opacity = "0";
+          loading.style.pointerEvents = "none";
         }
 
         document.addEventListener("click", function(e) {
