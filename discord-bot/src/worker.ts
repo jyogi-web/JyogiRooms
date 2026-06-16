@@ -11,6 +11,20 @@ export interface Env {
 }
 
 const DIRECT_RESPONSE_TIMEOUT_MS = 2500;
+const BOOLEAN_TYPE = 5;
+const EPHEMERAL_FLAG = 64;
+
+// public=false のときのみ ephemeral（デフォルト/未指定は全員表示）
+function resolveEphemeral(interaction: any): boolean {
+	const opt = interaction.data?.options?.find((o: any) => o.name === 'public' && o.type === BOOLEAN_TYPE);
+	return (opt?.value as boolean | undefined) === false;
+}
+
+// コマンドのレスポンスに ephemeral フラグを付与する
+function applyEphemeral(response: any): any {
+	if (!response?.data) return response;
+	return { ...response, data: { ...response.data, flags: EPHEMERAL_FLAG } };
+}
 
 function jsonResponse(status: number, data: object): Response {
 	return new Response(JSON.stringify(data), {
@@ -57,11 +71,14 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 		const command = commands.find(c => c.data.name === interaction.data.name);
 
 		if (!command) {
+			// 不明なコマンドは常にephemeral（コマンドが存在しないためpublicオプションを取得できない）
 			return jsonResponse(200, {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-				data: { content: '不明なコマンドです。', flags: 64 },
+				data: { content: '不明なコマンドです。', flags: EPHEMERAL_FLAG },
 			});
 		}
+
+		const ephemeral = resolveEphemeral(interaction);
 
 		const commandPromise = command.execute(interaction, env).catch((error: unknown) => {
 			console.error('Command execution error:', error);
@@ -82,16 +99,23 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 			ctx.waitUntil(
 				(async () => {
 					const response = await commandPromise as any;
-					await sendFollowup(env.DISCORD_CLIENT_ID, interaction.token, response.data || { content: 'コマンドを実行しました。' });
+					// PATCH時はflagsを除去（Discord仕様：初期レスポンスのflagsのみ有効）
+					const { flags: _flags, ...followupData } = response.data || {};
+					if (!followupData.content && !followupData.embeds) {
+						followupData.content = 'コマンドを実行しました。';
+					}
+					await sendFollowup(env.DISCORD_CLIENT_ID, interaction.token, followupData);
 				})()
 			);
 
 			return jsonResponse(200, {
 				type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+				...(ephemeral ? { data: { flags: EPHEMERAL_FLAG } } : {}),
 			});
 		}
 
-		return jsonResponse(200, result);
+		// public=false なら flags を付与して返す
+		return jsonResponse(200, ephemeral ? applyEphemeral(result) : result);
 	}
 
 	return new Response('Unknown interaction type', { status: 400 });
