@@ -1,5 +1,5 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
-<h1 class="text-2xl font-bold text-gray-900">管理画面</h1>
+<h1 class="text-2xl font-bold text-gray-900">🛡️ 管理画面</h1>
 
 <%= render "admin/nav" %>
 
@@ -23,9 +23,13 @@
         
         <div>
           <p class="text-sm text-gray-600 mb-2">ロール</p>
-          <%= form_with model: @user, url: admin_user_path(@user), method: :patch, local: true, class: "flex items-center gap-2" do |f| %>
-            <%= f.collection_select :role_id, @roles, :id, :name, { include_blank: "未設定" }, class: "px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary" %>
-            <%= f.submit "変更", class: "px-3 py-1 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors cursor-pointer" %>
+          <% if current_user&.manager? && @user.admin? %>
+            <p class="text-sm text-amber-700">管理者は開発者ユーザーのロールを変更できません</p>
+          <% else %>
+            <%= form_with model: @user, url: admin_user_path(@user), method: :patch, local: true, class: "flex items-center gap-2" do |f| %>
+              <%= f.collection_select :role_id, @roles, :id, :name, { include_blank: "未設定" }, class: "px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary" %>
+              <%= f.submit "変更", class: "px-3 py-1 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors cursor-pointer" %>
+            <% end %>
           <% end %>
           <div class="mt-2">
             <%= user_role_badge(@user) %>
@@ -34,14 +38,14 @@
         
         <div>
           <p class="text-sm text-gray-600">登録日時</p>
-          <p class="font-medium text-gray-800"><%= l(@user.created_at, format: :short) %></p>
+          <p class="font-medium text-gray-800"><%= format_jst_datetime(@user.created_at) %></p>
         </div>
         
         <div>
           <p class="text-sm text-gray-600">最終同期</p>
           <p class="font-medium text-gray-800">
             <% if @user.last_synced_at %>
-              <%= l(@user.last_synced_at, format: :short) %>
+              <%= format_jst_datetime(@user.last_synced_at) %>
             <% else %>
               <span class="text-gray-400">未同期</span>
             <% end %>
@@ -86,6 +90,37 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- 学生証情報 -->
+  <div class="card p-6">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">学生証情報</h2>
+    <% if @user.nfc_card %>
+      <div class="space-y-3">
+        <div>
+          <p class="text-sm text-gray-600">カードUID</p>
+          <p class="font-medium text-gray-800 font-mono"><%= @user.nfc_card.card_uid %></p>
+        </div>
+        <% if @user.nfc_card.student_id.present? %>
+          <div>
+            <p class="text-sm text-gray-600">学籍番号</p>
+            <p class="font-medium text-gray-800"><%= @user.nfc_card.student_id %></p>
+          </div>
+        <% end %>
+        <% if @user.nfc_card.student_name.present? %>
+          <div>
+            <p class="text-sm text-gray-600">学生氏名</p>
+            <p class="font-medium text-gray-800"><%= @user.nfc_card.student_name %></p>
+          </div>
+        <% end %>
+        <div>
+          <p class="text-sm text-gray-600">登録日時</p>
+          <p class="font-medium text-gray-800"><%= format_jst_datetime(@user.nfc_card.created_at) %></p>
+        </div>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-400">学生証未登録</p>
+    <% end %>
   </div>
 
   <div class="mt-6">

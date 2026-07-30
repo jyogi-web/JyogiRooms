@@ -47,10 +47,13 @@
   </head>
 
   <body class="min-h-screen bg-gray-100 font-sans text-gray-800">
+    <% signed_in = user_signed_in? %>
+
+    <% if signed_in %>
     <!-- Desktop Sidebar -->
     <aside class="hidden md:flex flex-col w-64 h-screen fixed top-0 left-0 bg-white border-r border-gray-200 z-30">
       <div class="h-16 flex items-center px-6 border-b border-gray-100">
-        <span class="text-xl font-bold text-gray-800">Jyogi Rooms</span>
+        <%= render "shared/app_brand", size_class: "w-12 h-12 rounded-full object-cover" %>
       </div>
       <nav class="flex-1 px-4 py-6 space-y-1">
         <% nav_items.each do |item| %>
@@ -58,11 +61,28 @@
         <% end %>
       </nav>
       
+      <!-- アップデート履歴リンク -->
+      <% unless current_user&.manager? %>
+        <div class="px-4 pb-2">
+          <%= link_to app_updates_path, class: "flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" do %>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+            </svg>
+            <span class="text-sm font-medium">アップデート履歴</span>
+          <% end %>
+        </div>
+      <% end %>
+
       <!-- User Profile Footer with Dropdown -->
       <div class="p-4 border-t border-gray-200 relative">
         <div class="group">
           <button type="button" class="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:bg-gray-100">
-            <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
+            <div class="relative">
+              <%= render(UserAvatarComponent.new(user: current_user, size: :medium)) %>
+              <% if current_user && !current_user.nfc_card %>
+                <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full"></span>
+              <% end %>
+            </div>
             <div class="flex flex-col text-left flex-1">
               <span class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></span>
               <span class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></span>
@@ -70,7 +90,27 @@
           </button>
           <!-- Dropdown Menu -->
           <div class="absolute bottom-full left-4 right-4 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200">
-            <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
+            <% if current_user&.admin? %>
+              <%= button_to toggle_admin_disguise_path, method: :post, class: "w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-t-lg transition-colors border-b border-gray-100" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"></path>
+                </svg>
+                <span class="text-sm font-medium">開発者表示</span>
+                <span class="ml-auto text-xs font-medium <%= session[:admin_disguise] ? 'text-gray-400' : 'text-green-600' %>">
+                  <%= session[:admin_disguise] ? "OFF" : "ON" %>
+                </span>
+              <% end %>
+            <% end %>
+            <%= link_to nfc_cards_path, class: "w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 #{current_user&.admin? ? '' : 'rounded-t-lg'} transition-colors" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"></path>
+              </svg>
+              <span class="text-sm font-medium">学生証管理</span>
+              <% if current_user && !current_user.nfc_card %>
+                <span class="ml-auto text-xs text-red-500 font-medium">未登録</span>
+              <% end %>
+            <% end %>
+            <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-b-lg transition-colors border-t border-gray-100", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
               </svg>
@@ -80,15 +120,29 @@
         </div>
       </div>
     </aside>
+    <% end %>
 
+    <% if signed_in %>
     <!-- Mobile Header (Optional, for brand) -->
     <header class="md:hidden fixed top-0 left-0 w-full h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-30">
-      <span class="text-xl font-bold text-gray-800">Jyogi Rooms</span>
+      <%= render "shared/app_brand", size_class: "w-11 h-11 rounded-full object-cover" %>
+      <div class="flex items-center gap-3">
+      <!-- アップデート履歴ボタン -->
+      <% unless current_user&.manager? %>
+        <%= link_to app_updates_path, class: "text-gray-500 hover:text-gray-700 transition-colors", "aria-label": "アップデート履歴" do %>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+          </svg>
+        <% end %>
+      <% end %>
       <!-- Mobile User Menu (checkbox toggle for real mobile support) -->
       <div class="relative">
         <input type="checkbox" id="mobile-menu-toggle" class="peer hidden">
-        <label for="mobile-menu-toggle" class="cursor-pointer">
+        <label for="mobile-menu-toggle" class="cursor-pointer relative">
           <%= render(UserAvatarComponent.new(user: current_user, size: :small)) %>
+          <% if current_user && !current_user.nfc_card %>
+            <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full"></span>
+          <% end %>
         </label>
         <!-- Backdrop to close menu -->
         <label for="mobile-menu-toggle" class="fixed inset-0 z-40 hidden peer-checked:block"></label>
@@ -98,7 +152,27 @@
             <p class="text-sm font-bold text-gray-800"><%= current_user ? current_user.display_name : "Guest" %></p>
             <p class="text-xs text-gray-500">@<%= current_user ? current_user.username : "guest" %></p>
           </div>
-          <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
+          <% if current_user&.admin? %>
+            <%= button_to toggle_admin_disguise_path, method: :post, class: "w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"></path>
+              </svg>
+              <span class="text-sm font-medium">開発者表示</span>
+              <span class="ml-auto text-xs font-medium <%= session[:admin_disguise] ? 'text-gray-400' : 'text-green-600' %>">
+                <%= session[:admin_disguise] ? "OFF" : "ON" %>
+              </span>
+            <% end %>
+          <% end %>
+          <%= link_to nfc_cards_path, class: "w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors" do %>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"></path>
+            </svg>
+            <span class="text-sm font-medium">学生証管理</span>
+            <% if current_user && !current_user.nfc_card %>
+              <span class="ml-auto text-xs text-red-500 font-medium">未登録</span>
+            <% end %>
+          <% end %>
+          <%= button_to auth_logout_path, method: :delete, class: "w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100", form: { onsubmit: "return confirm('ログアウトしますか？')" } do %>
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
             </svg>
@@ -106,18 +180,58 @@
           <% end %>
         </div>
       </div>
+      </div>
     </header>
+    <% end %>
 
     <!-- Main Content -->
-    <main class="md:ml-64 pt-14 md:pt-0 pb-20 md:pb-0">
+    <main class="<%= signed_in ? 'md:ml-64 pt-14 md:pt-0 pb-20 md:pb-0' : 'pt-0 pb-0' %>">
       <%= yield %>
     </main>
 
+    <% if signed_in %>
     <!-- Mobile Bottom Navigation -->
-      <nav class="md:hidden fixed bottom-0 left-0 w-full h-16 bg-white border-t border-gray-200 flex justify-around items-center z-50 px-2 safe-area-bottom">
+      <nav class="md:hidden fixed bottom-0 left-0 w-full h-20 bg-white border-t border-gray-200 flex justify-around items-start pt-1 pb-6 z-50 px-2 safe-area-bottom">
         <% nav_items.each do |item| %>
           <%= render "shared/nav_item", item: item, mode: :mobile %>
         <% end %>
       </nav>
+    <% end %>
+
+    <!-- Loading Overlay -->
+    <div id="page-loading" class="fixed inset-0 bg-black/20 z-[100] flex items-center justify-center" style="visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s">
+      <div class="bg-white rounded-2xl p-6 shadow-xl flex flex-col items-center gap-3">
+        <video src="<%= asset_path('bunny_loading.mp4') %>" autoplay loop muted playsinline class="h-16 w-16"></video>
+        <span class="text-sm font-medium text-gray-600">読み込み中...</span>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        var loading = document.getElementById("page-loading");
+
+        function showLoading() {
+          loading.style.visibility = "visible";
+          loading.style.opacity = "1";
+          loading.style.pointerEvents = "auto";
+        }
+
+        function hideLoading() {
+          loading.style.visibility = "hidden";
+          loading.style.opacity = "0";
+          loading.style.pointerEvents = "none";
+        }
+
+        document.addEventListener("click", function(e) {
+          var link = e.target.closest("a");
+          if (link && link.href && !link.href.startsWith("#") && !link.href.startsWith("javascript:") && !link.target) {
+            showLoading();
+          }
+        });
+
+        window.addEventListener("pageshow", hideLoading);
+        window.addEventListener("load", hideLoading);
+      })();
+    </script>
   </body>
 </html>

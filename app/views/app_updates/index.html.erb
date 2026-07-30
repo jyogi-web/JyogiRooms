@@ -1,0 +1,21 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-800">🔄 アップデート履歴</h1>
+
+  <% if @app_updates.empty? %>
+    <div class="card p-8 text-center text-gray-400">
+      アップデート情報はまだありません
+    </div>
+  <% else %>
+    <div class="space-y-4">
+      <% @app_updates.each do |update| %>
+        <div class="card p-5">
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <h2 class="text-lg font-bold text-gray-800"><%= update.title %></h2>
+            <span class="shrink-0 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded"><%= update.released_on.strftime("%Y/%m/%d") %></span>
+          </div>
+          <p class="text-sm text-gray-600 whitespace-pre-wrap"><%= update.description %></p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -1,162 +1,247 @@
-import 'dotenv/config';
+// Workers環境で必要なenv情報
+export interface ApiEnv {
+	API_BASE_URL: string;
+	API_ACCESS_TOKEN: string;
+}
 
-// Rails API Base URL
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000/api';
-const API_TIMEOUT_MS = 45000; // Cloud Runのコールドスタート(約30秒)を考慮
+const API_TIMEOUT_MS = 10000; // Workersではコールドスタートがないため短縮
 
 export class ApiError extends Error {
-    constructor(
-        message: string,
-        public readonly status: number,
-        public readonly validationErrors: string[]
-    ) {
-        super(message);
-        this.name = 'ApiError';
-    }
+	constructor(
+		message: string,
+		public readonly status: number,
+		public readonly validationErrors: string[]
+	) {
+		super(message);
+		this.name = 'ApiError';
+	}
 }
 
 export interface Reservation {
-    id: number;
-    user_id: number;
-    start_at: string;
-    end_at: string;
-    purpose: string;
-    // user information loaded via includes
-    user?: {
-        id: number;
-        username: string;
-        display_name: string;
-        discord_id?: string;
-        avatar_url?: string;
-    };
+	id: number;
+	user_id: number;
+	start_at: string;
+	end_at: string;
+	purpose: string;
+	user?: {
+		id: number;
+		username: string;
+		display_name: string;
+		discord_id?: string;
+		avatar_url?: string;
+	};
 }
 
 export interface KeyHolder {
-    id: number;
-    username: string;
-    display_name: string;
-    discord_id?: string;
+	id: number;
+	username: string;
+	display_name: string;
+	discord_id?: string;
 }
 
 export interface KeyInfo {
-    id: number;
-    holder: KeyHolder | null;
+	id: number;
+	holder: KeyHolder | null;
 }
 
 export interface RoomKeys {
-    room_id: number;
-    room_name: string;
-    room_number: string;
-    keys: KeyInfo[];
+	room_id: number;
+	room_name: string;
+	room_number: string;
+	keys: KeyInfo[];
 }
 
-export const api = {
-    /**
-     * 予約一覧を取得する
-     * @param startFrom この日時以降の予約を取得 (ISOString)
-     * @returns 予約の配列
-     */
-    async fetchReservations(startFrom?: string, endTo?: string): Promise<Reservation[]> {
-        const url = new URL(`${API_BASE_URL}/reservations`);
+export interface UserInfo {
+	id: number;
+	discord_id?: string;
+	display_name: string;
+	is_admin: boolean;
+}
 
-        if (startFrom) {
-            url.searchParams.append('start_from', startFrom);
-        }
-        if (endTo) {
-            url.searchParams.append('end_to', endTo);
-        }
+export interface RoomActionResponse {
+	action: string;
+	user: { id: number; display_name: string };
+	room: { id: number; name: string };
+	timestamp: string;
+}
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+export interface RoomOccupant {
+	id: number;
+	display_name: string;
+	entered_at: string;
+}
 
-        try {
-            const headers = {
-                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
-            };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+export interface RoomStatus {
+	room: { id: number; name: string };
+	is_open: boolean;
+	opened_at: string | null;
+	opened_by: { id: number; display_name: string } | null;
+	occupants: RoomOccupant[];
+	occupant_count: number;
+}
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
+export interface MyStatsRankEntry {
+	position: number | null;
+	total_users: number;
+}
 
-            return await response.json() as Reservation[];
-        } finally {
-            clearTimeout(timeoutId);
-        }
-    },
+export interface MyStatsRank {
+	visit: MyStatsRankEntry;
+	duration: MyStatsRankEntry;
+}
 
-    /**
-     * 各部室の鍵持ち情報を取得する
-     * @returns 部室ごとの鍵情報の配列
-     */
-    async fetchKeys(): Promise<RoomKeys[]> {
-        const url = new URL(`${API_BASE_URL}/keys`);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+export interface MyStatsResponse {
+	user: { id: number; display_name: string; discord_id?: string };
+	room: string;
+	total: { visit_days: number; total_seconds: number };
+	rank: MyStatsRank;
+}
 
-        try {
-            const headers = {
-                'X-Api-Key': process.env.API_ACCESS_TOKEN || ''
-            };
-            const response = await fetch(url.toString(), { signal: controller.signal, headers });
+export interface RankingEntry {
+	user_id: number;
+	display_name: string;
+	discord_id?: string;
+	count?: number;
+	total_seconds?: number;
+	rank?: number;
+}
 
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
+export interface RankingResponse {
+	type: string;
+	period: string;
+	room: string;
+	ranking: RankingEntry[];
+}
 
-            return await response.json() as RoomKeys[];
-        } finally {
-            clearTimeout(timeoutId);
-        }
-    },
+function createApi(env: ApiEnv) {
+	const baseUrl = env.API_BASE_URL;
+	const apiKey = env.API_ACCESS_TOKEN;
 
-    /**
-     * 予約を作成する
-     * @param reservation 予約情報
-     * @param discordUserId DiscordユーザーID (ユーザー特定用)
-     * @returns 作成された予約
-     */
-    async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }, discordUserId?: string): Promise<Reservation> {
-        const url = new URL(`${API_BASE_URL}/reservations`);
-        const headers = {
-            'X-Api-Key': process.env.API_ACCESS_TOKEN || '',
-            'Content-Type': 'application/json'
-        };
-        const body = JSON.stringify({
-            reservation,
-            discord_user_id: discordUserId
-        });
+	async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+		try {
+			const response = await fetch(url, {
+				...options,
+				signal: controller.signal,
+				headers: {
+					'X-Api-Key': apiKey,
+					...options.headers,
+				},
+			});
+			return response;
+		} finally {
+			clearTimeout(timeoutId);
+		}
+	}
 
-        try {
-            const response = await fetch(url.toString(), {
-                method: 'POST',
-                headers,
-                body,
-                signal: controller.signal
-            });
+	async function handleErrorResponse(response: Response): Promise<never> {
+		let errorBody: any = null;
+		try {
+			errorBody = await response.json();
+		} catch {
+			// ignore json parse error
+		}
+		throw new ApiError(
+			`API Error: ${response.status} ${response.statusText}`,
+			response.status,
+			errorBody?.errors || (errorBody?.error ? [errorBody.error] : [])
+		);
+	}
 
-            if (!response.ok) {
-                let errorBody: any = null;
-                try {
-                    errorBody = await response.json();
-                } catch {
-                    // ignore json parse error
-                }
+	return {
+		async fetchReservations(startFrom?: string, endTo?: string): Promise<Reservation[]> {
+			const url = new URL(`${baseUrl}/reservations`);
+			if (startFrom) url.searchParams.append('start_from', startFrom);
+			if (endTo) url.searchParams.append('end_to', endTo);
 
-                const err = new ApiError(
-                    `API Error: ${response.status} ${response.statusText}`,
-                    response.status,
-                    errorBody?.errors || (errorBody?.error ? [errorBody.error] : [])
-                );
-                throw err;
-            }
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as Reservation[];
+		},
 
-            return await response.json() as Reservation;
-        } finally {
-            clearTimeout(timeoutId);
-        }
-    }
-};
+		async fetchKeys(): Promise<RoomKeys[]> {
+			const url = new URL(`${baseUrl}/keys`);
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as RoomKeys[];
+		},
+
+		async createReservation(reservation: { start_at: string; end_at: string; purpose?: string }, discordUserId?: string): Promise<Reservation> {
+			const url = new URL(`${baseUrl}/reservations`);
+			const response = await fetchWithTimeout(url.toString(), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ reservation, discord_user_id: discordUserId }),
+			});
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as Reservation;
+		},
+
+		async openRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+			return this.postRoomAction(`/rooms/${roomId}/open`, discordUserId);
+		},
+
+		async closeRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+			return this.postRoomAction(`/rooms/${roomId}/close`, discordUserId);
+		},
+
+		async enterRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+			return this.postRoomAction(`/rooms/${roomId}/enter`, discordUserId);
+		},
+
+		async exitRoom(roomId: number, discordUserId: string): Promise<RoomActionResponse> {
+			return this.postRoomAction(`/rooms/${roomId}/exit`, discordUserId);
+		},
+
+		async fetchRoomStatus(roomId: number): Promise<RoomStatus> {
+			const url = new URL(`${baseUrl}/rooms/${roomId}/status`);
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as RoomStatus;
+		},
+
+		async fetchUserByDiscordId(discordUserId: string): Promise<UserInfo | null> {
+			const url = new URL(`${baseUrl}/users`);
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			const data = await response.json() as { users: UserInfo[] };
+			return data.users.find(u => u.discord_id === discordUserId) ?? null;
+		},
+
+		async fetchMyStats(discordUserId: string, room?: string): Promise<MyStatsResponse> {
+			const url = new URL(`${baseUrl}/stats/me`);
+			url.searchParams.append('discord_user_id', discordUserId);
+			if (room) url.searchParams.append('room', room);
+
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as MyStatsResponse;
+		},
+
+		async fetchRanking(type?: string, period?: string, room?: string): Promise<RankingResponse> {
+			const url = new URL(`${baseUrl}/stats/ranking`);
+			if (type) url.searchParams.append('type', type);
+			if (period) url.searchParams.append('period', period);
+			if (room) url.searchParams.append('room', room);
+
+			const response = await fetchWithTimeout(url.toString());
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as RankingResponse;
+		},
+
+		async postRoomAction(path: string, discordUserId: string): Promise<RoomActionResponse> {
+			const url = new URL(`${baseUrl}${path}`);
+			const response = await fetchWithTimeout(url.toString(), {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ discord_user_id: discordUserId }),
+			});
+			if (!response.ok) await handleErrorResponse(response);
+			return await response.json() as RoomActionResponse;
+		},
+	};
+}
+
+export { createApi };

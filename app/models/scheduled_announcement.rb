@@ -7,6 +7,8 @@ class ScheduledAnnouncement < ApplicationRecord
   validates :hour, presence: true, inclusion: { in: 0..23 }
   validates :minute, presence: true, inclusion: { in: 0..59 }
 
+  after_commit(on: %i[create update destroy]) { Rails.cache.delete("scheduled_announcement") }
+
   # シングルトンレコード（1件のみ使用）
   def self.current
     first_or_create!(

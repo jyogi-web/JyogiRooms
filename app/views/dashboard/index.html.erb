@@ -1,8 +1,54 @@
 <div class="space-y-6 px-4 py-6 md:px-8">
-    <h2 class="text-xl font-bold text-gray-800">今日の予約</h2>
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-bold text-gray-800">🚪 部室状況</h2>
+    <% unless current_user.nfc_card %>
+      <%= link_to nfc_cards_path, class: "inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 7.5A2.25 2.25 0 014.5 5.25h15A2.25 2.25 0 0121.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9zm0 3h19.5m-13.5 4.5h3"/>
+        </svg>
+        学生証を登録
+      <% end %>
+    <% end %>
+  </div>
 
-  <%# Today's Reservations %>
-  <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+  <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <% @room_statuses.each do |data| %>
+      <div class="card p-4 flex items-center justify-between <%= '!bg-gray-100 !border-gray-200' unless data[:is_open] %>">
+        <h3 class="text-base font-bold text-gray-800"><%= data[:room].name %></h3>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <% if data[:occupants].any? %>
+              <div class="flex -space-x-1.5">
+                <% data[:occupants].each do |user| %>
+                  <%= render(UserAvatarComponent.new(user: user, size: :xs)) %>
+                <% end %>
+                <% if data[:occupant_count] > 5 %>
+                  <span class="w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm">+<%= data[:occupant_count] - 5 %></span>
+                <% end %>
+              </div>
+            <% end %>
+            <span class="text-sm text-gray-600"><%= data[:occupant_count] %>人</span>
+          </div>
+          <% if data[:is_open] %>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+              <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+              開室
+            </span>
+          <% else %>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded-full">
+              <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+              閉室
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="h-px bg-gray-200 my-6"></div>
+
+  <h2 class="text-xl font-bold text-gray-800">📅 今後の予約</h2>
+  <div class="grid gap-2 max-w-lg">
     <% if @reservations.any? %>
       <% @reservations.each do |reservation| %>
         <%= render ReservationComponent.new(reservation: reservation, layout: :dashboard) %>
@@ -17,31 +63,40 @@
   <div class="h-px bg-gray-200 my-6"></div>
 
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-bold text-gray-800">現在の鍵持ち</h2>
+    <h2 class="text-xl font-bold text-gray-800">🔑 現在の鍵持ち</h2>
   </div>
 
   <%# Key Holders %>
   <div class="grid gap-4 grid-cols-1 md:grid-cols-3">
     <% @rooms.each do |room| %>
+      <% assigned_keys = room.keys.select { |key| key.user.present? } %>
       <div class="card p-5">
         <h3 class="text-lg font-bold text-gray-800 mb-4"><%= room.name %></h3>
         
-        <div class="flex flex-wrap gap-2">
-          <% if room.keys.any? %>
-            <% room.keys.each do |key| %>
+        <% if assigned_keys.any? %>
+          <div class="flex flex-wrap gap-x-1 min-[390px]:gap-x-2 gap-y-2 pb-1 md:hidden">
+            <% assigned_keys.each do |key| %>
+              <div class="w-14 flex flex-col items-center gap-2">
+                <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
+                <p class="w-full text-xs text-gray-700 font-medium text-center line-clamp-2"><%= key.user.display_name %></p>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="hidden md:flex md:flex-wrap md:gap-2">
+            <% assigned_keys.each do |key| %>
               <div class="relative group cursor-pointer">
                 <%= render(UserAvatarComponent.new(user: key.user, size: :medium)) %>
-                
-                <%# Tooltip %>
+
                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                  <%= key.user&.display_name || "Unknown" %>
+                  <%= key.user.display_name %>
                 </div>
               </div>
             <% end %>
-          <% else %>
-            <p class="text-sm text-gray-400">鍵持ちはいません</p>
-          <% end %>
-        </div>
+          </div>
+        <% else %>
+          <p class="text-sm text-gray-400">鍵持ちはいません</p>
+        <% end %>
       </div>
     <% end %>
   </div>

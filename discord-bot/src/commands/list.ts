@@ -1,15 +1,16 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { api } from '../api.js';
-import type { Interaction } from './types.js';
+import { createApi } from '../api.js';
+import type { Interaction, CommandEnv } from './types.js';
 import { reply, replyEmbed } from './utils.js';
 
 export const listCommand = {
-    data: new SlashCommandBuilder()
-        .setName('list')
-        .setDescription('今後の予約一覧を表示します'),
+    data: {
+        name: 'list',
+        description: '今後の予約一覧を表示します',
+    },
 
-    async execute(_interaction: Interaction): Promise<object> {
+    async execute(_interaction: Interaction, env: CommandEnv): Promise<object> {
         try {
+            const api = createApi(env);
             const now = new Date();
             const endDate = new Date(now);
             endDate.setDate(endDate.getDate() + 30);
@@ -30,8 +31,8 @@ export const listCommand = {
                 const res = reservations[i];
                 const start = new Date(res.start_at);
                 const end = new Date(res.end_at);
-                const dateStr = start.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
-                const timeStr = `${start.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })} ~ ${end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+                const dateStr = start.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short', timeZone: 'Asia/Tokyo' });
+                const timeStr = `${start.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })} ~ ${end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' })}`;
 
                 let userDisplay = `User ${res.user_id}`;
                 if (res.user) {

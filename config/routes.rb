@@ -1,8 +1,27 @@
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   root "dashboard#index"
-  resources :reservations, except: [ :show ]
+  resources :reservations, except: [ :show ] do
+    collection do
+      get :show_date
+    end
+  end
   resources :keys, only: [ :index ]
+  resources :nfc_cards, only: %i[index destroy]
+  post "admin_disguise/toggle", to: "admin_disguise#toggle", as: :toggle_admin_disguise
+  get "stats/ranking", to: "stats#ranking", as: :stats_ranking
+  get "stats/me", to: "stats#me", as: :stats_me
+  resources :app_updates, only: %i[index]
+  resources :room_statuses, only: %i[index] do
+    member do
+      post :exit_room
+      post :close_room
+      post :force_exit_user
+    end
+    collection do
+      get :logs
+    end
+  end
 
   resources :rooms, only: [] do
     resource :key, only: [] do
@@ -38,6 +57,28 @@ Rails.application.routes.draw do
     # ユーザー情報
     get "users/me", to: "users#me"
     resources :users, only: %i[index show create update destroy]
+
+    # 部室API
+    resources :rooms, only: [] do
+      post :touch, to: "rooms/touches#create"
+      post :enter, to: "rooms/entries#enter"
+      post :exit, to: "rooms/entries#exit"
+      post :open, to: "rooms/states#open"
+      post :close, to: "rooms/states#close"
+      get :status, to: "rooms/statuses#show"
+    end
+
+    # 統計
+    get "stats/ranking", to: "stats#ranking"
+    get "stats/me", to: "stats#me"
+    get "stats/visit_days", to: "stats#visit_days"
+
+    # NFC登録
+    resources :nfc_registrations, only: %i[create show destroy] do
+      member do
+        patch :confirm
+      end
+    end
   end
 
   # 管理者画面
@@ -45,6 +86,8 @@ Rails.application.routes.draw do
     root "roles#index"
     resources :roles, only: %i[index show update]
     resources :users, only: %i[show update]
+    resources :nfc_cards, only: %i[index]
+    resources :app_updates, only: %i[index new create edit update destroy]
     resources :key_transfer_logs, only: %i[index show]
     resource :scheduled_announcement, only: %i[edit update]
   end

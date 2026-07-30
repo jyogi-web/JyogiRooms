@@ -1,0 +1,76 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+<h1 class="text-2xl font-bold text-gray-900">🛡️ 管理画面</h1>
+
+<%= render "admin/nav" %>
+
+<h2 class="text-xl font-bold text-gray-800">学生証情報</h2>
+
+<!-- デスクトップ: テーブル表示 -->
+<div class="hidden md:block overflow-x-auto card">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100 border-b border-gray-200">
+      <tr>
+        <th class="px-6 py-3 text-left font-semibold text-gray-700">ユーザー</th>
+        <th class="px-6 py-3 text-left font-semibold text-gray-700">カードUID</th>
+        <th class="px-6 py-3 text-left font-semibold text-gray-700">学籍番号</th>
+        <th class="px-6 py-3 text-left font-semibold text-gray-700">学生氏名</th>
+        <th class="px-6 py-3 text-left font-semibold text-gray-700">登録日時</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      <% @nfc_cards.each do |card| %>
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4">
+            <%= link_to admin_user_path(card.user), class: "flex items-center gap-2 hover:text-primary" do %>
+              <%= render(UserAvatarComponent.new(user: card.user, size: :small)) %>
+              <div>
+                <p class="font-medium text-gray-800"><%= card.user.display_name %></p>
+                <p class="text-xs text-gray-500">@<%= card.user.username %></p>
+              </div>
+            <% end %>
+          </td>
+          <td class="px-6 py-4 font-mono text-gray-800"><%= card.card_uid %></td>
+          <td class="px-6 py-4 text-gray-800"><%= card.student_id.presence || "-" %></td>
+          <td class="px-6 py-4 text-gray-800"><%= card.student_name.presence || "-" %></td>
+          <td class="px-6 py-4 text-gray-600"><%= format_jst_datetime(card.created_at) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<!-- モバイル: カード表示 -->
+<div class="md:hidden space-y-3">
+  <% @nfc_cards.each do |card| %>
+    <%= link_to admin_user_path(card.user), class: "block card p-4 hover:bg-gray-50 transition-colors" do %>
+      <div class="flex items-center gap-3 mb-2">
+        <%= render(UserAvatarComponent.new(user: card.user, size: :small)) %>
+        <div>
+          <p class="font-medium text-gray-800"><%= card.user.display_name %></p>
+          <p class="text-xs text-gray-500">@<%= card.user.username %></p>
+        </div>
+      </div>
+      <div class="space-y-1 text-xs text-gray-600">
+        <p>UID: <span class="font-mono font-medium text-gray-800"><%= card.card_uid %></span></p>
+        <% if card.student_id.present? %>
+          <p>学籍番号: <span class="font-medium text-gray-800"><%= card.student_id %></span></p>
+        <% end %>
+        <% if card.student_name.present? %>
+          <p>学生氏名: <span class="font-medium text-gray-800"><%= card.student_name %></span></p>
+        <% end %>
+        <p class="text-gray-400">登録: <%= format_jst_datetime(card.created_at) %></p>
+      </div>
+    <% end %>
+  <% end %>
+</div>
+
+<% if @nfc_cards.empty? %>
+  <div class="card p-8 text-center text-gray-400">
+    登録されている学生証はありません
+  </div>
+<% else %>
+  <p class="text-sm text-gray-600 mt-4">
+    合計: <span class="font-bold"><%= @nfc_cards.size %></span> 枚
+  </p>
+<% end %>
+</div>

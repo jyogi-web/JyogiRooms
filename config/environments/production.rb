@@ -78,7 +78,8 @@ Rails.application.configure do
   # Enable DNS rebinding protection and other `Host` header attacks.
   config.hosts = [
     /.*\.run\.app/,   # Cloud Run のデフォルトドメイン（*.run.app）
-    /.*\.jyogi\.net/  # カスタムドメイン（*.jyogi.net）
+    /.*\.jyogi\.net/, # カスタムドメイン（*.jyogi.net）
+    "app"             # Docker Compose 内部通信（discord-bot → app コンテナ）
   ]
   # Skip DNS rebinding protection for the default health check endpoint.
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }

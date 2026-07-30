@@ -3,6 +3,9 @@ class User < ApplicationRecord
   has_many :reservations
   has_many :access_tokens, dependent: :destroy
   has_many :keys, dependent: :destroy
+  has_one :nfc_card, dependent: :destroy
+  has_many :room_visits, dependent: :restrict_with_error
+  has_many :nfc_registration_requests, dependent: :destroy
 
   # Callbacks
   after_create :assign_default_role
@@ -58,6 +61,24 @@ class User < ApplicationRecord
   # @return [Boolean] 管理者かどうか
   def admin?
     role&.name == Role::ADMIN
+  end
+
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # 例: room_statuses/index.html.erb の occupants ループ
+  def manager?
+    role&.name == Role::MANAGER
+  end
+
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # 例: room_statuses/index.html.erb の occupants ループ
+  def admin_or_manager?
+    admin? || manager?
+  end
+
+  # NOTE: ループ内で呼ぶ場合は必ず User.includes(:role) を使用してN+1を防ぐこと
+  # 例: room_statuses/index.html.erb の occupants ループ
+  def observer?
+    role&.name == Role::OBSERVER
   end
 
   private

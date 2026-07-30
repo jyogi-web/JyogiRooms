@@ -39,10 +39,15 @@
 | カラム | 型 | 制約 | 説明 |
 |--------|------|------|------|
 | id | bigint | PK | |
-| user_id | bigint | FK, NOT NULL | 所有ユーザー |
-| card_uid | string | NOT NULL, UNIQUE | 学生証のNFC UID |
+| user_id | bigint | FK, NOT NULL, UNIQUE | 所有ユーザー（1人1枚） |
+| card_uid | string | NOT NULL, UNIQUE | NFCカードのUID |
+| student_id | string | | 学籍番号（任意） |
+| student_name | string | | 氏名（任意） |
 | created_at | datetime | NOT NULL | |
 | updated_at | datetime | NOT NULL | |
+
+- **1ユーザー1枚のみ登録可能**（user_idにユニーク制約）
+- `student_id`・`student_name`は学生証で登録した場合のみ保存される（学生証以外のNFCカードでも登録可能）
 
 ### nfc_registration_requests（NFC登録待ち）
 
@@ -51,6 +56,8 @@
 | id | bigint | PK | |
 | user_id | bigint | FK, NOT NULL | 登録待ちユーザー |
 | card_uid | string | | かざされたカードUID（読み取り後に保存） |
+| student_id | string | | 学籍番号（読み取り後に保存） |
+| student_name | string | | 氏名（読み取り後に保存） |
 | expires_at | datetime | NOT NULL | 有効期限（作成から1分） |
 | created_at | datetime | NOT NULL | |
 | updated_at | datetime | NOT NULL | |
@@ -89,6 +96,39 @@
 - `closed_at IS NULL` → 現在開室中
 - 統計用途：曜日別の開室時間、誰がよく開けているか等を集計可能
 
+### room_status（部室状況スナップショット・参照専用）
+
+| カラム | 型 | 制約 | 説明 |
+|--------|------|------|------|
+| id | bigint | PK | |
+| room_id | bigint | FK, NOT NULL, UNIQUE | 部室（1部室1レコード） |
+| is_open | boolean | NOT NULL, default: false | 現在開室中か |
+| opened_at | datetime | | 開室時刻（is_open=falseの時はNULL） |
+| opened_by_id | bigint | FK | 開室したユーザー（is_open=falseの時はNULL） |
+| occupant_count | integer | NOT NULL, default: 0 | 現在の在室人数 |
+| occupants | jsonb | NOT NULL, default: [] | 在室中ユーザーのスナップショット |
+| created_at | datetime | NOT NULL | |
+| updated_at | datetime | NOT NULL | |
+
+`occupants` JSONBの形式:
+```json
+[
+  {
+    "user_id": 1,
+    "display_name": "田中太郎",
+    "entered_at": "2026-03-27T10:05:00+09:00"
+  }
+]
+```
+
+**設計方針:**
+- **1部室1レコードのみ**。`room_id` にUNIQUE制約
+- **読み取り専用の窓口**。状況確認（WebアプリとDiscord Bot）はこのテーブルのみ参照
+- `room_visits` / `room_sessions` への記録は行うが、部室状況確認の処理では使わない
+- 在室者情報はJSONBで非正規化して保持するため、状況確認時にJOINが不要
+- `display_name` はエントリ時点のスナップショット（入退室のたびに更新されるため実用上は常に最新）
+- Roomレコード作成時に `after_create` コールバックで対応する `room_status` を自動生成（`is_open: false`, `occupants: []`）
+
 ---
 
 ## API設計
@@ -104,15 +144,15 @@ NFC Raspiからのリクエストは既存の`X-Api-Key`ヘッダー認証を使
 | メソッド | パス | 用途 | クライアント |
 |----------|------|------|------------|
 | POST | `/api/rooms/:room_id/touch` | NFC自動判定（入室/退室/カード登録） | NFC Raspi |
-| POST | `/api/rooms/:room_id/enter` | 入室 | Webアプリ, Discord Bot |
+| POST | `/api/rooms/:room_id/enter` | 入室 | Discord Bot |
 | POST | `/api/rooms/:room_id/exit` | 退室 | Webアプリ, Discord Bot |
 
 #### 開閉室
 
-| メソッド | パス | 用途 | クライアント |
-|----------|------|------|------------|
-| POST | `/api/rooms/:room_id/open` | 開室 | Discord Bot, Webアプリ |
-| POST | `/api/rooms/:room_id/close` | 閉室 | Discord Bot, Webアプリ |
+| メソッド | パス | 用途 | 権限 | クライアント |
+|----------|------|------|------|------------|
+| POST | `/api/rooms/:room_id/open` | 開室 | 鍵持ち/管理者 | Discord Bot |
+| POST | `/api/rooms/:room_id/close` | 閉室 | 鍵持ち/管理者 | Webアプリ, Discord Bot |
 
 #### NFC登録
 
@@ -129,6 +169,8 @@ NFC Raspiからのリクエストは既存の`X-Api-Key`ヘッダー認証を使
 |----------|------|------|------------|
 | GET | `/api/rooms/:room_id/status` | 部室状況（開閉・入室者一覧） | Webアプリ, Discord Bot |
 
+> **参照テーブル:** `room_status` のみ。`room_visits` / `room_sessions` は参照しない。
+
 ---
 
 ## API詳細
@@ -139,7 +181,11 @@ NFC Raspi専用。カードUIDから自動で入室/退室/カード登録を判
 
 **リクエスト:**
 ```json
-{ "card_uid": "ABC123" }
+{
+  "card_uid": "ABC123",
+  "student_id": "24A001",
+  "student_name": "田中太郎"
+}
 ```
 
 **処理フロー:**
@@ -170,7 +216,17 @@ NFC Raspi専用。カードUIDから自動で入室/退室/カード登録を判
 
 ### POST /api/rooms/:room_id/enter
 
-明示的な入室処理。
+明示的な入室処理。**Discord Botからのみ利用可能**（Webアプリからは不可）。
+
+**リクエスト:**
+```json
+{ "discord_user_id": "123456789" }
+```
+
+### POST /api/rooms/:room_id/exit
+
+明示的な退室処理。Webアプリ・Discord Botから利用可能。
+Webアプリでは現在入室中の部室からのみ退室可能。
 
 **リクエスト:**
 ```json
@@ -181,27 +237,31 @@ NFC Raspi専用。カードUIDから自動で入室/退室/カード登録を判
 { "discord_user_id": "123456789" }
 ```
 
-### POST /api/rooms/:room_id/exit
-
-明示的な退室処理。リクエスト形式は`enter`と同じ。
-
 ### POST /api/rooms/:room_id/open
 
-開室処理。鍵持ちのみ実行可能。
+開室処理。**Discord Botからのみ利用可能**（Webアプリからは不可）。
+
+**権限:**
+- **鍵持ち**: 自身が鍵を持っている部室のみ開室可能
+- **管理者**: 全ての部室を開室可能
 
 **リクエスト:**
 ```json
-{ "user_id": 1 }
+{ "discord_user_id": "123456789" }
 ```
 
-**処理:** `rooms.is_open`を`true`に更新 + Discord通知
+**処理:** 開室 + Discord通知
 
 ### POST /api/rooms/:room_id/close
 
-閉室処理。鍵持ちまたは管理者のみ実行可能。
+閉室処理。Webアプリ・Discord Botから利用可能。
+
+**権限:**
+- **鍵持ち**: 自身が鍵を持っている部室のみ閉室可能
+- **管理者**: 全ての部室を閉室可能
 
 **処理:**
-1. `rooms.is_open`を`false`に更新
+1. 閉室
 2. 入室中の全ユーザーを退室処理
 3. Discord通知
 
@@ -259,13 +319,15 @@ Webアプリ                      Rails API                    NFC Raspi
 class RoomEntryService
   def self.enter(room, user, source: "web")
     # 既に入室中ならエラー
-    # room_visitsにレコード作成
+    # room_visitsにレコード作成（記録）
+    # room_status.occupantsにユーザーを追加、occupant_countをインクリメント（参照用更新）
     # Discord通知
   end
 
   def self.exit(room, user)
     # 入室中でなければエラー
-    # exited_atを現在時刻に更新
+    # room_visits.exited_atを現在時刻に更新（記録）
+    # room_status.occupantsからユーザーを除去、occupant_countをデクリメント（参照用更新）
     # Discord通知
   end
 
@@ -280,18 +342,33 @@ end
 ```ruby
 class RoomStateService
   def self.open(room, user)
-    # 鍵持ちか確認
-    # is_open = true, opened_by = user
+    # 既に開室中ならエラー
+    # room_sessionsにレコード作成（opened_by, opened_at）（記録）
+    # room_status.is_open=true, opened_at, opened_by_idを更新（参照用更新）
     # Discord通知
   end
 
   def self.close(room, user)
-    # is_open = false
-    # 入室中の全ユーザーを退室処理
+    # 開室中でなければエラー
+    # 入室中の全ユーザーを退室処理（room_visits.exited_at更新）（記録）
+    # room_sessionsのclosed_at, closed_by更新（記録）
+    # room_status.is_open=false, opened_at/opened_by_id=NULL, occupants=[], occupant_count=0（参照用更新）
     # Discord通知
   end
 end
 ```
+
+※ 権限チェック（鍵持ち/管理者）はAPIコントローラー層（`authorize_key_holder!`）で実施
+
+### room_statusの更新タイミングまとめ
+
+| イベント | 更新内容 |
+|---------|---------|
+| 開室（open） | `is_open=true`, `opened_at`, `opened_by_id` を設定 |
+| 閉室（close） | `is_open=false`, `opened_at/opened_by_id=NULL`, `occupants=[]`, `occupant_count=0` |
+| 入室（enter） | `occupants` に `{user_id, display_name, entered_at}` を追加、`occupant_count+1` |
+| 退室（exit） | `occupants` から該当ユーザーを除去、`occupant_count-1` |
+| 部屋作成（Room.create） | `room_status` レコードを自動生成（is_open: false, occupants: []） |
 
 ---
 
@@ -314,7 +391,9 @@ end
 
 - 各部室の開閉状態
 - 現在入室中のユーザー一覧
-- 入室/退室ボタン（ログインユーザー用）
+- 退室ボタン（自分が入室中の部室のみ表示）
+- 閉室ボタン（鍵持ち: 自分の鍵の部室のみ / 管理者: 全部室）
+- ※入室・開室はNFCまたはDiscordからのみ行う
 
 ### NFC登録ページ（新規）
 
@@ -329,15 +408,18 @@ end
 
 ---
 
-## Discord Botコマンド（将来）
+## Discord Botコマンド
 
-| コマンド | 説明 |
-|---------|------|
-| `/open [部室ID]` | 部室を開室（鍵持ち限定） |
-| `/close [部室ID]` | 部室を閉室 |
-| `/enter [部室ID]` | 入室登録 |
-| `/exit [部室ID]` | 退室登録 |
-| `/status [部室ID]` | 部室状況確認 |
+| コマンド | 説明 | 権限 |
+|---------|------|------|
+| `/open <部室番号>` | 部室を開室 | 鍵持ち/管理者 |
+| `/close <部室番号\|all>` | 部室を閉室（`all`で全部室を閉室） | 鍵持ち/管理者（`all`は管理者のみ） |
+| `/enter <部室番号>` | 入室登録 | 全ユーザー |
+| `/exit <部室番号>` | 退室登録 | 全ユーザー |
+| `/status [部室番号\|all]` | 部室状況確認（省略時は全部室） | 全ユーザー |
+
+- `room` パラメータは部室番号を数字で指定（例: `1`, `2`, `3`）
+- `/close` と `/status` は `all` を指定すると全部室が対象
 
 ---
 
@@ -363,4 +445,6 @@ end
 
 ### Phase 4: Discord Bot連携
 
-10. Discord Botにコマンド追加（/open, /enter, /exit, /status）
+10. Discord Botにコマンド追加（/open, /close, /enter, /exit, /status）
+11. 開閉室APIに鍵持ち/管理者の権限チェック追加
+12. 既存コマンド（/key, /call）のパラメータを部室番号形式に統一

@@ -18,9 +18,14 @@ Discord → POST /interactions → server.ts → commands/* → JSON レスポ�
 
 | コマンド | 説明 |
 |---|---|
-| `/reserve list` | 今後の予約一覧を表示（最大10件） |
-| `/reserve check` | 指定日の予約を確認。`preset`（今日/明日）または `date`（MM/DD 等）で指定 |
-| `/reserve create` | 予約を新規作成。`date`, `start`, `end`, `purpose`（任意）を指定 |
+| `/list` | 今後の予約一覧を表示（最大10件） |
+| `/check` | 指定日の予約を確認。`preset`（今日/明日）または `date`（MM/DD 等）で指定 |
+| `/reserve` | 予約を新規作成。`date`, `start`, `end`, `purpose`（任意）を指定 |
+| `/key` | 各部室の鍵持ち一覧を表示 |
+| `/call` | 指定した部室の鍵持ちをメンションして通知 |
+| `/status` | 部室の状況を確認 |
+
+部室の開室・閉室・入室・退室は Discord コマンドでは行わず、WebアプリまたはNFCで処理します。
 
 ### 施錠アナウンス（cron）
 
@@ -113,7 +118,7 @@ discord-bot/
 │   ├── deploy-commands.ts    # スラッシュコマンド登録スクリプト
 │   └── commands/
 │       ├── index.ts          # コマンド一覧
-│       └── reserve.ts        # /reserve コマンド実装
+│       └── [コマンド名].ts         # 各コマンド実装
 ├── dist/                     # ビルド出力
 ├── package.json
 ├── tsconfig.json
@@ -125,7 +130,7 @@ discord-bot/
 1. ユーザーが Discord でスラッシュコマンドを実行
 2. Discord が `POST /interactions` にリクエストを送信
 3. `server.ts` が署名を検証（`discord-interactions`）
-4. コマンドに応じたハンドラーを実行（`commands/reserve.ts`）
-5. Rails API と通信して予約データを取得・作成
+4. コマンドに応じたハンドラーを実行（`commands/*.ts`）
+5. Rails API と通信して予約・鍵・部室状態データを取得
 6. JSON レスポンスを Discord に返却
 7. Discord がユーザーにメッセージを表示

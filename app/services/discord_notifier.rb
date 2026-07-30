@@ -18,6 +18,24 @@ class DiscordNotifier
     "key_unassigned" => { title: "🔑 鍵の割り当てが解除されました", color: 0xff9900 }
   }.freeze
 
+  ROOM_LABELS = {
+    "room_entered" => { title: "🟢 入室しました", color: 0x00cc66 },
+    "room_exited" => { title: "🟠 退室しました", color: 0xff9900 },
+    "room_opened" => { title: "🔓 部室が開きました", color: 0x0099ff },
+    "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
+  }.freeze
+
+  ROOM_EMOJIS = {
+    "第１部室" => "<:dai1:1225676713384607764>",
+    "第２部室" => "<:dai2:1225677193779216426>",
+    "第３部室" => "<:dai3:1363112241897017565>"
+  }.freeze
+
+  ACTION_EMOJIS = {
+    "room_opened" => "<:ake:1225676720493822003>",
+    "room_closed" => "<:shime:1225676717478252736>"
+  }.freeze
+
   def self.notify(type:, data:)
     return unless enabled?
 
@@ -25,6 +43,8 @@ class DiscordNotifier
       send_reservation_notification(type, data)
     elsif type.start_with?("key_")
       send_key_notification(type, data)
+    elsif type.start_with?("room_")
+      send_room_notification(type, data)
     else
       Rails.logger.error("Discord notification: unknown type #{type}")
     end
@@ -83,9 +103,13 @@ class DiscordNotifier
     ENV["ANNOUNCE_CHANNEL_ID"]
   end
 
+  def self.entry_channel_id
+    ENV.fetch("ENTRY_CHANNEL_ID", channel_id)
+  end
+
   # Discord APIにメッセージを送信する
-  def self.post_message(body)
-    uri = URI("#{DISCORD_API_BASE}/channels/#{channel_id}/messages")
+  def self.post_message(body, target_channel_id: channel_id)
+    uri = URI("#{DISCORD_API_BASE}/channels/#{target_channel_id}/messages")
     request = Net::HTTP::Post.new(uri.request_uri)
     request["Content-Type"] = "application/json"
     request["Authorization"] = "Bot #{bot_token}"
@@ -132,8 +156,8 @@ class DiscordNotifier
       } ]
     })
 
-    # 予約作成時のみ鍵持ちにメンション
-    if type == "reservation_created"
+    # 予約作成時のみ鍵持ちにメンション（notify_key_holdersがfalseでない場合）
+    if type == "reservation_created" && data[:notify_key_holders] != false
       holders = (data[:key_holders] || []).select { |h| h[:discord_id].present? }
       if holders.any?
         mentions = holders.map { |h| "<@#{h[:discord_id]}>" }.join(" ")
@@ -172,7 +196,51 @@ class DiscordNotifier
     })
   end
 
+  def self.send_room_notification(type, data)
+    # 入退室は専用チャンネル、開閉は通常チャンネル
+    target = %w[room_entered room_exited].include?(type) ? entry_channel_id : channel_id
+
+    # 開閉通知はカスタム絵文字で送信
+    if %w[room_opened room_closed].include?(type)
+      room_emoji = ROOM_EMOJIS[data[:room_name]] || "🚪"
+      action_emoji = ACTION_EMOJIS[type] || ""
+      post_message({ content: "#{room_emoji} #{action_emoji}" }, target_channel_id: target)
+    else
+      label = ROOM_LABELS[type] || { title: "🚪 部室通知", color: 0x0099ff }
+      room_name = "#{data[:room_name]}（#{data[:room_number]}）"
+      user = format_user_mention(data[:user_discord_id], data[:user_display_name])
+      exited_by = format_user_mention(data[:exited_by_discord_id], data[:exited_by_display_name])
+      source_label = case data[:source]
+      when "nfc"
+        "NFCタッチ"
+      when "web"
+        "Webアプリ"
+      when "room_close"
+        "閉室時の一斉退室"
+      when "forced"
+        "#{exited_by}による代理退室"
+      else
+        "不明"
+      end
+
+      description = "🚪 #{room_name}\n👤 #{user}"
+      if type == "room_exited" && source_label.present?
+        description += "\n⏏️ #{source_label}"
+      end
+
+      post_message({
+        embeds: [ {
+          title: label[:title],
+          description: description,
+          color: label[:color],
+          timestamp: Time.current.iso8601
+        } ]
+      }, target_channel_id: target)
+    end
+  end
+
   private_class_method :post_message, :format_user_mention, :format_date_time,
                        :send_reservation_notification, :send_key_notification,
-                       :bot_token, :channel_id
+                       :send_room_notification, :bot_token, :channel_id,
+                       :entry_channel_id
 end

@@ -61,6 +61,14 @@
     <%= f.text_field :purpose, placeholder: "例：面接、会議など", maxlength: 15, class: "bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" %>
   </div>
 
+  <!-- 鍵持ちメンション（新規作成時のみ） -->
+  <% if reservation.new_record? %>
+    <div class="flex items-center gap-2">
+      <%= f.check_box :notify_key_holders, { checked: true, class: "w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" }, "1", "0" %>
+      <%= f.label :notify_key_holders, "鍵持ちにメンションする", class: "text-sm text-gray-700" %>
+    </div>
+  <% end %>
+
   <div class="pt-6">
     <%= f.submit submit_text, class: "btn btn-primary w-full justify-center py-3 text-base shadow-lg shadow-primary/30" %>
   </div>

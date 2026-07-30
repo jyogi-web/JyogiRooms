@@ -1,7 +1,8 @@
 class KeysController < ApplicationController
   before_action :authenticate_user!, only: [ :index, :transfer_form, :transfer, :assign_form, :assign, :unassign ]
+  before_action :require_key_holder_or_admin!, only: [ :index ]
   before_action :set_room, only: [ :transfer_form, :transfer, :assign_form, :assign, :unassign ]
-  before_action :require_admin!, only: [ :assign_form, :assign, :unassign ]
+  before_action :require_admin_or_manager!, only: [ :assign_form, :assign, :unassign ]
 
   # GET /keys
   # 鍵管理画面：全ての部室と現在の鍵持ちを表示
@@ -124,7 +125,7 @@ class KeysController < ApplicationController
   def resolve_from_user
     from_user_id = params[:from_user_id]
 
-    if current_user.admin?
+    if effective_admin_or_manager?
       User.find(from_user_id)
     else
       return current_user if from_user_id.blank? || from_user_id.to_i == current_user.id
@@ -134,8 +135,14 @@ class KeysController < ApplicationController
     end
   end
 
-  def require_admin!
-    unless current_user.admin?
+  def require_key_holder_or_admin!
+    unless effective_admin_or_manager? || current_user.keys.exists?
+      redirect_to root_path, alert: "鍵持ちまたは開発者/管理者のみアクセスできます"
+    end
+  end
+
+  def require_admin_or_manager!
+    unless effective_admin_or_manager?
       redirect_to keys_path, alert: "権限がありません"
     end
   end

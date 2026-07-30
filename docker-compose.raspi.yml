@@ -10,3 +10,4 @@ services:
     environment:
       - RAILS_ENV=production
     restart: always
+

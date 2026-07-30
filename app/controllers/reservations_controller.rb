@@ -27,6 +27,15 @@ class ReservationsController < ApplicationController
     @reservations_by_date = @reservations.group_by { |r| r.start_at.to_date }
   end
 
+  def show_date
+    @date = begin
+      Date.parse(params[:date])
+    rescue ArgumentError, TypeError
+      redirect_to reservations_path and return
+    end
+    @reservations = fetch_existing_reservations(@date)
+  end
+
   def new
     @reservation = Reservation.new
     @reservation.start_time = "13:00"
@@ -51,7 +60,9 @@ class ReservationsController < ApplicationController
     @reservation.user = current_user
 
     if @reservation.save
-      DiscordNotifier.notify(type: "reservation_created", data: DiscordNotifier.reservation_data(@reservation))
+      data = DiscordNotifier.reservation_data(@reservation)
+      data[:notify_key_holders] = @reservation.notify_key_holders != "0"
+      DiscordNotifier.notify(type: "reservation_created", data: data)
       redirect_to reservations_path, notice: "予約を作成しました"
     else
       # Re-populate existing reservations for the view
@@ -105,7 +116,7 @@ class ReservationsController < ApplicationController
   private
 
   def reservation_params
-    permitted = [ :start_time, :end_time, :purpose ]
+    permitted = [ :start_time, :end_time, :purpose, :notify_key_holders ]
     permitted << :reservation_date if [ "create", "new" ].include?(action_name)
     params.require(:reservation).permit(permitted)
   end
@@ -131,7 +142,7 @@ class ReservationsController < ApplicationController
 
   def ensure_owner
     # 管理者は全ての予約を編集・削除できる
-    return if current_user.admin?
+    return if effective_admin_or_manager?
 
     unless @reservation.user == current_user
       redirect_to reservations_path, alert: "他のユーザーの予約は編集・削除できません" and return

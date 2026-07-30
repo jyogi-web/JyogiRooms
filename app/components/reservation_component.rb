@@ -10,6 +10,10 @@ class ReservationComponent < ViewComponent::Base
 
   private
 
+  def date_label
+    @reservation.start_at.strftime("%-m/%-d(#{%w[日 月 火 水 木 金 土][@reservation.start_at.wday]})")
+  end
+
   def start_time
     @reservation.start_at.strftime("%H:%M")
   end
@@ -28,6 +32,6 @@ class ReservationComponent < ViewComponent::Base
 
   def owned_by_current_user?
     return false unless helpers.current_user.present?
-    helpers.current_user.admin? || helpers.current_user == @reservation.user
+    helpers.current_user.admin_or_manager? || helpers.current_user == @reservation.user
   end
 end
