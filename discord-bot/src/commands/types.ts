@@ -30,9 +30,13 @@ export interface Interaction {
 export interface CommandEnv {
     API_BASE_URL: string;
     API_ACCESS_TOKEN: string;
+    // 閲覧ログ取り込み Worker（未設定なら記録は no-op）
+    INGEST_URL?: string;
+    INGEST_SHARED_SECRET?: string;
 }
 
 export interface Command {
     data: { name: string; description: string };
-    execute(interaction: Interaction, env: CommandEnv): Promise<object>;
+    // ctx はバックグラウンド処理（ctx.waitUntil）用。応答をブロックせず閲覧ログ等を送るのに使う。
+    execute(interaction: Interaction, env: CommandEnv, ctx?: ExecutionContext): Promise<object>;
 }
