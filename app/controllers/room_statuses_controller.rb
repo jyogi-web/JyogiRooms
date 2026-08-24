@@ -6,6 +6,9 @@ class RoomStatusesController < ApplicationController
 
   # GET /room_statuses
   def index
+    # 部室状況の閲覧ログ（非同期・ベストエフォート。表示処理はブロックしない）
+    RoomViewLogger.log_web_view(current_user)
+
     @rooms = Room.includes(:room_status, keys: :user).order(room_number: :desc)
 
     all_statuses = @rooms.map(&:room_status).compact
