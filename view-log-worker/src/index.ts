@@ -1,11 +1,12 @@
 import type { Env } from "./types.js";
 import { isAuthorized } from "./auth.js";
 import { parseViewLogEvent } from "./schema.js";
-import { shouldRecord } from "./throttle.js";
+import { isThrottled, markRecorded } from "./throttle.js";
 import { insertViewLog } from "./insert.js";
 import { getStats } from "./stats.js";
 
 function clampInt(value: string | null, fallback: number, min: number, max: number): number {
+  if (value === null || value === "") return fallback;
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, Math.floor(n)));
@@ -46,9 +47,8 @@ export default {
         return json(422, { error: parsed.error });
       }
 
-      // 3. throttle（5分窓の重複を間引く）
-      const record = await shouldRecord(env, parsed.event);
-      if (!record) {
+      // 3. throttle（5分窓の重複を間引く。読み取りのみ）
+      if (await isThrottled(env, parsed.event)) {
         return json(200, { recorded: false, reason: "throttled" });
       }
 
@@ -59,6 +59,9 @@ export default {
         console.error("insertViewLog failed:", error);
         return json(500, { error: "failed to persist view log" });
       }
+
+      // 5. 保存成功後に throttle 窓を張る（保存失敗時は窓を消費しない）
+      await markRecorded(env, parsed.event);
 
       return json(201, { recorded: true });
     }

@@ -13,24 +13,29 @@ export function throttleTtlSeconds(env: Env): number {
   return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : DEFAULT_THROTTLE_TTL_SECONDS;
 }
 
-// 記録すべきか判定する。
-// - throttle 窓内に既に記録済み → false（間引く）
-// - 新規 → キーをセット（TTL）して true
-//
-// KV の get→put は厳密にはアトミックでなく、また同一キーへの書き込みは
-// 約1秒に1回の制限がある。読み取りが一時的に stale だと put が失敗し得るため、
-// エラー時は fail-open（記録側に倒す）とする。
+// throttle 窓内に既に記録済みか判定する（読み取りのみ）。
+// KV 読み取り失敗時は fail-open（未記録扱い＝記録側に倒す）。
 //   → ごく稀に重複が1件通るが、イベントを欠落させない方を優先する。
-export async function shouldRecord(env: Env, event: ViewLogEvent): Promise<boolean> {
+export async function isThrottled(env: Env, event: ViewLogEvent): Promise<boolean> {
   const key = throttleKey(event);
   try {
     const existing = await env.THROTTLE_KV.get(key);
-    if (existing !== null) return false;
-
-    await env.THROTTLE_KV.put(key, "1", { expirationTtl: throttleTtlSeconds(env) });
-    return true;
+    return existing !== null;
   } catch (error) {
-    console.error("throttle KV error (fail-open, will record):", error);
-    return true;
+    console.error("throttle KV read error (fail-open, will record):", error);
+    return false;
+  }
+}
+
+// throttle 窓を張る。D1 保存が成功した後にのみ呼ぶこと。
+// 保存失敗時に窓を消費しないことで、再試行が間引かれてイベントを取りこぼすのを防ぐ。
+// KV 書き込み失敗は fail-open（ログのみ・記録自体は成功扱いのまま。
+// 同一キー1秒1回制限に触れても記録を失敗させない）。
+export async function markRecorded(env: Env, event: ViewLogEvent): Promise<void> {
+  const key = throttleKey(event);
+  try {
+    await env.THROTTLE_KV.put(key, "1", { expirationTtl: throttleTtlSeconds(env) });
+  } catch (error) {
+    console.error("throttle KV write error (ignored):", error);
   }
 }

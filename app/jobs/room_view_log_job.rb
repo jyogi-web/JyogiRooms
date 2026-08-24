@@ -16,8 +16,10 @@ class RoomViewLogJob < ApplicationJob
 
   queue_as :default
 
-  # 5xx / タイムアウトはリトライ。4xx（検証エラー等）はリトライしない。
-  retry_on IngestError, Net::OpenTimeout, Net::ReadTimeout,
+  # 5xx / タイムアウト / 一時的な接続エラーはリトライ。4xx（検証エラー等）はリトライしない。
+  retry_on IngestError,
+           Net::OpenTimeout, Net::ReadTimeout,
+           SocketError, Errno::ECONNREFUSED, Errno::ECONNRESET, EOFError,
            wait: :polynomially_longer, attempts: 5
 
   TIMEOUT_SECONDS = 5

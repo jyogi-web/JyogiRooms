@@ -14,10 +14,7 @@ class RoomViewLogger
   def self.log_web_view(user)
     return if user.blank?
     return unless enabled?
-
-    # 一次throttle: 5分窓で既に投入済みならジョブを作らない
-    cache_key = "view_log_throttle:web:#{user.id}"
-    return unless Rails.cache.write(cache_key, true, expires_in: THROTTLE_WINDOW, unless_exist: true)
+    return unless should_enqueue?(user)
 
     RoomViewLogJob.perform_later(
       "web",
@@ -27,6 +24,18 @@ class RoomViewLogger
     )
   rescue => e
     Rails.logger.error("[RoomViewLogger] failed to enqueue web view log: #{e.class}: #{e.message}")
+  end
+
+  # 一次throttle: 5分窓で既に投入済みならジョブを作らない。
+  # キャッシュ障害（write が例外）時は fail-open（ジョブ投入を止めない）。
+  # 経路横断の最終的な重複判定は Worker 側 KV が権威なので、ここが緩くても実害はない。
+  def self.should_enqueue?(user)
+    cache_key = "view_log_throttle:web:#{user.id}"
+    # unless_exist: true → 新規書き込み成功で true、キー存在（＝throttle対象）で false
+    Rails.cache.write(cache_key, true, expires_in: THROTTLE_WINDOW, unless_exist: true)
+  rescue => e
+    Rails.logger.warn("[RoomViewLogger] throttle cache error, fail-open: #{e.class}: #{e.message}")
+    true
   end
 
   def self.enabled?

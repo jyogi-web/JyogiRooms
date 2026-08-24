@@ -25,6 +25,24 @@ Web(Rails) と Discord(bot) の両経路が、この Worker の `POST /view-logs
 - `200 { "recorded": false, "reason": "throttled" }` … 5分窓内なので間引いた
 - `401 / 422 / 500` … 認可失敗 / 検証エラー / 保存失敗
 
+### `GET /view-logs/stats`
+集計取得（Rails 管理画面 / 開発者確認用）。ヘッダ `X-Ingest-Secret: <INGEST_SHARED_SECRET>` 必須。
+
+クエリパラメータ:
+- `days` … 日別集計の対象日数。範囲 `1〜365`、既定 `30`（範囲外・未指定・空は既定）
+- `limit` … 最近の閲覧の取得件数。範囲 `1〜500`、既定 `50`
+
+レスポンス `200`:
+```jsonc
+{
+  "total": 1234,
+  "by_source": [{ "source": "web", "count": 1000 }, { "source": "discord", "count": 234 }],
+  "by_day":    [{ "day": "2026-08-24", "count": 42 }],   // viewed_at 基準・降順
+  "recent":    [{ "id": 9, "user_id": 123, "discord_id": null, "source": "web", "viewed_at": "2026-08-24T01:23:45.000Z" }]
+}
+```
+- `401 / 500` … 認可失敗 / 集計失敗
+
 ### `GET /health`
 `200 OK`。
 

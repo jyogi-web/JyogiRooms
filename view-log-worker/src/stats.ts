@@ -50,7 +50,7 @@ export async function getStats(
     .prepare(
       `SELECT id, user_id, discord_id, source, viewed_at
        FROM view_logs
-       ORDER BY id DESC
+       ORDER BY viewed_at DESC, id DESC
        LIMIT ?`
     )
     .bind(opts.recentLimit)
