@@ -35,6 +35,11 @@ export const rankCommand = {
             const api = createApi(env);
             const data = await api.fetchRanking(type, period, room ?? 'all');
 
+            // 統計機能が無効（工事中）
+            if (data.enabled === false) {
+                return reply(data.message ?? '🚧 現在工事中です');
+            }
+
             if (data.ranking.length === 0) {
                 return reply('該当期間のデータがありません。');
             }

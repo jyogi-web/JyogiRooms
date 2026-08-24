@@ -1,0 +1,24 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-900">🛡️ 管理画面</h1>
+
+  <%= render "admin/nav" %>
+
+  <h2 class="text-xl font-bold text-gray-800">設定</h2>
+
+  <%= form_with model: @setting, url: admin_settings_path, method: :patch, class: "card p-6 space-y-4" do |f| %>
+    <div>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <%= f.check_box :stats_enabled, class: "h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" %>
+        <span class="font-medium text-gray-800">統計・ランキングを表示する</span>
+      </label>
+      <p class="text-sm text-gray-500 mt-2">
+        オフにすると、Web の統計・ランキング画面と Discord の <code>/rank</code>・<code>/me</code> が
+        「現在工事中です」と表示されます。
+      </p>
+    </div>
+
+    <div>
+      <%= f.submit "保存", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

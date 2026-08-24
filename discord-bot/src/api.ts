@@ -91,6 +91,9 @@ export interface MyStatsRank {
 }
 
 export interface MyStatsResponse {
+	// 統計機能が無効な場合は enabled: false + message のみが返る
+	enabled?: boolean;
+	message?: string;
 	user: { id: number; display_name: string; discord_id?: string };
 	room: string;
 	total: { visit_days: number; total_seconds: number };
@@ -107,6 +110,9 @@ export interface RankingEntry {
 }
 
 export interface RankingResponse {
+	// 統計機能が無効な場合は enabled: false + message のみが返る
+	enabled?: boolean;
+	message?: string;
 	type: string;
 	period: string;
 	room: string;
