@@ -1,6 +1,7 @@
 import { createApi } from '../api.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, reply, replyEmbed } from './utils.js';
+import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
+import { logDiscordView } from '../viewLog.js';
 
 export const statusCommand = {
     data: {
@@ -8,8 +9,18 @@ export const statusCommand = {
         description: '部室の状況を確認します',
     },
 
-    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv, ctx?: ExecutionContext): Promise<object> {
         const room = getStringOption(interaction, 'room');
+
+        // 閲覧ログ（誰がいつ /status を見たか）を応答をブロックせず記録する。
+        // 5分窓の重複間引きは取り込み Worker 側で行う。
+        const discordUserId = getUserId(interaction);
+        if (discordUserId) {
+            const logPromise = logDiscordView(env, discordUserId);
+            if (ctx) {
+                ctx.waitUntil(logPromise);
+            }
+        }
 
         try {
             const api = createApi(env);

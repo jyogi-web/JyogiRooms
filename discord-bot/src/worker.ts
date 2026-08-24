@@ -8,6 +8,9 @@ export interface Env {
 	DISCORD_BOT_TOKEN: string;
 	API_ACCESS_TOKEN: string;
 	API_BASE_URL: string;
+	// 閲覧ログ取り込み Worker（未設定なら記録は no-op）
+	INGEST_URL?: string;
+	INGEST_SHARED_SECRET?: string;
 }
 
 const DIRECT_RESPONSE_TIMEOUT_MS = 2500;
@@ -63,7 +66,7 @@ async function handleInteraction(request: Request, env: Env, ctx: ExecutionConte
 			});
 		}
 
-		const commandPromise = command.execute(interaction, env).catch((error: unknown) => {
+		const commandPromise = command.execute(interaction, env, ctx).catch((error: unknown) => {
 			console.error('Command execution error:', error);
 			return {
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

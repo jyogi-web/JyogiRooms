@@ -1,0 +1,104 @@
+<div class="space-y-6 px-4 py-6 md:px-8">
+  <h1 class="text-2xl font-bold text-gray-900">🛡️ 管理画面</h1>
+
+  <%= render "admin/nav" %>
+
+  <h2 class="text-xl font-bold text-gray-800">部室状況の閲覧ログ</h2>
+
+  <% if @error %>
+    <div class="card p-6 text-center text-gray-600">
+      <p class="font-medium text-red-600">⚠️ <%= @error %></p>
+      <p class="text-sm text-gray-500 mt-2">閲覧ログは Cloudflare (view-log-worker) 側に保存されています。連携設定を確認してください。</p>
+    </div>
+  <% else %>
+    <!-- サマリー -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="card p-4">
+        <p class="text-xs text-gray-500">累計閲覧数</p>
+        <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats["total"]) %></p>
+      </div>
+      <% (@stats["by_source"] || []).each do |s| %>
+        <div class="card p-4">
+          <p class="text-xs text-gray-500"><%= s["source"] == "web" ? "Web" : (s["source"] == "discord" ? "Discord" : s["source"]) %></p>
+          <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(s["count"]) %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 日別 -->
+    <div class="card p-4">
+      <h3 class="font-semibold text-gray-800 mb-3">日別閲覧数（直近<%= @days %>日）</h3>
+      <% by_day = @stats["by_day"] || [] %>
+      <% if by_day.any? %>
+        <% max = by_day.map { |d| d["count"] }.max.to_f %>
+        <div class="space-y-1">
+          <% by_day.each do |d| %>
+            <div class="flex items-center gap-3 text-sm">
+              <span class="w-24 shrink-0 text-gray-600 tabular-nums"><%= d["day"] %></span>
+              <div class="flex-1 bg-gray-100 rounded h-4 overflow-hidden">
+                <div class="bg-primary h-4" style="width: <%= max.zero? ? 0 : (d["count"] / max * 100).round %>%"></div>
+              </div>
+              <span class="w-12 shrink-0 text-right font-medium text-gray-800 tabular-nums"><%= d["count"] %></span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-500">データがありません</p>
+      <% end %>
+    </div>
+
+    <!-- 最近の閲覧 -->
+    <div class="card">
+      <h3 class="font-semibold text-gray-800 p-4 pb-0">最近の閲覧（最大<%= Admin::ViewLogsController::RECENT_LIMIT %>件）</h3>
+      <% if @recent.any? %>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm mt-3">
+            <thead class="bg-gray-100 border-b border-gray-200">
+              <tr>
+                <th class="px-6 py-3 text-left font-semibold text-gray-700">ユーザー</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-700">経路</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-700">日時</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% @recent.each do |row| %>
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-3">
+                    <% if row[:display_name] %>
+                      <p class="font-medium text-gray-800"><%= row[:display_name] %></p>
+                      <% if row[:username] %><p class="text-xs text-gray-500">@<%= row[:username] %></p><% end %>
+                    <% else %>
+                      <p class="text-gray-500"><%= row[:raw_identity] %></p>
+                      <p class="text-xs text-gray-400">未解決のユーザー</p>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-3">
+                    <% if row[:source] == "web" %>
+                      <span class="inline-block px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">Web</span>
+                    <% elsif row[:source] == "discord" %>
+                      <span class="inline-block px-2 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700">Discord</span>
+                    <% else %>
+                      <span class="inline-block px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600"><%= row[:source] %></span>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-3 text-gray-600">
+                    <% if row[:viewed_at] %>
+                      <p class="font-medium text-gray-800"><%= l(row[:viewed_at], format: :short) %></p>
+                      <p class="text-xs text-gray-500"><%= time_ago_in_words(row[:viewed_at]) %>前</p>
+                    <% else %>
+                      <span class="text-gray-400">-</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="p-8 text-center text-gray-500">
+          <p>閲覧ログがまだありません</p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

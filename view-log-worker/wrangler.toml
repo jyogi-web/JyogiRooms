@@ -1,0 +1,26 @@
+name = "jyogi-view-log-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1: 閲覧ログ本体（永続・分析対象）
+# database_id は `wrangler d1 create jyogi-view-logs` 実行後に確定する。
+# ★本番リソース作成前にどの Cloudflare アカウントを使うか要確認。
+[[d1_databases]]
+binding = "VIEW_LOGS_DB"
+database_name = "jyogi-view-logs"
+database_id = "762743c5-f9a0-41ce-b31d-978b9668b5e8"
+migrations_dir = "migrations"
+
+# KV: throttle 窓（一時・TTL自動失効する「最近見た？」の記憶）
+# id は `wrangler kv namespace create THROTTLE_KV` 実行後に確定する。
+[[kv_namespaces]]
+binding = "THROTTLE_KV"
+id = "c518e32fd5874378821f41eb572f27fe"
+
+[vars]
+# throttle 窓（秒）。今回の要件は5分 = 300秒。
+THROTTLE_TTL_SECONDS = "300"
+
+# INGEST_SHARED_SECRET は平文で置かず、必ず secret として設定すること:
+#   wrangler secret put INGEST_SHARED_SECRET

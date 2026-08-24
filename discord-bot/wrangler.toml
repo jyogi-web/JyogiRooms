@@ -5,3 +5,9 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 API_BASE_URL = "https://rooms.jyogi.net/api"
+# 閲覧ログ取り込み Worker の URL（/view-logs を含む完全URL）
+INGEST_URL = "https://jyogi-view-log-worker.jyogi.workers.dev/view-logs"
+
+# INGEST_SHARED_SECRET は平文で置かず secret として設定すること:
+#   wrangler secret put INGEST_SHARED_SECRET
+# （view-log-worker 側と同じ値にする）
