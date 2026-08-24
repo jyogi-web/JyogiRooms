@@ -5,20 +5,45 @@
 
   <h2 class="text-xl font-bold text-gray-800">設定</h2>
 
-  <%= form_with model: @setting, url: admin_settings_path, method: :patch, class: "card p-6 space-y-4" do |f| %>
-    <div>
-      <label class="flex items-center gap-3 cursor-pointer">
-        <%= f.check_box :stats_enabled, class: "h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" %>
-        <span class="font-medium text-gray-800">統計・ランキングを表示する</span>
-      </label>
-      <p class="text-sm text-gray-500 mt-2">
-        オフにすると、Web の統計・ランキング画面と Discord の <code>/rank</code>・<code>/me</code> が
-        「現在工事中です」と表示されます。
-      </p>
-    </div>
-
-    <div>
-      <%= f.submit "保存", class: "btn btn-primary" %>
+  <% if notice %>
+    <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+      ✅ <%= notice %>
     </div>
   <% end %>
+
+  <div class="card p-6 space-y-4 max-w-2xl">
+    <!-- 現在の状態 -->
+    <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+      <div>
+        <p class="font-medium text-gray-800">統計・ランキング</p>
+        <p class="text-sm text-gray-500">現在の状態</p>
+      </div>
+      <% if @setting.stats_enabled %>
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+          🟢 表示中
+        </span>
+      <% else %>
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-gray-200 text-gray-600">
+          🚧 非表示（工事中）
+        </span>
+      <% end %>
+    </div>
+
+    <%= form_with model: @setting, url: admin_settings_path, method: :patch, class: "space-y-4" do |f| %>
+      <div>
+        <label class="flex items-center gap-3 cursor-pointer">
+          <%= f.check_box :stats_enabled, class: "h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" %>
+          <span class="font-medium text-gray-800">統計・ランキングを表示する</span>
+        </label>
+        <p class="text-sm text-gray-500 mt-2">
+          オフにすると、Web の統計・ランキング画面と Discord の <code>/rank</code>・<code>/me</code> が
+          「現在工事中です」と表示されます。
+        </p>
+      </div>
+
+      <div>
+        <%= f.submit "保存", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
 </div>
