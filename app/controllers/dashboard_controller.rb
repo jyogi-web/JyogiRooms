@@ -7,9 +7,6 @@ class DashboardController < ApplicationController
       return
     end
 
-    # 部室状況の閲覧ログ（非同期・ベストエフォート。表示処理はブロックしない）
-    RoomViewLogger.log_web_view(current_user)
-
     @reservations = Reservation.where("end_at > ?", Time.zone.now).includes(:user).order(:start_at).limit(10)
     @rooms = Room.includes(keys: :user).order(room_number: :desc)
 
