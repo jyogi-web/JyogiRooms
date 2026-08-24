@@ -30,8 +30,8 @@ export interface Interaction {
 export interface CommandEnv {
     API_BASE_URL: string;
     API_ACCESS_TOKEN: string;
-    // 閲覧ログ取り込み Worker（未設定なら記録は no-op）
-    INGEST_URL?: string;
+    // 閲覧ログ取り込み Worker への Service Binding（未設定なら記録は no-op）
+    VIEW_LOG?: Fetcher;
     INGEST_SHARED_SECRET?: string;
 }
 
