@@ -4,6 +4,7 @@ module Api
   class StatsController < BaseController
     skip_before_action :authenticate_user!
     before_action :authenticate_api_key!
+    before_action :require_stats_enabled, only: %i[ranking me visit_days]
     include PeriodFilterable
 
     # GET /api/stats/ranking
@@ -73,6 +74,13 @@ module Api
     end
 
     private
+
+    # 統計・ランキングが無効な場合は工事中を示すレスポンスを返す（Discord Bot が判別する）
+    def require_stats_enabled
+      return if Setting.stats_enabled?
+
+      render json: { enabled: false, message: "現在工事中です" }, status: :ok
+    end
 
 def load_user_and_scope
       unless params[:discord_user_id].present?

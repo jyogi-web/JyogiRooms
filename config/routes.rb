@@ -90,6 +90,7 @@ Rails.application.routes.draw do
     resources :app_updates, only: %i[index new create edit update destroy]
     resources :key_transfer_logs, only: %i[index show]
     resources :view_logs, only: %i[index]
+    resource :settings, only: %i[edit update]
     resource :scheduled_announcement, only: %i[edit update]
   end
 

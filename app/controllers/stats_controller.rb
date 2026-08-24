@@ -3,6 +3,8 @@
 class StatsController < ApplicationController
   include PeriodFilterable
 
+  before_action :require_stats_enabled, only: %i[ranking me]
+
   # GET /stats/ranking
   def ranking
     @period = valid_period(params[:period])
@@ -61,6 +63,13 @@ class StatsController < ApplicationController
   end
 
   private
+
+  # 統計・ランキングが無効な場合は「工事中」ページを表示して処理を打ち切る
+  def require_stats_enabled
+    return if Setting.stats_enabled?
+
+    render "stats/disabled"
+  end
 
   def heatmap_start_date(period)
     end_date = Date.current
