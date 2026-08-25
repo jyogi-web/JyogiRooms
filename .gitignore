@@ -39,6 +39,9 @@
 # Ignore node_modules
 /node_modules
 
+# wrangler ローカル用シークレット（view-log-worker ローカル検証で使用）
+view-log-worker/.dev.vars
+
 # 個人設定ファイル
 CLAUDE.md
 .claude/

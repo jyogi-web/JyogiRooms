@@ -1,0 +1,41 @@
+name: Deploy View Log Worker to Cloudflare Workers
+
+on:
+  push:
+    branches: [develop,main]
+    paths:
+      - 'view-log-worker/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: view-log-worker/package-lock.json
+
+      - name: Install dependencies
+        working-directory: view-log-worker
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: view-log-worker
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: view-log-worker
+        run: npm test
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: view-log-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

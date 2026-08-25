@@ -1,18 +1,19 @@
 # frozen_string_literal: true
 
-# 部室状況の閲覧ログ記録の入口（Web 経路）。
+# 閲覧ログ記録の入口（Web 経路）。
 # - 実際の保存は RoomViewLogJob 経由で view-log-worker(Cloudflare) が担う。
 # - ここでの throttle は「無駄なジョブ投入を抑える一次判定」であり、
 #   経路横断（Web/Discord）の最終的な5分重複判定は Worker 側 KV が権威。
 #   ※本アプリの本番キャッシュがプロセスローカルでも、Worker 側で必ず間引かれる。
 class RoomViewLogger
   THROTTLE_WINDOW = 5.minutes
-  VALID_CATEGORIES = %w[room_status ranking stats].freeze
+  # app: アプリ全体へのアクセス（画面種別を問わない。5分窓でセッション的に数える）
+  VALID_CATEGORIES = %w[room_status ranking stats app].freeze
 
   # ログイン中ユーザーの Web 閲覧を記録する。
   # メイン処理をブロック・失敗させないよう、例外は握りつぶしてログのみ。
   # @param user [User, nil]
-  # @param category [String] "room_status" / "ranking" / "stats"
+  # @param category [String] "room_status" / "ranking" / "stats" / "app"
   def self.log_web_view(user, category: "room_status")
     return if user.blank?
     return unless enabled?

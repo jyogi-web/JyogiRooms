@@ -74,7 +74,7 @@ export default {
       const days = clampInt(url.searchParams.get("days"), 30, 1, 365);
       const recentLimit = clampInt(url.searchParams.get("limit"), 50, 1, 500);
       const categoryParam = url.searchParams.get("category");
-      const category = ["room_status", "ranking", "stats"].includes(categoryParam ?? "")
+      const category = ["room_status", "ranking", "stats", "app"].includes(categoryParam ?? "")
         ? categoryParam!
         : undefined;
       try {
