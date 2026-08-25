@@ -1,11 +1,11 @@
 import type { Env, ViewLogEvent } from "./types.js";
 import { DEFAULT_THROTTLE_TTL_SECONDS } from "./types.js";
 
-// throttle キー: 経路 + 識別子 単位。
-// web は user_id、discord は discord_id で区別する。
+// throttle キー: カテゴリ + 経路 + 識別子 単位。
+// カテゴリを含めるので、同一ユーザーが5分内にランキングと統計を見た場合は別々に記録される。
 export function throttleKey(event: ViewLogEvent): string {
   const identity = event.source === "web" ? `u:${event.user_id}` : `d:${event.discord_id}`;
-  return `throttle:${event.source}:${identity}`;
+  return `throttle:${event.category}:${event.source}:${identity}`;
 }
 
 export function throttleTtlSeconds(env: Env): number {

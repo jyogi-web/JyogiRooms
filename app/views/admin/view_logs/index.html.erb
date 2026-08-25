@@ -3,7 +3,7 @@
 
   <%= render "admin/nav" %>
 
-  <h2 class="text-xl font-bold text-gray-800">部室状況の閲覧ログ</h2>
+  <h2 class="text-xl font-bold text-gray-800">閲覧ログ</h2>
 
   <% if @error %>
     <div class="card p-6 text-center text-gray-600">
@@ -11,23 +11,56 @@
       <p class="text-sm text-gray-500 mt-2">閲覧ログは Cloudflare (view-log-worker) 側に保存されています。連携設定を確認してください。</p>
     </div>
   <% else %>
-    <!-- サマリー -->
+    <%
+      category_meta = {
+        "room_status" => { label: "部室状況", emoji: "🚪", badge: "bg-emerald-100 text-emerald-700" },
+        "ranking"     => { label: "ランキング", emoji: "👑", badge: "bg-amber-100 text-amber-700" },
+        "stats"       => { label: "統計", emoji: "📊", badge: "bg-sky-100 text-sky-700" }
+      }
+      by_category = (@stats["by_category"] || []).index_by { |c| c["category"] }
+      total_all = (@stats["by_category"] || []).sum { |c| c["count"] }
+    %>
+
+    <!-- カテゴリ絞り込みタブ -->
+    <div class="flex flex-wrap gap-2">
+      <%= link_to "全体", admin_view_logs_path,
+            class: "px-3 py-1 rounded-full text-sm font-medium #{@category.nil? ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <% %w[room_status ranking stats].each do |c| %>
+        <%= link_to "#{category_meta[c][:emoji]} #{category_meta[c][:label]}", admin_view_logs_path(category: c),
+              class: "px-3 py-1 rounded-full text-sm font-medium #{@category == c ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+      <% end %>
+    </div>
+
+    <!-- カテゴリ別サマリー（常に全体） -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div class="card p-4">
-        <p class="text-xs text-gray-500">累計閲覧数</p>
-        <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@stats["total"]) %></p>
+        <p class="text-xs text-gray-500">累計（全カテゴリ）</p>
+        <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(total_all) %></p>
       </div>
-      <% (@stats["by_source"] || []).each do |s| %>
-        <div class="card p-4">
-          <p class="text-xs text-gray-500"><%= s["source"] == "web" ? "Web" : (s["source"] == "discord" ? "Discord" : s["source"]) %></p>
-          <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(s["count"]) %></p>
+      <% %w[room_status ranking stats].each do |c| %>
+        <div class="card p-4 <%= "ring-2 ring-primary" if @category == c %>">
+          <p class="text-xs text-gray-500"><%= category_meta[c][:emoji] %> <%= category_meta[c][:label] %></p>
+          <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(by_category[c]&.fetch("count", 0) || 0) %></p>
         </div>
+      <% end %>
+    </div>
+
+    <!-- 経路別（現在の絞り込み反映） -->
+    <div class="flex flex-wrap gap-3">
+      <% (@stats["by_source"] || []).each do |s| %>
+        <div class="card px-4 py-2 flex items-center gap-2">
+          <span class="text-xs text-gray-500"><%= s["source"] == "web" ? "Web" : (s["source"] == "discord" ? "Discord" : s["source"]) %></span>
+          <span class="text-lg font-bold text-gray-900"><%= number_with_delimiter(s["count"]) %></span>
+        </div>
+      <% end %>
+      <% if @category %>
+        <span class="text-sm text-gray-500 self-center">（絞り込み: <%= category_meta[@category][:emoji] %> <%= category_meta[@category][:label] %>）</span>
       <% end %>
     </div>
 
     <!-- 日別 -->
     <div class="card p-4">
-      <h3 class="font-semibold text-gray-800 mb-3">日別閲覧数（直近<%= @days %>日）</h3>
+      <h3 class="font-semibold text-gray-800 mb-3">日別閲覧数（直近<%= @days %>日<%= "・#{category_meta[@category][:label]}" if @category %>）</h3>
       <% by_day = @stats["by_day"] || [] %>
       <% if by_day.any? %>
         <% max = by_day.map { |d| d["count"] }.max.to_f %>
@@ -56,6 +89,7 @@
             <thead class="bg-gray-100 border-b border-gray-200">
               <tr>
                 <th class="px-6 py-3 text-left font-semibold text-gray-700">ユーザー</th>
+                <th class="px-6 py-3 text-left font-semibold text-gray-700">カテゴリ</th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-700">経路</th>
                 <th class="px-6 py-3 text-left font-semibold text-gray-700">日時</th>
               </tr>
@@ -70,6 +104,14 @@
                     <% else %>
                       <p class="text-gray-500"><%= row[:raw_identity] %></p>
                       <p class="text-xs text-gray-400">未解決のユーザー</p>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-3">
+                    <% meta = category_meta[row[:category]] %>
+                    <% if meta %>
+                      <span class="inline-block px-2 py-0.5 rounded text-xs <%= meta[:badge] %>"><%= meta[:emoji] %> <%= meta[:label] %></span>
+                    <% else %>
+                      <span class="inline-block px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600"><%= row[:category] %></span>
                     <% end %>
                   </td>
                   <td class="px-6 py-3">

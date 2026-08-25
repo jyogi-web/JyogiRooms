@@ -10,12 +10,15 @@ export interface ViewLogEnv {
 	INGEST_SHARED_SECRET?: string;
 }
 
+// 閲覧対象のカテゴリ
+export type ViewCategory = 'room_status' | 'ranking' | 'stats';
+
 // Service Binding のルーティングに使う内部URL（ホストは任意・pathname のみ意味を持つ）
 const INGEST_URL = 'https://view-log-worker.internal/view-logs';
 
 // Discord 経路の閲覧を記録する。
 // 5分窓の重複間引き（throttle）は取り込み Worker 側で行われる。
-export async function logDiscordView(env: ViewLogEnv, discordUserId: string): Promise<void> {
+export async function logDiscordView(env: ViewLogEnv, discordUserId: string, category: ViewCategory): Promise<void> {
 	const service = env.VIEW_LOG;
 	const secret = env.INGEST_SHARED_SECRET;
 	if (!service || !secret) return; // 未設定なら no-op
@@ -29,6 +32,7 @@ export async function logDiscordView(env: ViewLogEnv, discordUserId: string): Pr
 			},
 			body: JSON.stringify({
 				source: 'discord',
+				category,
 				discord_id: discordUserId,
 				viewed_at: new Date().toISOString(),
 			}),

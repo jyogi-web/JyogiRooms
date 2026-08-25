@@ -2,7 +2,8 @@ import { createApi } from '../api.js';
 import type { RankingEntry } from '../api.js';
 import { PERIOD_LABELS } from '../constants.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, reply, replyEmbed } from './utils.js';
+import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
+import { logDiscordView } from '../viewLog.js';
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
@@ -26,7 +27,7 @@ export const rankCommand = {
         description: '部室の訪問回数・滞在時間ランキングを表示します',
     },
 
-    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv, ctx?: ExecutionContext): Promise<object> {
         const type = getStringOption(interaction, 'type') ?? 'visits';
         const period = getStringOption(interaction, 'period') ?? 'all';
         const room = getStringOption(interaction, 'room');
@@ -35,9 +36,15 @@ export const rankCommand = {
             const api = createApi(env);
             const data = await api.fetchRanking(type, period, room ?? 'all');
 
-            // 統計機能が無効（工事中）
+            // 統計機能が無効（工事中）: 記録しない
             if (data.enabled === false) {
                 return reply(data.message ?? '🚧 現在工事中です');
+            }
+
+            // 閲覧ログ（ランキング）。応答をブロックせず記録する
+            const discordUserId = getUserId(interaction);
+            if (discordUserId && ctx) {
+                ctx.waitUntil(logDiscordView(env, discordUserId, 'ranking'));
             }
 
             if (data.ranking.length === 0) {

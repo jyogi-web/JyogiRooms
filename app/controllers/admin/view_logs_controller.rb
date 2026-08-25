@@ -1,9 +1,11 @@
 class Admin::ViewLogsController < Admin::BaseController
   DAYS = 30
   RECENT_LIMIT = 100
+  CATEGORIES = %w[room_status ranking stats].freeze
 
   def index
-    result = ViewLogStatsClient.fetch(days: DAYS, limit: RECENT_LIMIT)
+    @category = params[:category].presence_in(CATEGORIES)
+    result = ViewLogStatsClient.fetch(days: DAYS, limit: RECENT_LIMIT, category: @category)
 
     unless result.ok
       @error = result.error
@@ -36,6 +38,7 @@ class Admin::ViewLogsController < Admin::BaseController
 
       {
         source: row["source"],
+        category: row["category"],
         viewed_at: parse_time(row["viewed_at"]),
         display_name: user&.display_name,
         username: user&.username,

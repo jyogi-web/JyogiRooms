@@ -1,10 +1,11 @@
-import type { ViewLogEvent, ViewSource } from "./types.js";
+import type { ViewLogEvent, ViewSource, ViewCategory } from "./types.js";
 
 export type ParseResult =
   | { ok: true; event: ViewLogEvent }
   | { ok: false; error: string };
 
 const VALID_SOURCES: ViewSource[] = ["web", "discord"];
+const VALID_CATEGORIES: ViewCategory[] = ["room_status", "ranking", "stats"];
 
 // 受信 JSON を検証して ViewLogEvent に正規化する。
 export function parseViewLogEvent(body: unknown): ParseResult {
@@ -21,6 +22,15 @@ export function parseViewLogEvent(body: unknown): ParseResult {
   const viewedAt = raw.viewed_at;
   if (typeof viewedAt !== "string" || Number.isNaN(Date.parse(viewedAt))) {
     return { ok: false, error: "viewed_at must be a valid ISO8601 string" };
+  }
+
+  // category: 未指定は後方互換で "room_status"
+  let category: ViewCategory = "room_status";
+  if (raw.category !== undefined && raw.category !== null) {
+    if (typeof raw.category !== "string" || !VALID_CATEGORIES.includes(raw.category as ViewCategory)) {
+      return { ok: false, error: "category must be one of room_status, ranking, stats" };
+    }
+    category = raw.category as ViewCategory;
   }
 
   // user_id: 数値 or 数値文字列 or 未指定
@@ -59,6 +69,7 @@ export function parseViewLogEvent(body: unknown): ParseResult {
     ok: true,
     event: {
       source: source as ViewSource,
+      category,
       viewed_at: new Date(viewedAt).toISOString(), // UTC 正規化
       user_id: userId,
       discord_id: discordId,
