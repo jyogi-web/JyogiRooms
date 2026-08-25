@@ -12,7 +12,19 @@ describe("parseViewLogEvent", () => {
       expect(r.event.user_id).toBe(12);
       expect(r.event.discord_id).toBeNull();
       expect(r.event.viewed_at).toBe("2026-08-24T01:00:00.000Z");
+      expect(r.event.category).toBe("room_status"); // 未指定は後方互換で room_status
     }
+  });
+
+  it("accepts an explicit category", () => {
+    const r = parseViewLogEvent({ source: "web", user_id: 1, category: "ranking", viewed_at: "2026-08-24T01:00:00Z" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.event.category).toBe("ranking");
+  });
+
+  it("rejects unknown category", () => {
+    const r = parseViewLogEvent({ source: "web", user_id: 1, category: "nope", viewed_at: "2026-08-24T01:00:00Z" });
+    expect(r.ok).toBe(false);
   });
 
   it("accepts a valid discord event", () => {
@@ -57,14 +69,20 @@ describe("parseViewLogEvent", () => {
 });
 
 describe("throttleKey", () => {
-  it("keys web by user_id", () => {
-    expect(throttleKey({ source: "web", user_id: 5, discord_id: null, viewed_at: "x" })).toBe(
-      "throttle:web:u:5"
-    );
+  it("keys web by category + user_id", () => {
+    expect(
+      throttleKey({ source: "web", category: "room_status", user_id: 5, discord_id: null, viewed_at: "x" })
+    ).toBe("throttle:room_status:web:u:5");
   });
-  it("keys discord by discord_id", () => {
-    expect(throttleKey({ source: "discord", user_id: null, discord_id: "42", viewed_at: "x" })).toBe(
-      "throttle:discord:d:42"
+  it("keys discord by category + discord_id", () => {
+    expect(
+      throttleKey({ source: "discord", category: "ranking", user_id: null, discord_id: "42", viewed_at: "x" })
+    ).toBe("throttle:ranking:discord:d:42");
+  });
+  it("separates categories for the same user", () => {
+    const base = { source: "web" as const, user_id: 5, discord_id: null, viewed_at: "x" };
+    expect(throttleKey({ ...base, category: "ranking" })).not.toBe(
+      throttleKey({ ...base, category: "stats" })
     );
   });
 });

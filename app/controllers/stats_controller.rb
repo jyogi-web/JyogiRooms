@@ -7,6 +7,9 @@ class StatsController < ApplicationController
 
   # GET /stats/ranking
   def ranking
+    # 閲覧ログ（ランキング）。工事中(before_action で弾かれた)場合はここに来ない
+    RoomViewLogger.log_web_view(current_user, category: "ranking")
+
     @period = valid_period(params[:period])
     @type = params[:type].presence || "visits"
     @room_param = params[:room].presence || "all"
@@ -30,6 +33,9 @@ class StatsController < ApplicationController
 
   # GET /stats/me
   def me
+    # 閲覧ログ（統計）。工事中(before_action で弾かれた)場合はここに来ない
+    RoomViewLogger.log_web_view(current_user, category: "stats")
+
     @period = valid_period(params[:period])
 
     base_scope = RoomVisit.where(user: current_user)

@@ -12,14 +12,17 @@ class ViewLogStatsClient
 
   # @param days [Integer] 日別集計の対象日数
   # @param limit [Integer] 最近の閲覧の取得件数
+  # @param category [String, nil] カテゴリ絞り込み（nil は全体）
   # @return [Result]
-  def self.fetch(days: 30, limit: 50)
+  def self.fetch(days: 30, limit: 50, category: nil)
     ingest_url = ENV["VIEW_LOG_INGEST_URL"]
     secret = ENV["VIEW_LOG_INGEST_SECRET"]
     return Result.new(ok: false, error: "閲覧ログ連携が未設定です（VIEW_LOG_INGEST_URL / VIEW_LOG_INGEST_SECRET）") if ingest_url.blank? || secret.blank?
 
     uri = URI("#{ingest_url}/stats")
-    uri.query = URI.encode_www_form(days: days, limit: limit)
+    query = { days: days, limit: limit }
+    query[:category] = category if category.present?
+    uri.query = URI.encode_www_form(query)
 
     request = Net::HTTP::Get.new(uri.request_uri)
     request["X-Ingest-Secret"] = secret

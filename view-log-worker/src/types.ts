@@ -13,9 +13,13 @@ export interface Env {
 
 export type ViewSource = "web" | "discord";
 
+// 閲覧対象のカテゴリ
+export type ViewCategory = "room_status" | "ranking" | "stats";
+
 // 取り込みエンドポイントが受け取る閲覧イベント
 export interface ViewLogEvent {
   source: ViewSource;
+  category: ViewCategory;
   viewed_at: string; // UTC ISO8601
   user_id: number | null; // Rails users.id（web）
   discord_id: string | null; // Discord ユーザーID（discord）

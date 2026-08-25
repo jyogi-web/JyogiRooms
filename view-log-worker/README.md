@@ -15,10 +15,12 @@ Web(Rails) と Discord(bot) の両経路が、この Worker の `POST /view-logs
 ボディ（JSON）:
 ```jsonc
 // web 経路
-{ "source": "web", "user_id": 123, "viewed_at": "2026-08-24T01:23:45Z" }
+{ "source": "web", "category": "ranking", "user_id": 123, "viewed_at": "2026-08-24T01:23:45Z" }
 // discord 経路
-{ "source": "discord", "discord_id": "1122334455", "viewed_at": "2026-08-24T01:23:45Z" }
+{ "source": "discord", "category": "stats", "discord_id": "1122334455", "viewed_at": "2026-08-24T01:23:45Z" }
 ```
+- `category` … `room_status`（部室状況） / `ranking`（ランキング） / `stats`（自分の統計）。省略時は `room_status`。
+  throttle(5分)は **カテゴリ別** に効く。
 
 レスポンス:
 - `201 { "recorded": true }` … D1 に追記した
@@ -31,14 +33,17 @@ Web(Rails) と Discord(bot) の両経路が、この Worker の `POST /view-logs
 クエリパラメータ:
 - `days` … 日別集計の対象日数。範囲 `1〜365`、既定 `30`（範囲外・未指定・空は既定）
 - `limit` … 最近の閲覧の取得件数。範囲 `1〜500`、既定 `50`
+- `category` … `room_status` / `ranking` / `stats` で絞り込み（未指定は全体）。
+  絞り込み時も `by_category` は常に全体を返す（管理画面のカテゴリ切替用）。
 
 レスポンス `200`:
 ```jsonc
 {
   "total": 1234,
-  "by_source": [{ "source": "web", "count": 1000 }, { "source": "discord", "count": 234 }],
-  "by_day":    [{ "day": "2026-08-24", "count": 42 }],   // viewed_at 基準・降順
-  "recent":    [{ "id": 9, "user_id": 123, "discord_id": null, "source": "web", "viewed_at": "2026-08-24T01:23:45.000Z" }]
+  "by_source":   [{ "source": "web", "count": 1000 }, { "source": "discord", "count": 234 }],
+  "by_category": [{ "category": "room_status", "count": 900 }, { "category": "ranking", "count": 234 }, { "category": "stats", "count": 100 }],
+  "by_day":      [{ "day": "2026-08-24", "count": 42 }],   // viewed_at 基準・降順
+  "recent":      [{ "id": 9, "user_id": 123, "discord_id": null, "source": "web", "category": "ranking", "viewed_at": "2026-08-24T01:23:45.000Z" }]
 }
 ```
 - `401 / 500` … 認可失敗 / 集計失敗

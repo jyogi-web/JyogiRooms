@@ -73,8 +73,12 @@ export default {
       }
       const days = clampInt(url.searchParams.get("days"), 30, 1, 365);
       const recentLimit = clampInt(url.searchParams.get("limit"), 50, 1, 500);
+      const categoryParam = url.searchParams.get("category");
+      const category = ["room_status", "ranking", "stats"].includes(categoryParam ?? "")
+        ? categoryParam!
+        : undefined;
       try {
-        const stats = await getStats(env, { days, recentLimit });
+        const stats = await getStats(env, { days, recentLimit, category });
         return json(200, stats);
       } catch (error) {
         console.error("getStats failed:", error);
