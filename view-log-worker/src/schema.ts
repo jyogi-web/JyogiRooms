@@ -5,7 +5,7 @@ export type ParseResult =
   | { ok: false; error: string };
 
 const VALID_SOURCES: ViewSource[] = ["web", "discord"];
-const VALID_CATEGORIES: ViewCategory[] = ["room_status", "ranking", "stats"];
+const VALID_CATEGORIES: ViewCategory[] = ["room_status", "ranking", "stats", "app"];
 
 // 受信 JSON を検証して ViewLogEvent に正規化する。
 export function parseViewLogEvent(body: unknown): ParseResult {
@@ -28,7 +28,7 @@ export function parseViewLogEvent(body: unknown): ParseResult {
   let category: ViewCategory = "room_status";
   if (raw.category !== undefined && raw.category !== null) {
     if (typeof raw.category !== "string" || !VALID_CATEGORIES.includes(raw.category as ViewCategory)) {
-      return { ok: false, error: "category must be one of room_status, ranking, stats" };
+      return { ok: false, error: "category must be one of room_status, ranking, stats, app" };
     }
     category = raw.category as ViewCategory;
   }

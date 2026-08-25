@@ -22,6 +22,12 @@ describe("parseViewLogEvent", () => {
     if (r.ok) expect(r.event.category).toBe("ranking");
   });
 
+  it("accepts the app category (アプリ全体アクセス)", () => {
+    const r = parseViewLogEvent({ source: "web", user_id: 1, category: "app", viewed_at: "2026-08-24T01:00:00Z" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.event.category).toBe("app");
+  });
+
   it("rejects unknown category", () => {
     const r = parseViewLogEvent({ source: "web", user_id: 1, category: "nope", viewed_at: "2026-08-24T01:00:00Z" });
     expect(r.ok).toBe(false);
@@ -83,6 +89,12 @@ describe("throttleKey", () => {
     const base = { source: "web" as const, user_id: 5, discord_id: null, viewed_at: "x" };
     expect(throttleKey({ ...base, category: "ranking" })).not.toBe(
       throttleKey({ ...base, category: "stats" })
+    );
+  });
+  it("separates app from room_status for the same user (画面ログと全体アクセスは独立)", () => {
+    const base = { source: "web" as const, user_id: 5, discord_id: null, viewed_at: "x" };
+    expect(throttleKey({ ...base, category: "app" })).not.toBe(
+      throttleKey({ ...base, category: "room_status" })
     );
   });
 });

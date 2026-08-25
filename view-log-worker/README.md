@@ -1,6 +1,6 @@
 # view-log-worker
 
-「閲覧ログ」を取り込む Cloudflare Worker。カテゴリ（部室状況 `room_status` / ランキング `ranking` / 自分の統計 `stats`）ごとに、誰がいつ見たかを記録する。
+「閲覧ログ」を取り込む Cloudflare Worker。カテゴリ（部室状況 `room_status` / ランキング `ranking` / 自分の統計 `stats` / アプリ全体アクセス `app`）ごとに、誰がいつ見たかを記録する。
 
 - **D1 (`VIEW_LOGS_DB`)** … 閲覧ログ本体（永続・分析対象）。Neon の容量・稼働を消費しない。
 - **KV (`THROTTLE_KV`)** … throttle 窓（同一ユーザー・同一カテゴリの5分以内の重複を間引く。TTL で自動失効）。
@@ -19,7 +19,7 @@ Web(Rails) と Discord(bot) の両経路が、この Worker の `POST /view-logs
 // discord 経路
 { "source": "discord", "category": "stats", "discord_id": "1122334455", "viewed_at": "2026-08-24T01:23:45Z" }
 ```
-- `category` … `room_status`（部室状況） / `ranking`（ランキング） / `stats`（自分の統計）。省略時は `room_status`。
+- `category` … `room_status`（部室状況） / `ranking`（ランキング） / `stats`（自分の統計） / `app`（アプリ全体アクセス・Rails から画面種別なしで送られる）。省略時は `room_status`。
   throttle(5分)は **カテゴリ別** に効く。
 
 レスポンス:
@@ -33,7 +33,7 @@ Web(Rails) と Discord(bot) の両経路が、この Worker の `POST /view-logs
 クエリパラメータ:
 - `days` … 日別集計の対象日数。範囲 `1〜365`、既定 `30`（範囲外・未指定・空は既定）
 - `limit` … 最近の閲覧の取得件数。範囲 `1〜500`、既定 `50`
-- `category` … `room_status` / `ranking` / `stats` で絞り込み（未指定は全体）。
+- `category` … `room_status` / `ranking` / `stats` / `app` で絞り込み（未指定は全体）。
   絞り込み時も `by_category` は常に全体を返す（管理画面のカテゴリ切替用）。
 
 レスポンス `200`:

@@ -14,7 +14,8 @@ export interface Env {
 export type ViewSource = "web" | "discord";
 
 // 閲覧対象のカテゴリ
-export type ViewCategory = "room_status" | "ranking" | "stats";
+// app: アプリ全体へのアクセス（画面種別を問わない・5分窓でセッション的に数える）
+export type ViewCategory = "room_status" | "ranking" | "stats" | "app";
 
 // 取り込みエンドポイントが受け取る閲覧イベント
 export interface ViewLogEvent {

@@ -15,8 +15,10 @@
       category_meta = {
         "room_status" => { label: "部室状況", emoji: "🚪", badge: "bg-emerald-100 text-emerald-700" },
         "ranking"     => { label: "ランキング", emoji: "👑", badge: "bg-amber-100 text-amber-700" },
-        "stats"       => { label: "統計", emoji: "📊", badge: "bg-sky-100 text-sky-700" }
+        "stats"       => { label: "統計", emoji: "📊", badge: "bg-sky-100 text-sky-700" },
+        "app"         => { label: "アプリ", emoji: "📱", badge: "bg-violet-100 text-violet-700" }
       }
+      categories = Admin::ViewLogsController::CATEGORIES
       by_category = (@stats["by_category"] || []).index_by { |c| c["category"] }
       total_all = (@stats["by_category"] || []).sum { |c| c["count"] }
     %>
@@ -25,19 +27,19 @@
     <div class="flex flex-wrap gap-2">
       <%= link_to "全体", admin_view_logs_path,
             class: "px-3 py-1 rounded-full text-sm font-medium #{@category.nil? ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
-      <% %w[room_status ranking stats].each do |c| %>
+      <% categories.each do |c| %>
         <%= link_to "#{category_meta[c][:emoji]} #{category_meta[c][:label]}", admin_view_logs_path(category: c),
               class: "px-3 py-1 rounded-full text-sm font-medium #{@category == c ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
       <% end %>
     </div>
 
     <!-- カテゴリ別サマリー（常に全体） -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
       <div class="card p-4">
         <p class="text-xs text-gray-500">累計（全カテゴリ）</p>
         <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(total_all) %></p>
       </div>
-      <% %w[room_status ranking stats].each do |c| %>
+      <% categories.each do |c| %>
         <div class="card p-4 <%= "ring-2 ring-primary" if @category == c %>">
           <p class="text-xs text-gray-500"><%= category_meta[c][:emoji] %> <%= category_meta[c][:label] %></p>
           <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(by_category[c]&.fetch("count", 0) || 0) %></p>

@@ -1,7 +1,7 @@
 class Admin::ViewLogsController < Admin::BaseController
   DAYS = 30
   RECENT_LIMIT = 100
-  CATEGORIES = %w[room_status ranking stats].freeze
+  CATEGORIES = %w[room_status ranking stats app].freeze
 
   def index
     @category = params[:category].presence_in(CATEGORIES)

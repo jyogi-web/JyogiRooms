@@ -1,0 +1,53 @@
+name: Deploy View Log Worker to Cloudflare Workers
+
+on:
+  push:
+    branches: [develop,main]
+    paths:
+      - 'view-log-worker/**'
+
+# デプロイ先（jyogi-view-log-worker）単位のグループ。
+# develop/main の両方から同じ Worker にデプロイされるため、ブランチを跨いで直列化し、
+# 新しいコミットの実行を優先する（古い実行が後からデプロイを完了するのを防ぐ）。
+concurrency:
+  group: deploy-view-log-worker
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: view-log-worker/package-lock.json
+
+      - name: Install dependencies
+        working-directory: view-log-worker
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: view-log-worker
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: view-log-worker
+        run: npm test
+
+      - name: Deploy to Cloudflare Workers
+        working-directory: view-log-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
