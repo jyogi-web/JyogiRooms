@@ -5,6 +5,9 @@ on:
     branches: [develop,main]
     paths:
       - 'view-log-worker/**'
+      # workflow 自体の変更（Node バージョン等のデプロイ環境修正）でも
+      # 再デプロイされるようにする
+      - '.github/workflows/deploy-view-log-worker.yml'
 
 # デプロイ先（jyogi-view-log-worker）単位のグループ。
 # develop/main の両方から同じ Worker にデプロイされるため、ブランチを跨いで直列化し、
@@ -29,7 +32,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: '20'
+          # wrangler 4.78+ は Node 22 以降を要求する（lockfile は 4.125.0 に解決済み）。
+          # Node 20 のままデプロイすると "Wrangler requires at least Node.js v22.0.0" で失敗する。
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: view-log-worker/package-lock.json
 
