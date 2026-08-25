@@ -29,7 +29,8 @@ class RoomViewLogJob < ApplicationJob
   # @param user_id [Integer, nil] Rails users.id
   # @param discord_id [String, nil] Discord ユーザーID
   # @param viewed_at [String] UTC ISO8601
-  def perform(source, category:, user_id:, discord_id:, viewed_at:)
+  # category は後方互換のため既定を持つ（旧シグネチャで投入済みのジョブが失敗しないように）
+  def perform(source, category: "room_status", user_id:, discord_id:, viewed_at:)
     url = ENV["VIEW_LOG_INGEST_URL"]
     secret = ENV["VIEW_LOG_INGEST_SECRET"]
     return if url.blank? || secret.blank?

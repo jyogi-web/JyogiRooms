@@ -1,9 +1,9 @@
 # view-log-worker
 
-部室状況の「閲覧ログ」を取り込む Cloudflare Worker。
+「閲覧ログ」を取り込む Cloudflare Worker。カテゴリ（部室状況 `room_status` / ランキング `ranking` / 自分の統計 `stats`）ごとに、誰がいつ見たかを記録する。
 
 - **D1 (`VIEW_LOGS_DB`)** … 閲覧ログ本体（永続・分析対象）。Neon の容量・稼働を消費しない。
-- **KV (`THROTTLE_KV`)** … throttle 窓（同一ユーザーの5分以内の重複を間引く。TTL で自動失効）。
+- **KV (`THROTTLE_KV`)** … throttle 窓（同一ユーザー・同一カテゴリの5分以内の重複を間引く。TTL で自動失効）。
 
 Web(Rails) と Discord(bot) の両経路が、この Worker の `POST /view-logs` に集約して書き込む。
 
