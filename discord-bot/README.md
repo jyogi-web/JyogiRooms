@@ -1,16 +1,16 @@
 # Jyogi Rooms Discord Bot
 
-Jyogi Rooms の Discord 連携ボット。部室予約の確認・作成と施錠アナウンスを提供する。
+Jyogi Rooms の Discord 連携ボット。部室予約の確認・作成、部室状況・鍵持ちの確認、利用統計の表示を提供する。
 
 ## アーキテクチャ
 
 **HTTP Interactions 方式**を採用。Discord Gateway（WebSocket 常時接続）は使わず、Discord からの HTTP POST リクエストを受け取ってレスポンスを返す。
 
 ```
-Discord → POST /interactions → server.ts → commands/* → JSON レスポンス
+Discord → POST /interactions → worker.ts → commands/* → JSON レスポンス
 ```
 
-これにより Cloud Run 等のサーバーレス環境でスケール to 0 が可能になり、コストを抑えられる。
+Cloudflare Workers 上で動作する（`wrangler.toml` の `main = "src/worker.ts"`）。常駐プロセスを持たないため、リクエストがないときはコストがかからない。
 
 ## 機能
 
@@ -21,19 +21,20 @@ Discord → POST /interactions → server.ts → commands/* → JSON レスポ�
 | `/list` | 今後の予約一覧を表示（最大10件） |
 | `/check` | 指定日の予約を確認。`preset`（今日/明日）または `date`（MM/DD 等）で指定 |
 | `/reserve` | 予約を新規作成。`date`, `start`, `end`, `purpose`（任意）を指定 |
+| `/status` | 部室の状況を確認 |
 | `/key` | 各部室の鍵持ち一覧を表示 |
 | `/call` | 指定した部室の鍵持ちをメンションして通知 |
-| `/status` | 部室の状況を確認 |
+| `/me` | 自分の部室利用統計を表示 |
+| `/rank` | 部室の訪問日数・滞在時間ランキングを表示 |
+| `/help` | コマンドの使い方を表示 |
 
 部室の開室・閉室・入室・退室は Discord コマンドでは行わず、WebアプリまたはNFCで処理します。
 
-### 施錠アナウンス（cron）
-
-`LOCK_ANNOUNCE_CRON` で指定した時刻に、`ANNOUNCE_CHANNEL_ID` のチャンネルへ施錠リマインドを送信する。Discord REST API を使用するため Gateway 接続不要。
+施錠アナウンスは Rails 側（`LockAnnounceJob`）から送信しており、この Bot には含まれません。
 
 ### ヘルスチェック
 
-`GET /health` → `200 OK` を返す。Cloud Run のヘルスチェック用。
+`GET /health` → `200 OK` を返す。
 
 ## セットアップ
 
@@ -44,24 +45,30 @@ cd discord-bot
 npm install
 ```
 
-### 2. 環境変数の設定
+### 2. 環境変数・シークレットの設定
 
-`.env.example` をコピーして `.env` を作成し、各値を設定する。
+Worker が使う値は以下のとおり。本番では `API_BASE_URL` は `wrangler.toml` の `[vars]`、それ以外は Cloudflare の Secret として設定する。
 
 ```bash
-cp .env.example .env
+npx wrangler secret put DISCORD_PUBLIC_KEY
 ```
 
-| 変数名 | 必須 | 説明 |
-|---|---|---|
-| `DISCORD_BOT_TOKEN` | Yes | Discord Bot トークン |
-| `DISCORD_CLIENT_ID` | Yes | Discord Application ID（コマンドデプロイ時に使用） |
-| `DISCORD_PUBLIC_KEY` | Yes | Discord Application の Public Key（署名検証用） |
-| `ANNOUNCE_CHANNEL_ID` | No | 施錠アナウンスを送信するチャンネル ID |
-| `LOCK_ANNOUNCE_CRON` | No | 施錠アナウンスの cron 式（デフォルト: `0 11 * * *` UTC = 20:00 JST） |
-| `API_ACCESS_TOKEN` | Yes | Rails API の認証トークン |
-| `API_BASE_URL` | Yes | Rails API の URL（例: `https://jyogi-rooms.jyogi.net/api`） |
-| `PORT` | No | HTTP サーバーのポート（デフォルト: `3000`） |
+| 変数名 | 必須 | 設定先 | 説明 |
+|---|---|---|---|
+| `DISCORD_PUBLIC_KEY` | Yes | Secret | Discord Application の Public Key（署名検証用） |
+| `DISCORD_CLIENT_ID` | Yes | Secret | Discord Application ID（応答が遅いときのフォローアップ送信に使用） |
+| `API_ACCESS_TOKEN` | Yes | Secret | Rails API の認証トークン |
+| `API_BASE_URL` | Yes | `wrangler.toml` | Rails API の URL（例: `https://rooms.jyogi.net/api`） |
+| `INGEST_SHARED_SECRET` | No | Secret | 閲覧ログ Worker（`view-log-worker`）との共有シークレット。同じ値を両方に設定する |
+
+閲覧ログ Worker へは `wrangler.toml` の Service Binding（`VIEW_LOG`）で接続する。`VIEW_LOG` と `INGEST_SHARED_SECRET` のどちらかが未設定の場合、閲覧ログの記録は行われない。
+
+スラッシュコマンドの登録（`npm run deploy-commands`）には、`.env` に以下を設定する。
+
+| 変数名 | 説明 |
+|---|---|
+| `DISCORD_BOT_TOKEN` | Discord Bot トークン |
+| `DISCORD_CLIENT_ID` | Discord Application ID |
 
 `DISCORD_BOT_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_PUBLIC_KEY` は [Discord Developer Portal](https://discord.com/developers/applications) の対象アプリケーションから取得する。
 
@@ -88,22 +95,31 @@ Discord が URL に対して PING を送信し、署名検証を含めた疎通�
 ### 開発サーバー起動
 
 ```bash
-npm run dev
+npm run dev    # wrangler dev（デフォルト: http://localhost:8787）
 ```
 
-ローカルで開発する場合、Discord からの HTTP リクエストを受け取るために [ngrok](https://ngrok.com/) 等のトンネルツールが必要。
+ローカル実行時のシークレットは `.dev.vars`（なければ `.env`）から読み込まれる。
+
+Discord からの HTTP リクエストを受け取るには [ngrok](https://ngrok.com/) 等のトンネルツールが必要。
 
 ```bash
-ngrok http 3000
+ngrok http 8787
 ```
 
 表示された URL を Discord Developer Portal の Interactions Endpoint URL に設定する。
 
-### ビルド
+### 型チェック
 
 ```bash
-npm run build    # TypeScript → JavaScript（dist/）
-npm start        # ビルド後に実行
+npm run build    # Worker 用の TypeScript をコンパイル（dist/）
+```
+
+### デプロイ
+
+develop・main ブランチへの Push（`discord-bot/` 配下の変更時）で、GitHub Actions（`deploy-discord-bot.yml`）が `wrangler deploy` を実行する。手動でデプロイする場合は以下。
+
+```bash
+npm run deploy
 ```
 
 ## ディレクトリ構成
@@ -111,17 +127,21 @@ npm start        # ビルド後に実行
 ```
 discord-bot/
 ├── src/
-│   ├── index.ts              # エントリーポイント（サーバー起動 + cron 開始）
-│   ├── server.ts             # HTTP サーバー（/interactions, /health）
+│   ├── worker.ts             # Workers エントリーポイント（/interactions, /health）
 │   ├── api.ts                # Rails API クライアント
-│   ├── lockAnnounce.ts       # 施錠アナウンス cron（REST API 使用）
+│   ├── viewLog.ts            # 閲覧ログ Worker への送信クライアント
+│   ├── constants.ts          # 共通定数
 │   ├── deploy-commands.ts    # スラッシュコマンド登録スクリプト
 │   └── commands/
 │       ├── index.ts          # コマンド一覧
-│       └── [コマンド名].ts         # 各コマンド実装
-├── dist/                     # ビルド出力
+│       ├── types.ts          # 型定義
+│       ├── utils.ts          # オプション取得・日付処理・レスポンス生成などの共通処理
+│       └── [コマンド名].ts     # 各コマンド実装
 ├── package.json
-├── tsconfig.json
+├── tsconfig.json             # 共通設定
+├── tsconfig.worker.json      # Worker 用（npm run build）
+├── tsconfig.deploy.json      # deploy-commands 用
+├── wrangler.toml
 └── .env.example
 ```
 
@@ -129,8 +149,8 @@ discord-bot/
 
 1. ユーザーが Discord でスラッシュコマンドを実行
 2. Discord が `POST /interactions` にリクエストを送信
-3. `server.ts` が署名を検証（`discord-interactions`）
+3. `worker.ts` が署名を検証（`discord-interactions`）
 4. コマンドに応じたハンドラーを実行（`commands/*.ts`）
 5. Rails API と通信して予約・鍵・部室状態データを取得
-6. JSON レスポンスを Discord に返却
+6. JSON レスポンスを Discord に返却（2.5秒以内に終わらない場合は Deferred レスポンスを返し、完了後にフォローアップでメッセージを更新）
 7. Discord がユーザーにメッセージを表示
