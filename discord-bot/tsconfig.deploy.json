@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": [
-    "src/worker.ts"
+  "include": [
+    "src/deploy-commands.ts"
   ]
 }
