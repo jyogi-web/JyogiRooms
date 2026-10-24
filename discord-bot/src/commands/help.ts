@@ -22,6 +22,7 @@ export const helpCommand = {
             'Webアプリ「JyogiRooms」の一部機能をDiscordから利用できるBotです。',
             '',
             '`*` = 入力必須',
+            '`public` `False` で結果を自分だけに表示（`/call` `/help` 以外の全コマンド共通／デフォルト: 全員に表示）',
             '',
             '### 📅 部室予約',
             '`/list` — 今後の予約一覧を表示（最大10件）',
