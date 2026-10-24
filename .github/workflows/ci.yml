@@ -50,6 +50,33 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+  discord-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: discord-bot/package-lock.json
+
+      - name: Install dependencies
+        working-directory: discord-bot
+        run: npm ci
+
+      # wrangler deploy は型チェックせずにバンドルするため、型エラーはここで検出する
+      - name: Type check worker
+        working-directory: discord-bot
+        run: npx tsc -p tsconfig.worker.json --noEmit
+
+      - name: Type check deploy-commands
+        working-directory: discord-bot
+        run: npx tsc -p tsconfig.deploy.json --noEmit
+
   test:
     runs-on: ubuntu-latest
 
