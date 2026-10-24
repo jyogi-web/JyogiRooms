@@ -44,7 +44,7 @@
 | `ci.yml` | PR / develop・mainへのPush | Brakeman, Bundler-audit, RuboCop, Minitest, システムテスト |
 | `deploy-discord-bot.yml` | develop・mainへのPush（`discord-bot/`配下の変更時） | `wrangler deploy`でCloudflare Workersにデプロイ |
 | `deploy-raspi.yml` | develop・mainへのPush（`discord-bot/`配下以外の変更時） | ラズパイ上でdocker-composeビルド・起動 |
-| `deploy-view-log-worker.yml` | develop・mainへのPush（`view-log-worker/`配下の変更時） | `wrangler deploy`でCloudflare Workersにデプロイ |
+| `deploy-view-log-worker.yml` | develop・mainへのPush（`view-log-worker/`配下またはワークフロー自体の変更時） | `wrangler deploy`でCloudflare Workersにデプロイ |
 
 ## セキュリティ・品質ツール
 

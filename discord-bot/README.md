@@ -10,7 +10,7 @@ Jyogi Rooms の Discord 連携ボット。部室予約の確認・作成、部�
 Discord → POST /interactions → worker.ts → commands/* → JSON レスポンス
 ```
 
-Cloudflare Workers 上で動作する（`wrangler.toml` の `main = "src/worker.ts"`）。常駐プロセスを持たないため、リクエストがないときはコストがかからない。
+Cloudflare Workers 上で動作する（`wrangler.toml` の `main = "src/worker.ts"`）。常駐プロセスを持たず、リクエストごとに実行される。
 
 ## 機能
 
@@ -101,6 +101,16 @@ npm run dev    # wrangler dev（デフォルト: http://localhost:8787）
 ```
 
 ローカル実行時のシークレットは `.dev.vars`（なければ `.env`）から読み込まれる。
+
+**注意:** `wrangler.toml` の `API_BASE_URL` は本番 API（`https://rooms.jyogi.net/api`）を指している。そのまま `npm run dev` すると、`/reserve` などが本番データを操作してしまうため、`.dev.vars` で開発用の API に上書きする（`.dev.vars` の値は `wrangler.toml` の `[vars]` より優先される）。
+
+```bash
+# discord-bot/.dev.vars（Git 管理外）
+API_BASE_URL=http://localhost:3000/api
+API_ACCESS_TOKEN=<開発環境の Rails API トークン>
+DISCORD_PUBLIC_KEY=<開発用 Discord Application の Public Key>
+DISCORD_CLIENT_ID=<開発用 Discord Application ID>
+```
 
 Discord からの HTTP リクエストを受け取るには [ngrok](https://ngrok.com/) 等のトンネルツールが必要。
 
