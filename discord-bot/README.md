@@ -28,6 +28,8 @@ Cloudflare Workers 上で動作する（`wrangler.toml` の `main = "src/worker.
 | `/rank` | 部室の訪問日数・滞在時間ランキングを表示 |
 | `/help` | コマンドの使い方を表示 |
 
+`/call` と `/help` 以外のコマンドは `public` オプションを持ち、`public:False` を指定すると結果を自分だけに表示する（デフォルトは全員に表示）。`/help` は逆で、デフォルトが自分だけ・`public:True` で全員に表示。
+
 部室の開室・閉室・入室・退室は Discord コマンドでは行わず、WebアプリまたはNFCで処理します。
 
 施錠アナウンスは Rails 側（`LockAnnounceJob`）から送信しており、この Bot には含まれません。
@@ -74,7 +76,7 @@ npx wrangler secret put DISCORD_PUBLIC_KEY
 
 ### 3. スラッシュコマンドの登録
 
-Discord にコマンド定義を登録する。初回およびコマンド定義変更時に実行が必要。
+Discord にコマンド定義（オプション等）を登録する。develop・main への Push 時に GitHub Actions がデプロイ後に自動で実行するため、通常は手動実行不要。初回セットアップ時や手元で確認したいときは以下を実行する。
 
 ```bash
 npm run deploy-commands
@@ -116,7 +118,18 @@ npm run build    # Worker 用の TypeScript をコンパイル（dist/）
 
 ### デプロイ
 
-develop・main ブランチへの Push（`discord-bot/` 配下の変更時）で、GitHub Actions（`deploy-discord-bot.yml`）が `wrangler deploy` を実行する。手動でデプロイする場合は以下。
+develop・main ブランチへの Push（`discord-bot/` 配下の変更時）で、GitHub Actions（`deploy-discord-bot.yml`）が `wrangler deploy` を実行し、続けて `npm run deploy-commands` でスラッシュコマンド定義を登録する。
+
+GitHub リポジトリの Secrets に以下が必要。
+
+| Secret | 用途 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` | `wrangler deploy` |
+| `DISCORD_BOT_TOKEN` / `DISCORD_CLIENT_ID` | `npm run deploy-commands` |
+
+PR では CI（`ci.yml` の `discord-bot` ジョブ）で Worker 用・deploy-commands 用の型チェックを行う。
+
+手動でデプロイする場合は以下。
 
 ```bash
 npm run deploy
