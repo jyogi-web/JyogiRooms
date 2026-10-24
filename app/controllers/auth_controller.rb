@@ -20,22 +20,13 @@ class AuthController < ApplicationController
       session[:return_to] = sanitized if sanitized.present?
     end
 
-    state = SecureRandom.hex(16)
-    session[:oauth_state] = state
-
-    authorization_url = JyogiAuthClient.authorization_url(state: state)
+    authorization_url = JyogiAuthClient.authorization_url
     redirect_to authorization_url, allow_other_host: true
   end
 
   # GET /auth/callback
   # OAuth2コールバック処理
   def callback
-    # stateパラメータ検証（CSRF対策）
-    unless valid_state?
-      redirect_to error_redirect_url("Invalid state parameter"), allow_other_host: true
-      return
-    end
-
     code = params[:code]
     unless code
       redirect_to error_redirect_url("Authorization code not found"), allow_other_host: true
@@ -95,12 +86,6 @@ class AuthController < ApplicationController
   end
 
   private
-
-  def valid_state?
-    stored_state = session[:oauth_state]
-    received_state = params[:state]
-    stored_state.present? && received_state.present? && stored_state == received_state
-  end
 
   def find_or_create_user(user_info)
     jyogi_user_id = user_info["id"]

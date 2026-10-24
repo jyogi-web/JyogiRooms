@@ -4,7 +4,7 @@
 
 | 技術 | バージョン | 選定理由 |
 |------|-----------|---------|
-| Ruby | 3.4.8 | 最新安定版 |
+| Ruby | 3.4.12 | 最新安定版 |
 | Ruby on Rails | 8.1 | フルスタックWebフレームワーク、Solid Queue/Cache/Cable による外部ミドルウェア不要の構成 |
 | Puma | 7.x | Rails標準のWebサーバー |
 | PostgreSQL | - | JSONB対応（room_statusの非正規化に活用）、堅牢なRDB |

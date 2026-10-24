@@ -36,6 +36,8 @@ class RoomStateService
   # @param user [User]
   # @return [RoomSession]
   def self.close(room:, user:)
+    now = Time.current
+
     session = ActiveRecord::Base.transaction do
       # 部室行ロックで同一部室の同時リクエストをシリアライズ
       room.lock!
@@ -43,8 +45,8 @@ class RoomStateService
       session = RoomSession.active.for_room(room).first
       raise StateError, "この部室は開室していません" unless session
 
-      RoomVisit.active.for_room(room).update_all(exited_at: Time.current)
-      session.update!(closed_at: Time.current, closed_by: user)
+      RoomVisit.active.for_room(room).update_all(exited_at: now, source: "room_close")
+      session.update!(closed_at: now, closed_by: user)
       room.room_status.update!(is_open: false, opened_at: nil, opened_by: nil, occupants: [], occupant_count: 0)
 
       session

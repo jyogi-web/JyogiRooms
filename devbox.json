@@ -8,11 +8,14 @@
     "postgresql@17",
     "pkg-config@latest",
     "libyaml.dev",
-    "git@latest"
+    "git@latest",
+    "clang@latest",
+    "gnumake@latest"
   ],
   "shell": {
     "init_hook": [
-      "echo 'Welcome to devbox!'"
+      "echo 'Welcome to devbox!'",
+      "if [ \"$(uname)\" = \"Darwin\" ]; then _dd=$(DEVELOPER_DIR= /usr/bin/xcode-select -p 2>/dev/null); if [ -d \"$_dd\" ]; then export DEVELOPER_DIR=\"$_dd\"; _sdk=$(SDKROOT= /usr/bin/xcrun --show-sdk-path 2>/dev/null); [ -d \"$_sdk\" ] && export SDKROOT=\"$_sdk\"; fi; fi"
     ],
     "scripts": {
       "dev": [

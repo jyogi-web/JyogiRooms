@@ -37,3 +37,22 @@
         padding-bottom: env(safe-area-inset-bottom);
     }
 }
+
+/* Turbo Drive Progress Bar */
+.turbo-progress {
+    background: linear-gradient(to right, #1e3a8a, #3b82f6);
+    height: 3px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 10px rgba(30, 58, 138, 0.5);
+}
+
+/* Navigation loading state */
+.nav-loading {
+    pointer-events: none;
+    opacity: 0.6;
+}

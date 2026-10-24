@@ -1,7 +1,7 @@
 import { createApi } from '../api.js';
-import { PERIOD_LABELS } from '../constants.js';
 import type { Interaction, CommandEnv } from './types.js';
-import { getStringOption, getUserId, reply, replyEmbed } from './utils.js';
+import { getIntegerOption, getUserId, reply, replyEmbed } from './utils.js';
+import { logDiscordView } from '../viewLog.js';
 
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
@@ -18,48 +18,46 @@ export const meCommand = {
         description: '自分の部室利用統計を表示します',
     },
 
-    async execute(interaction: Interaction, env: CommandEnv): Promise<object> {
+    async execute(interaction: Interaction, env: CommandEnv, ctx?: ExecutionContext): Promise<object> {
         const discordUserId = getUserId(interaction);
         if (!discordUserId) {
             return reply('ユーザー情報を取得できませんでした。');
         }
 
-        const period = getStringOption(interaction, 'period') ?? 'all';
+        const roomParam = getIntegerOption(interaction, 'room');
+        const room = roomParam === null ? 'all' : String(roomParam);
 
         try {
             const api = createApi(env);
-            const data = await api.fetchMyStats(discordUserId, period);
+            const data = await api.fetchMyStats(discordUserId, room);
 
-            const periodLabel = PERIOD_LABELS[period] ?? period;
-            const title = `📊 ${data.user.display_name} の部室利用統計（${periodLabel}）`;
+            // 統計機能が無効（工事中）: 記録しない
+            if (data.enabled === false) {
+                return reply(data.message ?? '🚧 現在工事中です');
+            }
+
+            // 閲覧ログ（統計）。応答をブロックせず記録する
+            if (ctx) {
+                ctx.waitUntil(logDiscordView(env, discordUserId, 'stats'));
+            }
+
+            const roomLabel = room === 'all' ? '全体' : `🚪第${room}部室`;
+            const title = `📊 ${data.user.display_name} の部室利用統計（${roomLabel}）`;
 
             const lines: string[] = [];
 
-            // ランキング順位
-            const rankPeriodLabel = PERIOD_LABELS[data.rank.period] ?? data.rank.period;
             if (data.rank.visit.position !== null) {
-                lines.push(`🏅 訪問日数ランキング: **${data.rank.visit.position}位** / ${data.rank.visit.total_users}人中（${rankPeriodLabel}）`);
+                lines.push(`🏅 訪問日数ランキング: **${data.rank.visit.position}位** / ${data.rank.visit.total_users}人中`);
             }
             if (data.rank.duration.position !== null) {
-                lines.push(`⏱️ 滞在時間ランキング: **${data.rank.duration.position}位** / ${data.rank.duration.total_users}人中（${rankPeriodLabel}）`);
+                lines.push(`⏱️ 滞在時間ランキング: **${data.rank.duration.position}位** / ${data.rank.duration.total_users}人中`);
             }
             if (data.rank.visit.position !== null || data.rank.duration.position !== null) {
                 lines.push('');
             }
 
-            // 全体の統計
-            lines.push('### 🏠 全体');
             lines.push(`訪問日数: **${data.total.visit_days}日**`);
             lines.push(`滞在時間: **${formatDuration(data.total.total_seconds)}**`);
-            lines.push('');
-
-            // 部室ごとの統計
-            for (const room of data.rooms) {
-                lines.push(`### 🚪 ${room.room_name}`);
-                lines.push(`訪問日数: **${room.visit_days}日**`);
-                lines.push(`滞在時間: **${formatDuration(room.total_seconds)}**`);
-                lines.push('');
-            }
 
             return replyEmbed(title, lines.join('\n'));
         } catch (error) {

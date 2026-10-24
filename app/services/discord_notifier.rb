@@ -19,8 +19,8 @@ class DiscordNotifier
   }.freeze
 
   ROOM_LABELS = {
-    "room_entered" => { title: "📱 入室しました", color: 0x00cc66 },
-    "room_exited" => { title: "📱 退室しました", color: 0xff9900 },
+    "room_entered" => { title: "🟢 入室しました", color: 0x00cc66 },
+    "room_exited" => { title: "🟠 退室しました", color: 0xff9900 },
     "room_opened" => { title: "🔓 部室が開きました", color: 0x0099ff },
     "room_closed" => { title: "🔒 部室が閉まりました", color: 0xff3333 }
   }.freeze
@@ -209,10 +209,29 @@ class DiscordNotifier
       label = ROOM_LABELS[type] || { title: "🚪 部室通知", color: 0x0099ff }
       room_name = "#{data[:room_name]}（#{data[:room_number]}）"
       user = format_user_mention(data[:user_discord_id], data[:user_display_name])
+      exited_by = format_user_mention(data[:exited_by_discord_id], data[:exited_by_display_name])
+      source_label = case data[:source]
+      when "nfc"
+        "NFCタッチ"
+      when "web"
+        "Webアプリ"
+      when "room_close"
+        "閉室時の一斉退室"
+      when "forced"
+        "#{exited_by}による代理退室"
+      else
+        "不明"
+      end
+
+      description = "🚪 #{room_name}\n👤 #{user}"
+      if type == "room_exited" && source_label.present?
+        description += "\n⏏️ #{source_label}"
+      end
+
       post_message({
         embeds: [ {
           title: label[:title],
-          description: "🚪 #{room_name}\n#{user}",
+          description: description,
           color: label[:color],
           timestamp: Time.current.iso8601
         } ]

@@ -23,9 +23,13 @@
         
         <div>
           <p class="text-sm text-gray-600 mb-2">ロール</p>
-          <%= form_with model: @user, url: admin_user_path(@user), method: :patch, local: true, class: "flex items-center gap-2" do |f| %>
-            <%= f.collection_select :role_id, @roles, :id, :name, { include_blank: "未設定" }, class: "px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary" %>
-            <%= f.submit "変更", class: "px-3 py-1 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors cursor-pointer" %>
+          <% if current_user&.manager? && @user.admin? %>
+            <p class="text-sm text-amber-700">管理者は開発者ユーザーのロールを変更できません</p>
+          <% else %>
+            <%= form_with model: @user, url: admin_user_path(@user), method: :patch, local: true, class: "flex items-center gap-2" do |f| %>
+              <%= f.collection_select :role_id, @roles, :id, :name, { include_blank: "未設定" }, class: "px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary" %>
+              <%= f.submit "変更", class: "px-3 py-1 bg-primary text-white text-sm font-medium rounded hover:bg-primary-dark transition-colors cursor-pointer" %>
+            <% end %>
           <% end %>
           <div class="mt-2">
             <%= user_role_badge(@user) %>

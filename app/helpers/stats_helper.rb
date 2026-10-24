@@ -26,9 +26,8 @@ module StatsHelper
   end
 
   PERIOD_OPTIONS = [
-    { value: "today", label: "今日" },
-    { value: "week", label: "今週" },
-    { value: "month", label: "今月" },
+    { value: "week", label: "1週間" },
+    { value: "month", label: "1ヶ月" },
     { value: "half_year", label: "半年間" },
     { value: "year", label: "1年間" },
     { value: "all", label: "全期間" }
@@ -51,5 +50,31 @@ module StatsHelper
     when 3 then "🥉"
     else rank.to_s
     end
+  end
+
+  def heatmap_color(level)
+    case level
+    when 0 then "bg-gray-100"
+    when 1 then "bg-green-200"
+    when 2 then "bg-green-400"
+    when 3 then "bg-green-600"
+    when 4 then "bg-green-800"
+    else "bg-gray-100"
+    end
+  end
+
+  def heatmap_tooltip_content(day_data)
+    lines = [ day_data[:date].strftime("%Y/%m/%d"), "合計: #{format_duration(day_data[:seconds])}" ]
+    day_data[:room_durations].each do |rd|
+      lines << "#{rd[:room_name]}: #{format_duration(rd[:seconds])}"
+    end
+    lines.join("\n")
+  end
+
+  def heatmap_period_label(period)
+    # ヒートマップでは「全期間」も「1年間」として表示（過去1年分のデータのみ表示するため）
+    return "1年間" if period == "all"
+
+    period_label(period)
   end
 end

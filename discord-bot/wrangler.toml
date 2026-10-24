@@ -5,3 +5,14 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 API_BASE_URL = "https://rooms.jyogi.net/api"
+
+# 閲覧ログ取り込み Worker へは Service Binding で接続する。
+# Worker→Worker を公開 workers.dev URL で fetch すると Cloudflare error 1042 で
+# ブロックされるため、内部バインディング(env.VIEW_LOG.fetch)を使う。
+[[services]]
+binding = "VIEW_LOG"
+service = "jyogi-view-log-worker"
+
+# INGEST_SHARED_SECRET は平文で置かず secret として設定すること:
+#   wrangler secret put INGEST_SHARED_SECRET
+# （view-log-worker 側と同じ値にする）

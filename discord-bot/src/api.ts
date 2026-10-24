@@ -80,13 +80,6 @@ export interface RoomStatus {
 	occupant_count: number;
 }
 
-export interface MyStatsRoom {
-	room_id: number;
-	room_name: string;
-	visit_days: number;
-	total_seconds: number;
-}
-
 export interface MyStatsRankEntry {
 	position: number | null;
 	total_users: number;
@@ -95,14 +88,15 @@ export interface MyStatsRankEntry {
 export interface MyStatsRank {
 	visit: MyStatsRankEntry;
 	duration: MyStatsRankEntry;
-	period: string;
 }
 
 export interface MyStatsResponse {
+	// 統計機能が無効な場合は enabled: false + message のみが返る
+	enabled?: boolean;
+	message?: string;
 	user: { id: number; display_name: string; discord_id?: string };
-	period: string;
+	room: string;
 	total: { visit_days: number; total_seconds: number };
-	rooms: MyStatsRoom[];
 	rank: MyStatsRank;
 }
 
@@ -116,6 +110,9 @@ export interface RankingEntry {
 }
 
 export interface RankingResponse {
+	// 統計機能が無効な場合は enabled: false + message のみが返る
+	enabled?: boolean;
+	message?: string;
 	type: string;
 	period: string;
 	room: string;
@@ -219,10 +216,10 @@ function createApi(env: ApiEnv) {
 			return data.users.find(u => u.discord_id === discordUserId) ?? null;
 		},
 
-		async fetchMyStats(discordUserId: string, period?: string): Promise<MyStatsResponse> {
+		async fetchMyStats(discordUserId: string, room?: string): Promise<MyStatsResponse> {
 			const url = new URL(`${baseUrl}/stats/me`);
 			url.searchParams.append('discord_user_id', discordUserId);
-			if (period) url.searchParams.append('period', period);
+			if (room) url.searchParams.append('room', room);
 
 			const response = await fetchWithTimeout(url.toString());
 			if (!response.ok) await handleErrorResponse(response);

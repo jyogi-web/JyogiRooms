@@ -14,14 +14,13 @@ class JyogiAuthClient
   TIMEOUT_SECONDS = 10
 
   # OAuth2認可URLを生成
-  def self.authorization_url(state:)
+  def self.authorization_url
     config = JyogiAuth.configuration
     uri = URI(config.authorize_url)
     params = {
       client_id: config.client_id,
       redirect_uri: config.redirect_uri,
-      response_type: "code",
-      state: state
+      response_type: "code"
     }
     uri.query = URI.encode_www_form(params)
     uri.to_s
