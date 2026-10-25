@@ -32,19 +32,19 @@
 | 技術 | 用途 |
 |------|------|
 | Raspberry Pi（自己ホスト） | Railsアプリのデプロイ先 |
-| Google Cloud Run | Discord Botのデプロイ先（サーバーレス） |
+| Cloudflare Workers | Discord Bot・閲覧ログWorkerのデプロイ先（サーバーレス） |
 | Cloudflare Tunnel | ラズパイへの外部公開（HTTPS自動、ドメイン: `jyogi-rooms.jyogi.net`） |
 | Docker / Docker Compose | コンテナ化・ラズパイ上でのオーケストレーション |
 | GitHub Actions | CI/CD（テスト・lint・デプロイ自動化） |
-| Google Artifact Registry | Discord BotのDockerイメージ管理 |
 
 ## CI/CD パイプライン
 
 | ワークフロー | トリガー | 内容 |
 |-------------|---------|------|
-| `ci.yml` | mainへのPush/PR | Brakeman, Bundler-audit, RuboCop, Minitest, システムテスト |
-| `deploy-discord-bot.yml` | developへのPush | Artifact Registryにビルド → Cloud Runデプロイ |
-| `deploy-raspi.yml` | developへのPush | ラズパイ上でdocker-composeビルド・起動 |
+| `ci.yml` | PR / develop・mainへのPush | Brakeman, Bundler-audit, RuboCop, Minitest, システムテスト |
+| `deploy-discord-bot.yml` | develop・mainへのPush（`discord-bot/`配下の変更時） | `wrangler deploy`でCloudflare Workersにデプロイ |
+| `deploy-raspi.yml` | develop・mainへのPush（`discord-bot/`配下以外の変更時） | ラズパイ上でdocker-composeビルド・起動 |
+| `deploy-view-log-worker.yml` | develop・mainへのPush（`view-log-worker/`配下またはワークフロー自体の変更時） | `wrangler deploy`でCloudflare Workersにデプロイ |
 
 ## セキュリティ・品質ツール
 

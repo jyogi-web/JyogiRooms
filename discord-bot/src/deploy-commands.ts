@@ -171,5 +171,7 @@ const rest = new REST({ version: '10' }).setToken(token);
         console.log('✅ Successfully reloaded application (/) commands.');
     } catch (error) {
         console.error('❌ Error deploying commands:', error);
+        // CI で失敗を検知できるよう終了コードを非0にする
+        process.exitCode = 1;
     }
 })();
