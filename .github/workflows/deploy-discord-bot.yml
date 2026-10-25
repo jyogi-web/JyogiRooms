@@ -6,6 +6,13 @@ on:
     paths:
       - 'discord-bot/**'
 
+# デプロイ先（Worker とグローバルのスラッシュコマンド定義）単位のグループ。
+# develop/main の両方から同じ Worker・同じコマンド定義に反映されるため、ブランチを跨いで直列化し、
+# 新しいコミットの実行を優先する（古い実行が後からデプロイやコマンド登録を完了するのを防ぐ）。
+concurrency:
+  group: deploy-discord-bot
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
